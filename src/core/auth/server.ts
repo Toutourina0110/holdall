@@ -6,6 +6,7 @@ import { admin } from "better-auth/plugins";
 import { getDb } from "@/core/db/client";
 import * as schema from "@/core/db/schema";
 import { getEnv } from "@/core/env";
+import { clientIpHeader } from "@/core/security/client-ip";
 import { currentSignupGrant } from "./signup-grant";
 
 function createAuth() {
@@ -38,7 +39,7 @@ function createAuth() {
     },
     advanced: {
       ipAddress: {
-        ipAddressHeaders: env.trustProxy ? ["cf-connecting-ip", "x-real-ip", "x-forwarded-for"] : [],
+        ipAddressHeaders: env.trustProxy ? ["cf-connecting-ip", "x-real-ip", "x-forwarded-for"] : [clientIpHeader],
       },
     },
     hooks: {
