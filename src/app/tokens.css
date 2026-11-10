@@ -28,6 +28,9 @@
   --color-rail-focus: #9dbde8;
   --color-highlight: rgb(255 255 255 / 0.18);
   --color-shadow: rgb(20 32 42 / 0.25);
+  --color-late-soft: #fbeceb;
+  --color-on-accent-line: rgb(255 255 255 / 0.45);
+  --color-overlay: rgb(10 15 20 / 0.5);
 
   --font-sans: var(--font-plex), "IBM Plex Sans", sans-serif;
   --weight-regular: 400;
@@ -63,8 +66,17 @@
   --border-thin: 1px;
   --border-strong: 2px;
   --stroke-icon: 1.6;
+  --stroke-ui: 1.5;
+  --opacity-disabled: 0.55;
 
   --size-tile: 28px;
+  --size-kbd: 20px;
+  --size-chip: 26px;
+  --size-field: 40px;
+  --size-textarea: 120px;
+  --size-auth: 420px;
+  --size-rail-item: 36px;
+  --size-bottom-bar: 64px;
   --size-control: 30px;
   --size-row: 40px;
   --size-header: 44px;
@@ -115,6 +127,7 @@
     --color-hatch: #18222c;
     --color-focus: #7fa9e0;
     --color-shadow: rgb(0 0 0 / 0.5);
+    --color-late-soft: #3a1f1d;
   }
 }
 
@@ -143,4 +156,5 @@
   --color-hatch: #18222c;
   --color-focus: #7fa9e0;
   --color-shadow: rgb(0 0 0 / 0.5);
+  --color-late-soft: #3a1f1d;
 }
