@@ -15,7 +15,13 @@ export default defineConfig({
   webServer: {
     command: "pnpm build && pnpm start",
     url: `http://127.0.0.1:${port}`,
-    env: { PORT: String(port), HOSTNAME: "127.0.0.1" },
+    env: {
+      PORT: String(port),
+      HOSTNAME: "127.0.0.1",
+      APP_URL: `http://127.0.0.1:${port}`,
+      APP_SECRET: "e2e-only-secret-value-that-is-long-enough-0123456789",
+      DATA_DIR: "test-results/e2e-data",
+    },
     reuseExistingServer: !process.env.CI,
     timeout: 180_000,
   },

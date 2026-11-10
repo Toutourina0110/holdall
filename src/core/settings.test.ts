@@ -12,6 +12,14 @@ describe("settings", () => {
     expect(settingsError({ HOLDALL_TARGET: "Desktop" }, "/app")).toMatch(/HOLDALL_TARGET/);
   });
 
+  it("refuses to run in production without APP_SECRET", () => {
+    expect(settingsError({ NODE_ENV: "production" }, "/app")).toMatch(/APP_SECRET/);
+  });
+
+  it("refuses a short APP_SECRET", () => {
+    expect(settingsError({ APP_SECRET: "short" }, "/app")).toMatch(/APP_SECRET/);
+  });
+
   it("accepts valid settings", () => {
     expect(settingsError({ PORT: "3000", HOLDALL_TARGET: "server" }, "/app")).toBeUndefined();
   });
