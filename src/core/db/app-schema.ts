@@ -101,3 +101,18 @@ export const job = sqliteTable(
   },
   (table) => [index("job_user_idx").on(table.userId), index("job_status_idx").on(table.status)],
 );
+
+export const pluginStorage = sqliteTable(
+  "plugin_storage",
+  {
+    pluginId: text("plugin_id")
+      .notNull()
+      .references(() => plugin.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    key: text("key").notNull(),
+    value: text("value").notNull(),
+  },
+  (table) => [primaryKey({ columns: [table.pluginId, table.userId, table.key] })],
+);
