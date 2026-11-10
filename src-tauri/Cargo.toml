@@ -1,0 +1,18 @@
+[package]
+name = "holdall"
+version = "0.0.1"
+description = "Holdall desktop app"
+authors = ["Toutourina0110"]
+license = "AGPL-3.0-or-later"
+edition = "2024"
+rust-version = "1.90"
+
+[lib]
+name = "holdall_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2.7.4", features = [] }
+
+[dependencies]
+tauri = { version = "2.12.5", features = [] }
