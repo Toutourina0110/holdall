@@ -78,12 +78,6 @@
   font-weight: var(--weight-bold);
 }
 
-.frame {
-  width: 100%;
-  min-height: var(--size-widget);
-  border: 0;
-  background: var(--color-surface);
-}
 
 @media (max-width: 1100px) {
   .grid {

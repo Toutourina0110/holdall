@@ -1,0 +1,22 @@
+import { z } from "zod";
+import { apiSession, unauthorized } from "@/core/auth/session";
+import { getEnv } from "@/core/env";
+import { callPluginApi, PluginPermissionError } from "@/core/plugins/api";
+
+const body = z.object({ method: z.string().max(80), params: z.unknown() });
+
+export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const session = await apiSession(request);
+  if (!session) return unauthorized();
+  const origin = request.headers.get("origin");
+  if (origin && origin !== new URL(getEnv().appUrl).origin) return Response.json({ error: "Cross-origin calls are not allowed." }, { status: 403 });
+  const parsed = body.safeParse(await request.json().catch(() => null));
+  if (!parsed.success) return Response.json({ error: "Send a method and params." }, { status: 400 });
+  try {
+    const result = await callPluginApi(parsed.data.method, parsed.data.params, { pluginId: (await params).id, userId: session.user.id });
+    return Response.json({ result });
+  } catch (error) {
+    if (error instanceof PluginPermissionError) return Response.json({ error: error.message }, { status: 403 });
+    return Response.json({ error: "The plugin call failed." }, { status: 500 });
+  }
+}

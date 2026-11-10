@@ -9,7 +9,7 @@ export type SlotItem = {
   href?: string;
   order: number;
   source: string;
-  widget?: { pluginId: string; entry: string; title: string };
+  widget?: { pluginId: string; entry: string; title: string; width?: 1 | 2 | 3 };
 };
 
 export type ResolvedItem = SlotItem & { hidden: boolean; style: ElementStyle };

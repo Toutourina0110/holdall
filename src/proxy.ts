@@ -16,6 +16,8 @@ export function proxy(request: NextRequest) {
     return NextResponse.redirect(login);
   }
 
+  if (pathname.startsWith("/api/plugins/") && pathname.split("/")[4] === "ui") return NextResponse.next();
+
   const isolated = crossOriginIsolatedPrefixes.some((prefix) => pathname.startsWith(prefix));
   const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
   const csp = contentSecurityPolicy(nonce, { dev: process.env.NODE_ENV === "development", crossOriginIsolated: isolated });

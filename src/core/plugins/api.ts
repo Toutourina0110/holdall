@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { UserFacingError } from "@/core/errors";
+import { safeFetch } from "@/core/security/safe-fetch";
 import { deletePluginStorage, getInstalledPlugin, isPluginEnabledFor, readPluginStorage, writePluginStorage } from "./store";
 
 export type PluginCallContext = { pluginId: string; userId: string };
@@ -70,9 +71,7 @@ registerPluginApi(
       throw new PluginPermissionError(`The plugin did not declare ${target.hostname} in its network list.`);
     }
     const forwarded = Object.fromEntries(Object.entries(headers ?? {}).filter(([name]) => !/^(cookie|host|authorization-holdall)$/i.test(name)));
-    const response = await fetch(target, { method, headers: forwarded, body, redirect: "error", signal: AbortSignal.timeout(15000) });
-    const text = await response.text();
-    if (text.length > 2 * 1024 * 1024) throw new PluginPermissionError("The response is larger than 2 MB.");
-    return { status: response.status, headers: Object.fromEntries(response.headers), body: text };
+    const response = await safeFetch(target.toString(), { method, headers: forwarded, body, maxBytes: 2 * 1024 * 1024, timeoutMs: 15000 });
+    return { status: response.status, headers: response.headers, body: response.body.toString("utf8") };
   },
 );

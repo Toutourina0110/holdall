@@ -8,6 +8,7 @@ import { plugin, pluginPermission } from "@/core/db/schema";
 import { getEnv } from "@/core/env";
 import { UserFacingError } from "@/core/errors";
 import { safeJoin } from "@/core/paths";
+import { safeFetch } from "@/core/security/safe-fetch";
 import { maxArchiveBytes, unpackPlugin } from "./archive";
 import { satisfies, type PluginManifest } from "./manifest";
 import { getInstalledPlugin } from "./store";
@@ -73,30 +74,9 @@ export async function stagePluginFromUrl(url: string, expectedSha256: string | u
     throw new UserFacingError("Enter a full https:// address.");
   }
   if (parsed.protocol !== "https:") throw new UserFacingError("Plugins can only be downloaded over https.");
-  const response = await fetch(parsed, { redirect: "follow", signal: AbortSignal.timeout(30000) }).catch(() => undefined);
-  if (!response?.ok || !response.body) throw new UserFacingError("The plugin could not be downloaded. Check the address and try again.");
-  const declared = Number(response.headers.get("content-length") ?? 0);
-  if (declared > maxArchiveBytes) throw new UserFacingError("The plugin archive is larger than 20 MB.");
-  const reader = response.body.getReader();
-  const chunks: Uint8Array[] = [];
-  let size = 0;
-  for (;;) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    size += value.byteLength;
-    if (size > maxArchiveBytes) {
-      await reader.cancel();
-      throw new UserFacingError("The plugin archive is larger than 20 MB.");
-    }
-    chunks.push(value);
-  }
-  const archive = new Uint8Array(size);
-  let offset = 0;
-  for (const chunk of chunks) {
-    archive.set(chunk, offset);
-    offset += chunk.byteLength;
-  }
-  return stagePlugin(archive, { expectedSha256, source });
+  const response = await safeFetch(parsed.toString(), { maxBytes: maxArchiveBytes, timeoutMs: 30000, redirects: 3 });
+  if (response.status !== 200) throw new UserFacingError("The plugin could not be downloaded. Check the address and try again.");
+  return stagePlugin(new Uint8Array(response.body), { expectedSha256, source });
 }
 
 export function readStaged(stageId: string): StagedPlugin {

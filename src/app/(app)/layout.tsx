@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { requireSession } from "@/core/auth/session";
 import { slotItemsFor } from "@/core/layout/registry";
 import { getUserLayout } from "@/core/layout/store";
+import "@/core/plugins/contributions";
 import { Shell } from "./shell/Shell";
 
 export default async function AppLayout({ children }: { children: ReactNode }) {

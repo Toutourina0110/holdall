@@ -1,0 +1,11 @@
+.frame {
+  display: block;
+  width: 100%;
+  min-height: var(--size-widget);
+  border: 0;
+  background: var(--color-surface);
+}
+
+.frame[data-tall] {
+  min-height: calc(100dvh - var(--size-topbar) - var(--space-10) * 3);
+}

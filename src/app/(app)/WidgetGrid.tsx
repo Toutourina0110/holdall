@@ -2,6 +2,7 @@
 
 import { strings } from "@/core/strings";
 import { Icon } from "@/ui/Icon";
+import { PluginFrame } from "@/ui/PluginFrame";
 import { useCustomize } from "./shell/CustomizeContext";
 import { SlotList } from "./shell/SlotList";
 import styles from "./today.module.css";
@@ -26,19 +27,11 @@ export function WidgetGrid() {
       slot="dashboard.widgets"
       className={styles.grid}
       render={(item) => (
-        <article className={styles.widget} data-width={item.style.width ?? 1}>
+        <article className={styles.widget} data-width={item.style.width ?? item.widget?.width ?? 1}>
           <header className={styles.widgetHead}>
             <h2>{item.style.label || item.widget?.title || item.label}</h2>
           </header>
-          {item.widget && (
-            <iframe
-              className={styles.frame}
-              title={item.widget.title}
-              src={`/api/plugins/${encodeURIComponent(item.widget.pluginId)}/ui/${encodeURIComponent(item.widget.entry)}`}
-              sandbox="allow-scripts"
-              loading="lazy"
-            />
-          )}
+          {item.widget && <PluginFrame pluginId={item.widget.pluginId} entry={item.widget.entry} title={item.widget.title} />}
         </article>
       )}
     />
