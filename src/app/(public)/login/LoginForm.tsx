@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { authClient } from "@/core/auth/client";
 import { strings } from "@/core/strings";
@@ -8,12 +7,17 @@ import { Button, Field, Notice } from "@/ui/controls";
 import styles from "../auth.module.css";
 
 function safeNext(value: string | null): string {
-  if (!value || !value.startsWith("/") || value.startsWith("//") || value.startsWith("/\\")) return "/";
-  return value;
+  if (!value || /[\u0000-\u001f\u007f\\]/.test(value)) return "/";
+  try {
+    const url = new URL(value, window.location.origin);
+    if (url.origin !== window.location.origin) return "/";
+    return url.pathname + url.search + url.hash;
+  } catch {
+    return "/";
+  }
 }
 
 export function LoginForm({ next }: { next: string | null }) {
-  const router = useRouter();
   const [error, setError] = useState<string>();
   const [pending, setPending] = useState(false);
   const t = strings.auth;
@@ -32,8 +36,7 @@ export function LoginForm({ next }: { next: string | null }) {
       setError(result.error.status === 429 ? t.tooManyAttempts : result.error.status === 401 ? t.wrongCredentials : t.genericError);
       return;
     }
-    router.replace(safeNext(next));
-    router.refresh();
+    window.location.assign(safeNext(next));
   }
 
   return (

@@ -1,0 +1,83 @@
+.help {
+  color: var(--color-muted);
+  line-height: var(--leading-read);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.grow {
+  flex: 1;
+  min-width: 0;
+}
+
+.ratio {
+  color: var(--color-done);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  font-variant-numeric: tabular-nums;
+}
+
+.ratio[data-fail] {
+  color: var(--color-late);
+}
+
+.group {
+  padding: var(--space-4);
+  border-top: var(--border-thin) solid var(--color-line);
+}
+
+.groupTitle {
+  margin-bottom: var(--space-3);
+  color: var(--color-ink);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-bold);
+}
+
+.tokens {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--size-token-column)), 1fr));
+  gap: var(--space-2) var(--space-4);
+}
+
+.token {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.tokenName {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--color-text);
+  font-size: var(--text-sm);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.swatch {
+  width: var(--size-chip);
+  height: var(--size-chip);
+  padding: 0;
+  border: var(--border-thin) solid var(--color-line-strong);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+}
+
+.tokenInput {
+  width: var(--size-token-input);
+  height: var(--size-chip);
+  padding: 0 var(--space-2);
+  border: var(--border-thin) solid var(--color-line-strong);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font: inherit;
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+}

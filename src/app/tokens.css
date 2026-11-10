@@ -77,6 +77,9 @@
   --size-auth: 420px;
   --size-rail-item: 36px;
   --size-bottom-bar: 64px;
+  --size-widget: 220px;
+  --size-token-column: 260px;
+  --size-token-input: 9ch;
   --size-control: 30px;
   --size-row: 40px;
   --size-header: 44px;

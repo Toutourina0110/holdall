@@ -4,6 +4,7 @@ import { z } from "zod";
 import { getDb } from "@/core/db/client";
 import { appSetting, invitation, user } from "@/core/db/schema";
 import { getEnv } from "@/core/env";
+import { UserFacingError } from "@/core/errors";
 import { getAuth } from "./server";
 import { withSignupGrant } from "./signup-grant";
 
@@ -40,7 +41,7 @@ export async function createFirstAdmin(input: AccountInput) {
     .onConflictDoNothing()
     .run();
   if (claimed.changes === 0 || countUsers() > 0) {
-    throw new Error("Holdall is already set up. Sign in instead.");
+    throw new UserFacingError("Holdall is already set up. Sign in instead.");
   }
   try {
     return await signUp("admin", input);
@@ -64,7 +65,7 @@ export function setRegistrationOpen(open: boolean): void {
 }
 
 export async function registerOpenAccount(input: AccountInput) {
-  if (!isRegistrationOpen()) throw new Error("Registration is closed. Ask an admin for an invitation.");
+  if (!isRegistrationOpen()) throw new UserFacingError("Registration is closed. Ask an admin for an invitation.");
   return signUp("user", input);
 }
 
@@ -89,13 +90,13 @@ export function findOpenInvitation(token: string) {
 export async function acceptInvitation(token: string, input: AccountInput) {
   const db = getDb();
   const open = findOpenInvitation(token);
-  if (!open) throw new Error("This invitation link is invalid, expired or already used. Ask an admin for a new one.");
+  if (!open) throw new UserFacingError("This invitation link is invalid, expired or already used. Ask an admin for a new one.");
   const claimed = db
     .update(invitation)
     .set({ usedAt: new Date() })
     .where(and(eq(invitation.id, open.id), isNull(invitation.usedAt)))
     .run();
-  if (claimed.changes === 0) throw new Error("This invitation link was just used. Ask an admin for a new one.");
+  if (claimed.changes === 0) throw new UserFacingError("This invitation link was just used. Ask an admin for a new one.");
   try {
     const result = await signUp(open.role, input);
     db.update(invitation).set({ usedBy: result.user.id }).where(eq(invitation.id, open.id)).run();
@@ -112,4 +113,23 @@ export function listInvitations() {
 
 export function revokeInvitation(id: string) {
   getDb().delete(invitation).where(and(eq(invitation.id, id), isNull(invitation.usedAt))).run();
+}
+
+export function listUsers() {
+  return getDb()
+    .select({ id: user.id, name: user.name, email: user.email, role: user.role, createdAt: user.createdAt })
+    .from(user)
+    .orderBy(user.createdAt)
+    .all();
+}
+
+export function setUserRole(userId: string, role: "admin" | "user") {
+  const db = getDb();
+  const target = db.select().from(user).where(eq(user.id, userId)).get();
+  if (!target) throw new UserFacingError("This account no longer exists.");
+  if (target.role === "admin" && role !== "admin") {
+    const admins = db.select({ n: sql<number>`count(*)` }).from(user).where(eq(user.role, "admin")).get()?.n ?? 0;
+    if (admins <= 1) throw new UserFacingError("Holdall needs at least one admin. Make someone else admin first.");
+  }
+  db.update(user).set({ role }).where(eq(user.id, userId)).run();
 }

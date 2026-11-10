@@ -1,13 +1,59 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 
-test("home loads", async ({ page }) => {
-  const response = await page.goto("/");
-  expect(response?.status()).toBe(200);
-  await expect(page).toHaveTitle("Holdall");
-  await expect(page.getByRole("heading", { level: 1, name: "Holdall is being built" })).toBeVisible();
+const password = "correct-horse-battery";
+
+async function signIn(page: Page, email: string) {
+  await page.goto("/login");
+  await page.getByLabel("Email").fill(email);
+  await page.getByLabel("Password").fill(password);
+  await page.getByRole("button", { name: "Sign in" }).click();
+  await page.waitForURL("/");
+}
+
+test.describe.configure({ mode: "serial" });
+
+test("first visit sets up the admin account and opens Today", async ({ page }) => {
+  await page.goto("/");
+  await expect(page).toHaveURL(/\/setup$/);
+  await page.getByLabel("Name").fill("Ada");
+  await page.getByLabel("Email").fill("ada@example.com");
+  await page.getByLabel("Password").fill(password);
+  await page.getByRole("button", { name: "Create the admin account" }).click();
+  await page.waitForURL("/");
+  await expect(page.getByText("Good to see you, Ada.")).toBeVisible();
+});
+
+test("setup is closed once an account exists", async ({ page }) => {
+  await page.goto("/setup");
+  await expect(page).toHaveURL(/\/login$/);
+});
+
+test("pages and API need a session", async ({ page, request }) => {
+  await page.goto("/settings");
+  await expect(page).toHaveURL(/\/login\?next=%2Fsettings$/);
+  const response = await request.get("/api/plugins", { headers: { purpose: "prefetch" } });
+  expect(response.status()).toBe(401);
+});
+
+test("an invited member cannot open the admin page", async ({ page, browser }) => {
+  await signIn(page, "ada@example.com");
+  await page.goto("/admin");
+  await page.getByRole("button", { name: "Create invitation link" }).click();
+  const link = await page.getByLabel("Invitation link").inputValue();
+  const member = await browser.newPage();
+  await member.goto(link);
+  await member.getByLabel("Name").fill("Bob");
+  await member.getByLabel("Email").fill("bob@example.com");
+  await member.getByLabel("Password").fill(password);
+  await member.getByRole("button", { name: "Create my account" }).click();
+  await member.waitForURL("/");
+  const response = await member.goto("/admin");
+  expect(response?.status()).toBe(404);
+  await member.close();
 });
 
 test("unknown route shows the custom 404", async ({ page }) => {
+  await signIn(page, "ada@example.com");
   const response = await page.goto("/does-not-exist");
   expect(response?.status()).toBe(404);
   await expect(page.getByRole("heading", { level: 1, name: "This page does not exist" })).toBeVisible();
@@ -15,7 +61,8 @@ test("unknown route shows the custom 404", async ({ page }) => {
 
 test("no horizontal scroll at 375 px", async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 812 });
-  for (const path of ["/", "/does-not-exist"]) {
+  await signIn(page, "ada@example.com");
+  for (const path of ["/", "/settings", "/settings/appearance", "/admin", "/login"]) {
     await page.goto(path);
     const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
     expect(scrollWidth, path).toBeLessThanOrEqual(375);

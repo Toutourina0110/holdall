@@ -81,4 +81,16 @@ describe("accounts", () => {
     const result = await accounts.registerOpenAccount({ name: "Zoe", email: "zoe@example.com", password });
     expect(result.user.email).toBe("zoe@example.com");
   });
+
+  it("never removes the last admin", async () => {
+    const { getDb } = await import("@/core/db/client");
+    const { user } = await import("@/core/db/schema");
+    const { eq } = await import("drizzle-orm");
+    const admin = getDb().select().from(user).where(eq(user.role, "admin")).get()!;
+    expect(() => accounts.setUserRole(admin.id, "user")).toThrow(/at least one admin/);
+    const member = getDb().select().from(user).where(eq(user.role, "user")).get()!;
+    accounts.setUserRole(member.id, "admin");
+    accounts.setUserRole(admin.id, "user");
+    expect(() => accounts.setUserRole(member.id, "user")).toThrow(/at least one admin/);
+  });
 });

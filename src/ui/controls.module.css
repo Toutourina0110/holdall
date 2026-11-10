@@ -192,6 +192,8 @@
 }
 
 .segmented {
+  align-self: flex-start;
+  max-width: 100%;
   display: inline-flex;
   border: var(--border-thin) solid var(--color-line-strong);
   border-radius: var(--radius-control);

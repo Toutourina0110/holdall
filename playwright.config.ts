@@ -20,7 +20,7 @@ export default defineConfig({
       HOSTNAME: "127.0.0.1",
       APP_URL: `http://127.0.0.1:${port}`,
       APP_SECRET: "e2e-only-secret-value-that-is-long-enough-0123456789",
-      DATA_DIR: "test-results/e2e-data",
+      DATA_DIR: `test-results/e2e-data-${Date.now()}`,
     },
     reuseExistingServer: !process.env.CI,
     timeout: 180_000,

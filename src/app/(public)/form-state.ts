@@ -1,9 +1,21 @@
 import { APIError } from "better-auth/api";
 import type { z } from "zod";
+import { UserFacingError } from "@/core/errors";
+import { createLogger } from "@/core/log";
 
 export type FormState = {
   error?: string;
   fieldErrors?: Record<string, string>;
+};
+
+const log = createLogger("forms");
+
+const knownAuthErrors: Record<string, string> = {
+  USER_ALREADY_EXISTS: "An account with this email already exists. Sign in instead.",
+  USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL: "An account with this email already exists. Sign in instead.",
+  PASSWORD_TOO_SHORT: "Use at least 10 characters for the password.",
+  PASSWORD_TOO_LONG: "Use 128 characters or fewer for the password.",
+  INVALID_EMAIL: "Enter a valid email address.",
 };
 
 export function fieldErrors(error: z.ZodError): Record<string, string> {
@@ -16,12 +28,11 @@ export function fieldErrors(error: z.ZodError): Record<string, string> {
 }
 
 export function friendlyError(error: unknown): string {
+  if (error instanceof UserFacingError) return error.message;
   if (error instanceof APIError) {
-    const message = String(error.body?.message ?? error.message);
-    if (/already exists/i.test(message)) return "An account with this email already exists. Sign in instead.";
-    if (/password/i.test(message)) return message;
-    return message;
+    const code = String(error.body?.code ?? "");
+    if (knownAuthErrors[code]) return knownAuthErrors[code];
   }
-  if (error instanceof Error) return error.message;
+  log.error("Unexpected form error", { error: error instanceof Error ? error.message : String(error) });
   return "Something went wrong. Try again in a moment.";
 }

@@ -1,0 +1,27 @@
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-3) var(--space-6);
+  margin-bottom: var(--space-6);
+}
+
+.title {
+  color: var(--color-ink);
+  font-size: var(--text-xl);
+  font-weight: var(--weight-bold);
+  line-height: var(--leading-tight);
+}
+
+.intro {
+  max-width: var(--measure);
+  margin-top: var(--space-1);
+  color: var(--color-muted);
+  line-height: var(--leading-read);
+}
+
+.actions {
+  margin-left: auto;
+  display: flex;
+  gap: var(--space-2);
+}
