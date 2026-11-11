@@ -8,6 +8,7 @@ import { UserFacingError } from "@/core/errors";
 import { deleteJob, enqueueJob } from "@/core/jobs/queue";
 import { checkLink, downloadOptionsSchema, parseLinks } from "@/modules/downloader/args";
 import { canManageTools } from "@/modules/downloader/tools";
+import { assertPublicUrl } from "@/core/security/safe-fetch";
 
 type Result<T = object> = T | { error: string };
 
@@ -25,7 +26,9 @@ export async function probeLinksAction(text: string): Promise<Result<{ ids: stri
   const session = await requireSession();
   try {
     refuseInDemo();
-    const ids = parseLinks(String(text)).map((url) => enqueueJob({ userId: session.user.id, type: "downloader.probe", payload: { url }, maxAttempts: 1 }));
+    const links = parseLinks(String(text));
+    for (const url of links) await assertPublicUrl(url);
+    const ids = links.map((url) => enqueueJob({ userId: session.user.id, type: "downloader.probe", payload: { url }, maxAttempts: 1 }));
     return { ids };
   } catch (error) {
     return failure(error);
@@ -42,6 +45,7 @@ export async function startDownloadsAction(items: { url: string; title?: string 
       .min(1)
       .max(500)
       .parse(items);
+    for (const item of list.slice(0, 1)) await assertPublicUrl(item.url);
     for (const item of list) {
       enqueueJob({ userId: session.user.id, type: "downloader.download", payload: { url: checkLink(item.url), title: item.title, options: parsed }, maxAttempts: 2 });
     }

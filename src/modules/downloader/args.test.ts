@@ -23,6 +23,7 @@ describe("yt-dlp arguments", () => {
     expect(args.at(-1)).toBe("https://youtu.be/abc");
     expect(args).toContain("--ignore-config");
     expect(args).toContain("--no-exec");
+    expect(args[args.indexOf("--use-extractors") + 1]).toBe("default,-generic");
     expect(args.indexOf("-P") + 1).toBe(args.indexOf("/data/downloads/u1"));
     expect(probeArgs("https://youtu.be/abc").slice(-2)).toEqual(["--", "https://youtu.be/abc"]);
   });

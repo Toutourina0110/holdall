@@ -98,3 +98,17 @@ export async function safeFetch(
   }
   return { status: response.status, headers: response.headers, body: response.body };
 }
+
+export async function assertPublicUrl(value: string): Promise<void> {
+  const host = new URL(value).hostname.replace(/^\[|\]$/g, "");
+  if (net.isIP(host)) {
+    if (isBlockedAddress(host)) throw new UserFacingError(`${host} is a private or internal address.`);
+    return;
+  }
+  const addresses = await dns.promises.lookup(host, { all: true }).catch(() => {
+    throw new UserFacingError(`${host} could not be found. Check the link.`);
+  });
+  if (addresses.length === 0 || addresses.some((entry) => isBlockedAddress(entry.address))) {
+    throw new UserFacingError(`${host} points to a private or internal address. Only public websites can be downloaded.`);
+  }
+}

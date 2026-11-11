@@ -1,7 +1,7 @@
 import http from "node:http";
 import type { AddressInfo } from "node:net";
 import { describe, expect, it } from "vitest";
-import { isBlockedAddress, safeFetch } from "./safe-fetch";
+import { assertPublicUrl, isBlockedAddress, safeFetch } from "./safe-fetch";
 
 describe("isBlockedAddress", () => {
   it.each(["127.0.0.1", "10.1.2.3", "172.16.0.1", "192.168.1.10", "169.254.169.254", "100.64.0.1", "0.0.0.0", "::1", "fe80::1", "fd00::1", "::ffff:127.0.0.1", "224.0.0.1", "::ffff:7f00:1", "64:ff9b::7f00:1", "64:ff9b::a00:1", "2002:7f00:1::", "::7f00:1", "fec0::1", "100::1", "not-an-ip"])(
@@ -28,5 +28,11 @@ describe("safeFetch", () => {
 
   it("refuses plain http unless allowed", async () => {
     await expect(safeFetch("http://example.com/")).rejects.toThrow(/https/);
+  });
+});
+
+describe("assertPublicUrl", () => {
+  it.each(["http://127.0.0.1:8080/x", "http://localhost/admin", "http://169.254.169.254/latest", "http://[::1]/"])("refuses %s", async (url) => {
+    await expect(assertPublicUrl(url)).rejects.toThrow(/private or internal/);
   });
 });

@@ -6,6 +6,7 @@ import { UserFacingError } from "@/core/errors";
 import { registerJobHandler } from "@/core/jobs/queue";
 import { createLogger } from "@/core/log";
 import { userPath } from "@/core/paths";
+import { assertPublicUrl } from "@/core/security/safe-fetch";
 import { doAction } from "@/core/plugins/hooks";
 import { downloadArgs, downloadOptionsSchema, parseFinalPath, parseProgress, probeArgs } from "./args";
 import { canManageTools, ffmpegPath, installFfmpeg, updateIsDue, updateYtdlp, ytdlpPath } from "./tools";
@@ -116,6 +117,7 @@ function refuseInDemo() {
 registerJobHandler("downloader.probe", async (job, context) => {
   refuseInDemo();
   const { url } = job.payload as { url: string };
+  await assertPublicUrl(url);
   context.progress(0.1, "Reading the link");
   const { stdout } = await run(requireYtdlp(), probeArgs(url), context.signal, undefined, 30 * 1024 * 1024);
   return summarize(JSON.parse(stdout) as RawInfo, url);
@@ -125,6 +127,7 @@ registerJobHandler("downloader.download", async (job, context) => {
   refuseInDemo();
   const payload = job.payload as { url: string; title?: string; options: unknown };
   const options = downloadOptionsSchema.parse(payload.options);
+  await assertPublicUrl(payload.url);
   const outputDir = userPath(getEnv().dataDir, "downloads", job.userId);
   fs.mkdirSync(outputDir, { recursive: true });
   let finalPath: string | undefined;

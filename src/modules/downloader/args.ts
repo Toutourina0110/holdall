@@ -46,13 +46,15 @@ function videoSelector(options: DownloadOptions): string {
 }
 
 export function probeArgs(url: string): string[] {
-  return ["--dump-single-json", "--flat-playlist", "--no-warnings", "--no-progress", "--ignore-config", "--", checkLink(url)];
+  return ["--dump-single-json", "--flat-playlist", "--no-warnings", "--no-progress", "--ignore-config", "--use-extractors", "default,-generic", "--", checkLink(url)];
 }
 
 export function downloadArgs(input: { url: string; options: DownloadOptions; outputDir: string; ffmpegPath?: string }): string[] {
   const options = downloadOptionsSchema.parse(input.options);
   const args = [
     "--ignore-config",
+    "--use-extractors",
+    "default,-generic",
     "--no-playlist",
     "--newline",
     "--continue",
