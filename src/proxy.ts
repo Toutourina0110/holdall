@@ -1,13 +1,34 @@
 import { getSessionCookie } from "better-auth/cookies";
 import { NextResponse, type NextRequest } from "next/server";
 import { contentSecurityPolicy, staticSecurityHeaders } from "@/core/security/headers";
+import { desktopGate, launchCookie } from "@/core/security/desktop-gate";
 import { isPublicPath } from "@/core/security/public-routes";
+import { isDesktop } from "@/core/target";
 
 const crossOriginIsolatedPrefixes = ["/converter"];
 
 export function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
   const isApi = pathname.startsWith("/api/");
+
+  if (isDesktop()) {
+    const token = process.env.HOLDALL_LAUNCH_TOKEN;
+    const decision = desktopGate({
+      token,
+      port: Number(process.env.PORT ?? 3000),
+      host: request.headers.get("host") ?? undefined,
+      cookieToken: request.cookies.get(launchCookie)?.value,
+      queryToken: request.nextUrl.searchParams.get("launch") ?? undefined,
+    });
+    if (decision === "deny") return new NextResponse("Open Holdall from the desktop app.", { status: 403, headers: { "Content-Type": "text/plain" } });
+    if (decision === "set-cookie" && token) {
+      const clean = request.nextUrl.clone();
+      clean.searchParams.delete("launch");
+      const response = NextResponse.redirect(clean);
+      response.cookies.set(launchCookie, token, { httpOnly: true, sameSite: "lax", path: "/" });
+      return response;
+    }
+  }
 
   if (!isPublicPath(pathname) && !getSessionCookie(request)) {
     if (isApi) return NextResponse.json({ error: "Sign in to continue." }, { status: 401 });

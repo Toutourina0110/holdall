@@ -60,3 +60,25 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 7
+
+  docker:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Build the Docker image
+        run: docker build --tag holdall:ci .
+
+      - name: Start the container and check health
+        run: |
+          docker run -d --name holdall -p 3000:3000 -e APP_SECRET=ci-only-secret-value-that-is-long-enough-0123456789 -e APP_URL=http://localhost:3000 holdall:ci
+          for i in $(seq 1 60); do
+            if curl -fsS http://localhost:3000/api/health; then exit 0; fi
+            sleep 2
+          done
+          docker logs holdall
+          exit 1
+
+      - name: Check bundled tools
+        run: docker run --rm --entrypoint sh holdall:ci -c "yt-dlp --version && ffmpeg -version | head -1"

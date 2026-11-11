@@ -1,0 +1,17 @@
+services:
+  holdall:
+    build: .
+    image: holdall:local
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    environment:
+      DATA_DIR: /data
+      HOLDALL_TARGET: server
+    volumes:
+      - holdall-data:/data
+
+volumes:
+  holdall-data:
