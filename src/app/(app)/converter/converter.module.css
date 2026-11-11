@@ -1,0 +1,46 @@
+.page {
+  max-width: var(--size-content);
+}
+
+.label {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  color: var(--color-ink);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+}
+
+.select {
+  height: var(--size-field);
+  padding: 0 var(--space-2);
+  border: var(--border-thin) solid var(--color-line-strong);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font: inherit;
+  font-weight: var(--weight-regular);
+}
+
+.grow {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.strong {
+  display: block;
+  color: var(--color-ink);
+  font-weight: var(--weight-semibold);
+}
+
+.meta {
+  display: block;
+  color: var(--color-muted);
+  font-size: var(--text-sm);
+}
+
+.link {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+}

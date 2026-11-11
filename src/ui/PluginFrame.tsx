@@ -18,6 +18,7 @@ function readTheme(): Record<string, string> {
 
 export function PluginFrame({ pluginId, entry, title, tall }: { pluginId: string; entry: string; title: string; tall?: boolean }) {
   const frame = useRef<HTMLIFrameElement>(null);
+  const url = `/api/plugins/${encodeURIComponent(pluginId)}/ui/${entry.split("/").map(encodeURIComponent).join("/")}`;
 
   useEffect(() => {
     async function onMessage(event: MessageEvent) {
@@ -43,8 +44,9 @@ export function PluginFrame({ pluginId, entry, title, tall }: { pluginId: string
       }
     }
     window.addEventListener("message", onMessage);
+    if (frame.current && !frame.current.getAttribute("src")) frame.current.setAttribute("src", url);
     return () => window.removeEventListener("message", onMessage);
-  }, [pluginId]);
+  }, [pluginId, url]);
 
   return (
     <iframe
@@ -52,10 +54,8 @@ export function PluginFrame({ pluginId, entry, title, tall }: { pluginId: string
       className={styles.frame}
       data-tall={tall || undefined}
       title={title}
-      src={`/api/plugins/${encodeURIComponent(pluginId)}/ui/${entry.split("/").map(encodeURIComponent).join("/")}`}
       sandbox="allow-scripts"
       referrerPolicy="no-referrer"
-      loading="lazy"
     />
   );
 }
