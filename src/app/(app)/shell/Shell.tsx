@@ -30,7 +30,11 @@ function RailLink({ item }: { item: ResolvedItem }) {
   const content = (
     <>
       <span className={styles.railTile}>
-        <Icon name={icon} />
+        {item.iconUrl && !item.style.icon ? (
+          <span className={styles.customIcon} style={{ maskImage: `url("${item.iconUrl}")`, WebkitMaskImage: `url("${item.iconUrl}")` }} aria-hidden="true" />
+        ) : (
+          <Icon name={icon} />
+        )}
       </span>
       <span className={styles.railLabel}>{label}</span>
     </>
@@ -43,10 +47,25 @@ function RailLink({ item }: { item: ResolvedItem }) {
     "data-radius": item.style.radius,
   };
   if (customize.customizing || !item.href) return <span {...common}>{content}</span>;
+  const open = isActive(pathname, item.href);
+  const exact = pathname === item.href;
   return (
-    <Link {...common} href={item.href} aria-current={isActive(pathname, item.href) ? "page" : undefined}>
-      {content}
-    </Link>
+    <>
+      <Link {...common} href={item.href} aria-current={open && (!item.children || exact) ? "page" : undefined} aria-expanded={item.children ? open : undefined}>
+        {content}
+      </Link>
+      {item.children && open && (
+        <ul className={styles.subList}>
+          {item.children.map((child) => (
+            <li key={child.href}>
+              <Link className={styles.subItem} href={child.href} aria-current={isActive(pathname, child.href) ? "page" : undefined}>
+                {child.label}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+    </>
   );
 }
 

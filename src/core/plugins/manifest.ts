@@ -70,7 +70,25 @@ export const manifestSchema = z
           )
           .max(10)
           .default([]),
-        page: z.object({ title: z.string().trim().min(1).max(40), entry: relativeFile }).strict().optional(),
+        page: z
+          .object({
+            title: z.string().trim().min(1).max(40),
+            entry: relativeFile,
+            icon: relativeFile.refine((value) => value.endsWith(".svg"), "The icon must be an .svg file.").optional(),
+            pages: z
+              .array(
+                z
+                  .object({
+                    title: z.string().trim().min(1).max(40),
+                    path: z.string().regex(/^[A-Za-z0-9._~-]+(\/[A-Za-z0-9._~-]+)*$/, "Use a path like live or channels/new.").max(200),
+                  })
+                  .strict(),
+              )
+              .max(20)
+              .default([]),
+          })
+          .strict()
+          .optional(),
         settings: z.array(settingFieldSchema).max(40).default([]),
       })
       .strict()

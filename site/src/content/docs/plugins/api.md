@@ -40,6 +40,18 @@ Interface code only. No permission; needs `entry.server`.
 
 No params. **Returns** `true`. From then on, events your server code sends with `holdall.push` arrive as `{ type: "holdall:event", event, data }` messages. See [Receive live events](/holdall/plugins/interface/#receive-live-events).
 
+## Page address
+
+Interface code of a page only. No permission. See [Pages and addresses](/holdall/plugins/interface/#pages-and-addresses).
+
+### `page.path`
+
+No params. **Returns** the current path under `/p/<plugin id>/`, `""` on the main page, or `null` in a widget.
+
+### `page.navigate`
+
+**Params** `{ path }`. Changes the address to `/p/<plugin id>/<path>` without reloading the page. **Returns** `true`.
+
 ## Settings
 
 ### `settings.get`

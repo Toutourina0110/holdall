@@ -97,6 +97,25 @@ await holdall("events.subscribe");
 
 Every open widget and page of your plugin receives the events sent to the person looking at it. With the SDK: `onEvent(holdall, (event, data) => { ... })`.
 
+## Pages and addresses
+
+A page knows which address it was opened at, and can change it, so people can bookmark or share any screen of your plugin.
+
+- The current path is in the query string of your page: `new URLSearchParams(location.search).get("path")`, for example `channels/42` for `/p/<plugin id>/channels/42`. It is empty on the main page.
+- `holdall("page.path")` returns the current path at any time.
+- `holdall("page.navigate", { path: "channels/43" })` changes the address and adds a step to the browser history. Your page is not reloaded: update your screen yourself.
+- When the person uses a sub page in the side bar, or the browser's back and forward buttons, your page is not reloaded either. It receives a message:
+
+```js
+addEventListener("message", (event) => {
+  const data = event.data;
+  if (event.source !== parent || !data || data.type !== "holdall:navigate") return;
+  show(data.path);
+});
+```
+
+Widgets have no address: `page.path` returns `null` and `page.navigate` fails there.
+
 ## Match the theme
 
 `theme.tokens` returns the person's current theme as CSS variables. Apply them, then use them in your CSS:

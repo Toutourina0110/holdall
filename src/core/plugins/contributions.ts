@@ -1,4 +1,5 @@
 import { registerSlotContributor, type SlotItem } from "@/core/layout/registry";
+import { signAssetToken } from "./asset-token";
 import { pluginsEnabledFor } from "./store";
 
 registerSlotContributor("plugins", ({ userId }) => {
@@ -6,15 +7,19 @@ registerSlotContributor("plugins", ({ userId }) => {
   for (const installed of pluginsEnabledFor(userId)) {
     if (!installed.granted.has("ui:slots")) continue;
     const { manifest } = installed;
-    if (manifest.contributes.page) {
+    const page = manifest.contributes.page;
+    if (page) {
+      const base = `/p/${manifest.id}`;
       items.push({
         id: `plugin:${manifest.id}`,
         slot: "rail.main",
-        label: manifest.contributes.page.title,
+        label: page.title,
         icon: "plugins",
-        href: `/p/${manifest.id}`,
+        iconUrl: page.icon ? `/api/plugins/${manifest.id}/ui/${signAssetToken(manifest.id, userId)}/${page.icon}` : undefined,
+        href: base,
         order: 50,
         source: manifest.id,
+        children: page.pages.length > 0 ? page.pages.map((sub) => ({ label: sub.title, href: `${base}/${sub.path}` })) : undefined,
       });
     }
     for (const widget of manifest.contributes.widgets) {

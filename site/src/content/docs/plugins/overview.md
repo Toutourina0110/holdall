@@ -12,7 +12,8 @@ An admin installs it once for the whole server, after reviewing what it asks for
 | Goal | How | Read |
 |---|---|---|
 | Show something on Today | A widget: an HTML file | [Interface code](/holdall/plugins/interface/) |
-| Have its own page in the side bar | A page: an HTML file | [Interface code](/holdall/plugins/interface/) |
+| Have its own page in the side bar, with an icon and sub pages | A page: an HTML file | [Manifest](/holdall/plugins/manifest/#page) |
+| Give each screen a shareable address | `page.navigate` | [Interface code](/holdall/plugins/interface/#pages-and-addresses) |
 | Read or change notes, tasks, events, files | API methods, each behind a permission | [API reference](/holdall/plugins/api/) |
 | Start downloads | `downloads.create` | [API reference](/holdall/plugins/api/) |
 | Load libraries, images, videos, players from any site | Directly in your interface | [Interface code](/holdall/plugins/interface/) |

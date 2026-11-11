@@ -57,7 +57,7 @@ export type Manifest = {
     hooks?: HookName[];
     slots?: string[];
     widgets?: { id: string; title: string; entry: string; width?: 1 | 2 | 3 }[];
-    page?: { title: string; entry: string };
+    page?: { title: string; entry: string; icon?: string; pages?: { title: string; path: string }[] };
     settings?: {
       key: string;
       label: string;
@@ -121,6 +121,8 @@ export type Methods = {
   "theme.tokens": { params: undefined; result: Record<string, string> };
   "server.call": { params: { name: string; args?: unknown }; result: unknown };
   "events.subscribe": { params: undefined; result: true };
+  "page.path": { params: undefined; result: string | null };
+  "page.navigate": { params: { path: string }; result: true };
   "settings.get": { params: undefined; result: Record<string, string | number | boolean | null> };
   "storage.get": { params: { key: string }; result: unknown };
   "storage.set": { params: { key: string; value: unknown }; result: true };

@@ -115,3 +115,53 @@ test("a person fills the settings form of a plugin", async ({ page }) => {
   const missing = await page.goto("/plugins/com.test.nothing/settings");
   expect(missing?.status()).toBe(404);
 });
+
+test("a plugin page has sub pages in the side bar and a shareable address", async ({ page }) => {
+  await signIn(page);
+  const html = `<!doctype html><html><body><p id="where">...</p><button id="go">Go</button><script>
+let next = 0; const waiting = new Map();
+addEventListener("message", (event) => {
+  const data = event.data;
+  if (event.source !== parent || !data) return;
+  if (data.type === "holdall:navigate") document.getElementById("where").textContent = "at:" + data.path;
+  if (data.type !== "holdall:response") return;
+  const call = waiting.get(data.id); waiting.delete(data.id);
+  data.error ? call.reject(new Error(data.error)) : call.resolve(data.result);
+});
+function holdall(method, params) { const id = ++next; return new Promise((resolve, reject) => { waiting.set(id, { resolve, reject }); parent.postMessage({ type: "holdall:request", id, method, params }, "*"); }); }
+document.getElementById("where").textContent = "at:" + new URLSearchParams(location.search).get("path");
+document.getElementById("go").onclick = () => holdall("page.navigate", { path: "channels/abc" });
+</script></body></html>`;
+  const icon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6"/></svg>`;
+  const manifest = {
+    id: "com.test.tv",
+    name: "TV",
+    version: "1.0.0",
+    type: "module",
+    author: { name: "Test" },
+    license: "MIT",
+    holdall: ">=0.0.1",
+    permissions: ["ui:slots"],
+    entry: { ui: "page.html" },
+    contributes: { page: { title: "TV", entry: "page.html", icon: "icon.svg", pages: [{ title: "Live", path: "live" }, { title: "Saved", path: "saved" }] } },
+  };
+  const archive = Buffer.from(zipSync({ "holdall.plugin.json": Buffer.from(JSON.stringify(manifest)), "page.html": Buffer.from(html), "icon.svg": Buffer.from(icon) }));
+  await page.goto("/plugins");
+  await page.getByLabel("Plugin archive").setInputFiles({ name: "tv.zip", mimeType: "application/zip", buffer: archive });
+  await page.getByRole("button", { name: "Review the plugin" }).click();
+  await page.getByRole("button", { name: "Accept and install" }).click();
+  await page.waitForURL("/plugins");
+  await page.getByRole("group", { name: "Use TV" }).getByRole("button", { name: "On" }).click();
+  await page.waitForTimeout(500);
+  await page.goto("/p/com.test.tv/live");
+  const frame = page.frameLocator("iframe[title='TV']");
+  await expect(frame.locator("#where")).toHaveText("at:live");
+  const nav = page.getByRole("navigation", { name: "Main navigation" });
+  await nav.getByRole("link", { name: "Saved" }).click();
+  await page.waitForURL("/p/com.test.tv/saved");
+  await expect(frame.locator("#where")).toHaveText("at:saved");
+  await frame.locator("#go").click();
+  await page.waitForURL("/p/com.test.tv/channels/abc");
+  const response = await page.goto("/p/com.test.tv/..%2F..%2Fadmin");
+  expect(response?.status()).toBe(404);
+});

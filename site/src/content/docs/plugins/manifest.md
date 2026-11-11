@@ -48,7 +48,7 @@ Every plugin has a `holdall.plugin.json` file at the root of its archive. Holdal
 | `theme` | theme only | Relative path | Theme file. See [Themes](/holdall/plugins/themes/). |
 | `contributes.hooks` | no | Known hook names | Hooks your server code listens to. Each needs its `hooks:<name>` permission. |
 | `contributes.widgets` | no | Up to 10 | Widgets for **Today**. See below. |
-| `contributes.page` | no | `title` (up to 40 characters) and `entry` | A page in the side bar. |
+| `contributes.page` | no | `title` (up to 40 characters), `entry`, optional `icon` and `pages` | A page in the side bar, with sub pages. See [Page](#page). |
 | `contributes.settings` | no | Up to 40 fields | A settings form drawn by Holdall. See [Settings](#settings). |
 
 Unknown fields are refused, so a typo is caught at install instead of being ignored.
@@ -69,10 +69,21 @@ Widgets need the `ui:slots` permission. They appear on **Today** for each person
 ## Page
 
 ```json
-{ "title": "Word count", "entry": "ui/page.html" }
+{
+  "title": "TV",
+  "entry": "ui/page.html",
+  "icon": "ui/icon.svg",
+  "pages": [
+    { "title": "Live", "path": "live" },
+    { "title": "Saved", "path": "saved" }
+  ]
+}
 ```
 
-The page gets an entry in the side bar, named `title`, and opens at `/p/<plugin id>`. It fills the content area. It needs the `ui:slots` permission.
+- The page gets an entry in the side bar, named `title`, and opens at `/p/<plugin id>`. It fills the content area. It needs the `ui:slots` permission.
+- `icon`: an `.svg` file of your archive. Holdall draws it in one color, the color of the side bar, so it matches every theme. Use simple filled shapes on a 16 by 16 grid.
+- `pages`: up to 20 sub pages. When someone opens your page, they unfold under it in the side bar. Each one opens `/p/<plugin id>/<path>`, with the same `entry` file. `path` uses letters, digits and `. _ ~ -`, with `/` between parts.
+- Any address under `/p/<plugin id>/` opens your page, not only the listed ones, so you can give each item its own shareable address, like `/p/com.example.tv/channels/42`. See [Pages and addresses](/holdall/plugins/interface/#pages-and-addresses).
 
 ## Settings
 

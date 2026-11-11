@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
 import styles from "./PluginFrame.module.css";
 
@@ -16,8 +17,19 @@ function readTheme(): Record<string, string> {
   return Object.fromEntries(themeTokens.map((token) => [token, style.getPropertyValue(token).trim()]));
 }
 
-export function PluginFrame({ pluginId, entry, title, tall }: { pluginId: string; entry: string; title: string; tall?: boolean }) {
+const pathPattern = /^[A-Za-z0-9._~-]+(\/[A-Za-z0-9._~-]+)*$/;
+
+export function PluginFrame({ pluginId, entry, title, tall, path }: { pluginId: string; entry: string; title: string; tall?: boolean; path?: string }) {
   const frame = useRef<HTMLIFrameElement>(null);
+  const router = useRouter();
+  const current = useRef(path ?? "");
+  const navigable = path !== undefined;
+
+  useEffect(() => {
+    if (path === undefined || current.current === path) return;
+    current.current = path;
+    frame.current?.contentWindow?.postMessage({ type: "holdall:navigate", path }, "*");
+  }, [path]);
 
   useEffect(() => {
     let events: EventSource | undefined;
@@ -29,6 +41,19 @@ export function PluginFrame({ pluginId, entry, title, tall }: { pluginId: string
       const reply = (payload: { result?: unknown; error?: string }) => target.postMessage({ type: "holdall:response", id: data.id, ...payload }, "*");
       if (data.method === "theme.tokens") {
         reply({ result: readTheme() });
+        return;
+      }
+      if (data.method === "page.path") {
+        reply({ result: navigable ? current.current : null });
+        return;
+      }
+      if (data.method === "page.navigate") {
+        const next = String((data.params as { path?: unknown } | undefined)?.path ?? "").replace(/^\/+|\/+$/g, "");
+        if (!navigable) return reply({ error: "Only pages can change the address." });
+        if (next && (next.length > 300 || !pathPattern.test(next))) return reply({ error: "Use a path like live or channels/new." });
+        current.current = next;
+        router.push(`/p/${encodeURIComponent(pluginId)}${next ? `/${next}` : ""}`, { scroll: false });
+        reply({ result: true });
         return;
       }
       if (data.method === "events.subscribe") {
@@ -65,8 +90,9 @@ export function PluginFrame({ pluginId, entry, title, tall }: { pluginId: string
       .then((response) => (response.ok ? (response.json() as Promise<{ token: string }>) : undefined))
       .then((body) => {
         if (cancelled || !body || !frame.current || frame.current.getAttribute("src")) return;
-        const path = entry.split("/").map(encodeURIComponent).join("/");
-        frame.current.setAttribute("src", `/api/plugins/${encodeURIComponent(pluginId)}/ui/${body.token}/${path}`);
+        const file = entry.split("/").map(encodeURIComponent).join("/");
+        const query = navigable ? `?path=${encodeURIComponent(current.current)}` : "";
+        frame.current.setAttribute("src", `/api/plugins/${encodeURIComponent(pluginId)}/ui/${body.token}/${file}${query}`);
       })
       .catch(() => undefined);
     return () => {
@@ -74,7 +100,7 @@ export function PluginFrame({ pluginId, entry, title, tall }: { pluginId: string
       window.removeEventListener("message", onMessage);
       events?.close();
     };
-  }, [pluginId, entry]);
+  }, [pluginId, entry, navigable, router]);
 
   return (
     <iframe

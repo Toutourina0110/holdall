@@ -11,6 +11,8 @@ export type SlotItem = {
   source: string;
   widget?: { pluginId: string; entry: string; title: string; width?: 1 | 2 | 3 };
   builtin?: { component: string; width?: 1 | 2 | 3 };
+  iconUrl?: string;
+  children?: { label: string; href: string }[];
 };
 
 export type ResolvedItem = SlotItem & { hidden: boolean; style: ElementStyle };
