@@ -33,6 +33,31 @@ const codecArgs: Record<string, string[]> = {
   "image:tiff": [],
 };
 
+const demuxers: Record<string, string> = {
+  mp4: "mov",
+  m4v: "mov",
+  mov: "mov",
+  m4a: "mov",
+  avif: "mov",
+  mkv: "matroska",
+  webm: "matroska",
+  avi: "avi",
+  mp3: "mp3",
+  aac: "aac",
+  ogg: "ogg",
+  opus: "ogg",
+  wav: "wav",
+  flac: "flac",
+  png: "png_pipe",
+  jpg: "jpeg_pipe",
+  jpeg: "jpeg_pipe",
+  gif: "gif",
+  webp: "webp_pipe",
+  bmp: "bmp_pipe",
+  tif: "tiff_pipe",
+  tiff: "tiff_pipe",
+};
+
 function family(type: FileType, target: string): "video" | "audio" | "image" {
   if (type === "image") return "image";
   if ((audioTargets as readonly string[]).includes(target)) return "audio";
@@ -45,5 +70,7 @@ export function ffmpegArgs(input: string, output: string, target: string): strin
   const codecs = codecArgs[`${family(fileType(name), target)}:${target}`];
   if (!codecs) throw new UserFacingError(`This file cannot be converted to ${target}.`);
   const frames = fileType(name) === "image" && target !== "gif" ? ["-frames:v", "1", "-update", "1"] : [];
-  return ["-hide_banner", "-nostdin", "-n", "-i", input, ...codecs, ...frames, "-progress", "pipe:1", "-nostats", output];
+  const demuxer = demuxers[extensionOf(name)];
+  if (!demuxer) throw new UserFacingError("This file cannot be converted.");
+  return ["-hide_banner", "-nostdin", "-n", "-protocol_whitelist", "file", "-f", demuxer, "-i", `file:${input}`, ...codecs, ...frames, "-progress", "pipe:1", "-nostats", `file:${output}`];
 }

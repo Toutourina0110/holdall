@@ -59,7 +59,8 @@ describe("converter arguments", () => {
   it("never overwrites and refuses unknown targets", () => {
     const args = formats.ffmpegArgs("/data/files/u/clip.mp4", "/data/files/u/clip.webm", "webm");
     expect(args).toContain("-n");
-    expect(args.at(-1)).toBe("/data/files/u/clip.webm");
+    expect(args.at(-1)).toBe("file:/data/files/u/clip.webm");
+    expect(args.slice(args.indexOf("-protocol_whitelist"), args.indexOf("-i") + 2)).toEqual(["-protocol_whitelist", "file", "-f", "mov", "-i", "file:/data/files/u/clip.mp4"]);
     expect(() => formats.ffmpegArgs("/data/files/u/clip.mp4", "/x.exe", "exe")).toThrow();
   });
 });
