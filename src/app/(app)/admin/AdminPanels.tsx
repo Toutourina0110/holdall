@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { strings } from "@/core/strings";
 import { Button, Chip, Notice, Segmented } from "@/ui/controls";
 import { Panel, PanelEmpty, PanelForm, PanelRow } from "@/ui/Panel";
-import { createInvitationAction, revokeInvitationAction, setRegistrationAction, setRoleAction } from "./actions";
+import { createInvitationAction, createResetLinkAction, revokeInvitationAction, setRegistrationAction, setRoleAction } from "./actions";
 import styles from "./admin.module.css";
 
 type UserRow = { id: string; name: string; email: string; role: string | null; createdAt: Date };
@@ -14,15 +14,39 @@ function day(date: Date) {
   return new Date(date).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
 }
 
+function CopyLink({ link, label, warning }: { link: string; label: string; warning: string }) {
+  const t = strings.admin;
+  const [copied, setCopied] = useState(false);
+  return (
+    <>
+      <div className={styles.linkBox}>
+        <input className={styles.linkInput} readOnly value={link} aria-label={label} onFocus={(event) => event.target.select()} />
+        <Button
+          icon="copy"
+          onClick={async () => {
+            await navigator.clipboard.writeText(link);
+            setCopied(true);
+          }}
+        >
+          {copied ? t.copied : t.copy}
+        </Button>
+      </div>
+      <p className={styles.help}>{warning}</p>
+    </>
+  );
+}
+
 export function UsersPanel({ users, currentUserId }: { users: UserRow[]; currentUserId: string }) {
   const t = strings.admin;
   const [error, setError] = useState<string>();
+  const [reset, setReset] = useState<{ name: string; link: string }>();
   const [pending, start] = useTransition();
   return (
     <Panel title={t.usersTitle} count={`${users.length}`}>
-      {error && (
+      {(error || reset) && (
         <PanelForm>
-          <Notice tone="error">{error}</Notice>
+          {error && <Notice tone="error">{error}</Notice>}
+          {reset && <CopyLink key={reset.link} link={reset.link} label={t.resetFor.replace("{name}", reset.name)} warning={t.resetWarning} />}
         </PanelForm>
       )}
       {users.map((user) => (
@@ -49,6 +73,21 @@ export function UsersPanel({ users, currentUserId }: { users: UserRow[]; current
               { value: "admin", label: strings.shell.roleAdmin },
             ]}
           />
+          {user.id !== currentUserId && (
+            <Button
+              icon="reset"
+              disabled={pending}
+              onClick={() =>
+                start(async () => {
+                  const result = await createResetLinkAction(user.id);
+                  setError(result.error);
+                  setReset(result.link ? { name: user.name, link: result.link } : undefined);
+                })
+              }
+            >
+              {t.resetPassword}
+            </Button>
+          )}
           {pending && <span className={styles.meta}>{t.saving}</span>}
         </PanelRow>
       ))}
@@ -60,7 +99,6 @@ export function InvitationsPanel({ invitations }: { invitations: InvitationRow[]
   const t = strings.admin;
   const [role, setRole] = useState<"user" | "admin">("user");
   const [link, setLink] = useState<string>();
-  const [copied, setCopied] = useState(false);
   const [pending, start] = useTransition();
   const open = invitations.filter((invitation) => !invitation.usedAt && new Date(invitation.expiresAt) > new Date());
 
@@ -77,27 +115,12 @@ export function InvitationsPanel({ invitations }: { invitations: InvitationRow[]
             start(async () => {
               const result = await createInvitationAction(role);
               setLink(result.link);
-              setCopied(false);
             })
           }
         >
           {t.createLink}
         </Button>
-        {link && (
-          <div className={styles.linkBox}>
-            <input className={styles.linkInput} readOnly value={link} aria-label={t.linkLabel} onFocus={(event) => event.target.select()} />
-            <Button
-              icon="copy"
-              onClick={async () => {
-                await navigator.clipboard.writeText(link);
-                setCopied(true);
-              }}
-            >
-              {copied ? t.copied : t.copy}
-            </Button>
-          </div>
-        )}
-        {link && <p className={styles.help}>{t.linkWarning}</p>}
+        {link && <CopyLink link={link} label={t.linkLabel} warning={t.linkWarning} />}
       </PanelForm>
       {open.length === 0 && <PanelEmpty>{t.noInvitations}</PanelEmpty>}
       {open.map((invitation) => (

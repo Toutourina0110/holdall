@@ -3,22 +3,25 @@ import fs from "node:fs";
 import { and, eq, gt, isNull, sql } from "drizzle-orm";
 import { z } from "zod";
 import { getDb } from "@/core/db/client";
-import { appSetting, invitation, user } from "@/core/db/schema";
+import { appSetting, invitation, passwordReset, user } from "@/core/db/schema";
 import { getEnv } from "@/core/env";
 import { UserFacingError } from "@/core/errors";
 import { userPath, type UserArea } from "@/core/paths";
 import { getAuth } from "./server";
 import { withSignupGrant } from "./signup-grant";
 
+export const passwordInput = z.string().min(10, "Use at least 10 characters.").max(128, "Use 128 characters or fewer.");
+
 export const accountInput = z.object({
   name: z.string().trim().min(1, "Enter a name.").max(80, "Use 80 characters or fewer."),
   email: z.email("Enter a valid email address.").max(200),
-  password: z.string().min(10, "Use at least 10 characters.").max(128, "Use 128 characters or fewer."),
+  password: passwordInput,
 });
 
 export type AccountInput = z.infer<typeof accountInput>;
 
 const invitationDays = 7;
+const resetMinutes = 60;
 
 function hashToken(token: string): string {
   return createHash("sha256").update(token).digest("hex");
@@ -116,6 +119,49 @@ export function listInvitations() {
 
 export function revokeInvitation(id: string) {
   getDb().delete(invitation).where(and(eq(invitation.id, id), isNull(invitation.usedAt))).run();
+}
+
+export function createPasswordReset(createdBy: string, userId: string) {
+  const db = getDb();
+  if (!db.select({ id: user.id }).from(user).where(eq(user.id, userId)).get()) throw new UserFacingError("This account no longer exists.");
+  db.delete(passwordReset).where(and(eq(passwordReset.userId, userId), isNull(passwordReset.usedAt))).run();
+  const token = randomBytes(32).toString("base64url");
+  const expiresAt = new Date(Date.now() + resetMinutes * 60 * 1000);
+  db.insert(passwordReset).values({ id: randomUUID(), tokenHash: hashToken(token), userId, createdBy, expiresAt }).run();
+  return { token, expiresAt };
+}
+
+export function findOpenPasswordReset(token: string) {
+  return getDb()
+    .select()
+    .from(passwordReset)
+    .where(and(eq(passwordReset.tokenHash, hashToken(token)), isNull(passwordReset.usedAt), gt(passwordReset.expiresAt, new Date())))
+    .get();
+}
+
+export async function resetPassword(token: string, password: string): Promise<void> {
+  const db = getDb();
+  const open = findOpenPasswordReset(token);
+  if (!open) throw new UserFacingError("This reset link is invalid, expired or already used. Ask an admin for a new one.");
+  const claimed = db
+    .update(passwordReset)
+    .set({ usedAt: new Date() })
+    .where(and(eq(passwordReset.id, open.id), isNull(passwordReset.usedAt)))
+    .run();
+  if (claimed.changes === 0) throw new UserFacingError("This reset link was just used. Ask an admin for a new one.");
+  try {
+    const context = await getAuth().$context;
+    const hash = await context.password.hash(passwordInput.parse(password));
+    if (await context.internalAdapter.findCredentialAccount(open.userId)) {
+      await context.internalAdapter.updatePassword(open.userId, hash);
+    } else {
+      await context.internalAdapter.createAccount({ userId: open.userId, providerId: "credential", accountId: open.userId, password: hash });
+    }
+    await context.internalAdapter.deleteUserSessions(open.userId);
+  } catch (error) {
+    db.update(passwordReset).set({ usedAt: null }).where(eq(passwordReset.id, open.id)).run();
+    throw error;
+  }
 }
 
 export function listUsers() {

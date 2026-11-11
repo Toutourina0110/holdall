@@ -75,6 +75,32 @@ describe("accounts", () => {
     await expect(accounts.acceptInvitation("made-up", { name: "X", email: "x@example.com", password })).rejects.toThrow();
   });
 
+  it("resets a password once with an admin link, signs the person out, and refuses expired links", async () => {
+    const { getDb } = await import("@/core/db/client");
+    const { session, user } = await import("@/core/db/schema");
+    const { eq } = await import("drizzle-orm");
+    const adminId = getDb().select().from(user).where(eq(user.role, "admin")).get()!.id;
+    const bob = getDb().select().from(user).where(eq(user.email, "bob@example.com")).get()!;
+    const api = auth.getAuth().api;
+    await api.signInEmail({ body: { email: "bob@example.com", password } });
+    expect(getDb().select().from(session).where(eq(session.userId, bob.id)).all().length).toBeGreaterThan(0);
+
+    const { token } = accounts.createPasswordReset(adminId, bob.id);
+    await expect(accounts.resetPassword(token, "short")).rejects.toThrow();
+    await accounts.resetPassword(token, "a-brand-new-password");
+    expect(getDb().select().from(session).where(eq(session.userId, bob.id)).all()).toHaveLength(0);
+    await expect(api.signInEmail({ body: { email: "bob@example.com", password } })).rejects.toThrow();
+    await api.signInEmail({ body: { email: "bob@example.com", password: "a-brand-new-password" } });
+    await expect(accounts.resetPassword(token, "another-new-password")).rejects.toThrow(/invalid, expired or already used/);
+
+    vi.useFakeTimers({ toFake: ["Date"] });
+    const late = accounts.createPasswordReset(adminId, bob.id);
+    vi.setSystemTime(Date.now() + 61 * 60 * 1000);
+    await expect(accounts.resetPassword(late.token, "another-new-password")).rejects.toThrow(/invalid, expired or already used/);
+    vi.useRealTimers();
+    await expect(accounts.resetPassword("made-up", "another-new-password")).rejects.toThrow();
+  });
+
   it("refuses open registration while it is closed", async () => {
     await expect(accounts.registerOpenAccount({ name: "Zoe", email: "zoe@example.com", password })).rejects.toThrow(/closed/);
     accounts.setRegistrationOpen(true);

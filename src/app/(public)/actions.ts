@@ -1,7 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { acceptInvitation, accountInput, createFirstAdmin, registerOpenAccount } from "@/core/auth/accounts";
+import { acceptInvitation, accountInput, createFirstAdmin, passwordInput, registerOpenAccount, resetPassword } from "@/core/auth/accounts";
 import { fieldErrors, friendlyError, type FormState } from "./form-state";
 
 async function createAccount(formData: FormData, create: (input: ReturnType<typeof accountInput.parse>) => Promise<unknown>): Promise<FormState> {
@@ -30,4 +30,15 @@ export async function registerAction(_state: FormState, formData: FormData): Pro
 export async function inviteAction(_state: FormState, formData: FormData): Promise<FormState> {
   const token = String(formData.get("token") ?? "");
   return createAccount(formData, (input) => acceptInvitation(token, input));
+}
+
+export async function resetPasswordAction(_state: FormState, formData: FormData): Promise<FormState> {
+  const parsed = passwordInput.safeParse(formData.get("password"));
+  if (!parsed.success) return { fieldErrors: { password: parsed.error.issues[0]?.message ?? "Check the password." } };
+  try {
+    await resetPassword(String(formData.get("token") ?? ""), parsed.data);
+  } catch (error) {
+    return { error: friendlyError(error) };
+  }
+  redirect("/login?reset=done");
 }

@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { createInvitation, revokeInvitation, setRegistrationOpen, setUserRole } from "@/core/auth/accounts";
+import { createInvitation, createPasswordReset, revokeInvitation, setRegistrationOpen, setUserRole } from "@/core/auth/accounts";
 import { requireAdmin } from "@/core/auth/session";
 import { getEnv } from "@/core/env";
 import { UserFacingError } from "@/core/errors";
@@ -29,6 +29,17 @@ export async function createInvitationAction(nextRole: unknown): Promise<{ link?
   const { token } = createInvitation(session.user.id, parsedRole.data);
   revalidatePath("/admin");
   return { link: `${getEnv().appUrl}/invite/${token}` };
+}
+
+export async function createResetLinkAction(userId: unknown): Promise<{ link?: string; error?: string }> {
+  const session = await requireAdmin();
+  if (typeof userId !== "string") return { error: "This account no longer exists." };
+  try {
+    const { token } = createPasswordReset(session.user.id, userId);
+    return { link: `${getEnv().appUrl}/reset/${token}` };
+  } catch (error) {
+    return { error: error instanceof UserFacingError ? error.message : "The reset link could not be created. Try again." };
+  }
 }
 
 export async function revokeInvitationAction(id: unknown): Promise<void> {

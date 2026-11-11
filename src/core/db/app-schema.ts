@@ -20,6 +20,24 @@ export const invitation = sqliteTable("invitation", {
   createdAt: createdAt(),
 });
 
+export const passwordReset = sqliteTable(
+  "password_reset",
+  {
+    id: text("id").primaryKey(),
+    tokenHash: text("token_hash").notNull().unique(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    createdBy: text("created_by")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    expiresAt: integer("expires_at", { mode: "timestamp_ms" }).notNull(),
+    usedAt: integer("used_at", { mode: "timestamp_ms" }),
+    createdAt: createdAt(),
+  },
+  (table) => [index("password_reset_user_idx").on(table.userId)],
+);
+
 export const appSetting = sqliteTable("app_setting", {
   key: text("key").primaryKey(),
   value: text("value").notNull(),

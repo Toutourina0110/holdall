@@ -19,14 +19,14 @@ Open **Admin** in the side bar.
 
 Under **Registration**, **Open to anyone** lets anyone who reaches your Holdall create a member account without an invitation. **Invitation only** is the default.
 
-Under **People**, change someone's role between **Member** and **Admin**.
+Under **People**, change someone's role between **Member** and **Admin**, or create a **Reset password** link for someone who forgot their password. Send it yourself; it works once, for 60 minutes, and signs the person out on every device.
 
 ## Roles
 
 | Role | Can |
 |---|---|
 | Member | Use every module with their own data, customize their own layout and theme, turn installed plugins on or off. |
-| Admin | Everything a member can, plus invite people, change roles, open registration, install and remove plugins, add CalDAV servers on the local network. |
+| Admin | Everything a member can, plus invite people, change roles, create password reset links, open registration, install and remove plugins, add CalDAV servers on the local network. |
 
 Nobody, not even an admin, can open another person's notes, tasks, events or files.
 
