@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { insertUser, useTempDatabase } from "@/test/db";
 import { buildEvent, parseEvents } from "./ical";
+import { davFetch } from "./providers";
 import { resolveConflict } from "./types";
 
 describe("conflicts", () => {
@@ -93,5 +94,18 @@ describe("calendar data", () => {
     expect(() => store.deleteEvent("bob", event.id)).toThrow();
     expect(() => store.createEvent("bob", { ...event, calendarId: local.id })).toThrow();
     expect(store.listEvents("alice", new Date("2026-11-01"), new Date("2026-12-01")).map((item) => item.title)).toEqual(["Private"]);
+  });
+});
+
+describe("caldav requests", () => {
+  const send = davFetch("https://caldav.example.com/dav/", false);
+
+  it("refuses addresses on another site", async () => {
+    await expect(send("https://attacker.example.org/steal", { method: "PROPFIND" })).rejects.toThrow("another site");
+  });
+
+  it("refuses private and loopback addresses", async () => {
+    await expect(davFetch("https://127.0.0.1/", false)("https://127.0.0.1/dav/")).rejects.toThrow("private or internal");
+    await expect(davFetch("http://caldav.example.com/", false)("http://caldav.example.com/dav/")).rejects.toThrow("Only https");
   });
 });

@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import net from "node:net";
 import { createDAVClient, type DAVCalendar } from "tsdav";
 import { getEnv } from "@/core/env";
 import { UserFacingError } from "@/core/errors";
@@ -205,6 +206,26 @@ export const microsoft: CalendarProvider = {
   },
 };
 
+function siteOf(hostname: string): string {
+  if (net.isIP(hostname.replace(/^\[|\]$/g, ""))) return hostname;
+  return hostname.split(".").slice(-2).join(".").toLowerCase();
+}
+
+export function davFetch(serverUrl: string, allowPrivate: boolean): typeof fetch {
+  const site = siteOf(new URL(serverUrl).hostname);
+  return (async (input: string | URL | Request, init?: RequestInit) => {
+    const url = new URL(typeof input === "string" ? input : input instanceof URL ? input.href : input.url);
+    if (siteOf(url.hostname) !== site) throw new UserFacingError("The CalDAV server pointed to another site, which is not followed.");
+    const method = init?.method ?? "GET";
+    const headers = Object.fromEntries(new Headers(init?.headers).entries());
+    const body = typeof init?.body === "string" ? init.body : undefined;
+    if (allowPrivate) return fetch(url, { method, headers, body, redirect: "manual", signal: AbortSignal.timeout(30000) });
+    const response = await safeFetch(url.href, { method, headers, body, maxBytes: 20 * 1024 * 1024, timeoutMs: 30000, manualRedirect: true });
+    const empty = [101, 204, 205, 304].includes(response.status);
+    return new Response(empty ? null : new Uint8Array(response.body), { status: response.status, headers: response.headers });
+  }) as typeof fetch;
+}
+
 async function davClient(credentials: Credentials) {
   const basic = asBasic(credentials);
   try {
@@ -213,6 +234,7 @@ async function davClient(credentials: Credentials) {
       credentials: { username: basic.username, password: basic.password },
       authMethod: "Basic",
       defaultAccountType: "caldav",
+      fetch: davFetch(basic.serverUrl, Boolean(basic.allowPrivate)),
     });
   } catch {
     throw new UserFacingError("The CalDAV server refused the connection. Check the address, user name and app password.");
@@ -247,7 +269,7 @@ export const caldav: CalendarProvider = {
   async listEvents(credentials, remote, from, to) {
     const { client, calendar } = await davCalendar(credentials, remote.remoteId);
     const objects = await client.fetchCalendarObjects({ calendar, timeRange: { start: from.toISOString(), end: to.toISOString() } });
-    return objects.flatMap((object) => {
+    return objects.slice(0, 5000).flatMap((object) => {
       try {
         return typeof object.data === "string" ? parseEvents(object.data, object.url, object.etag, from, to) : [];
       } catch {

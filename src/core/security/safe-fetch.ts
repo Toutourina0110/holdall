@@ -38,7 +38,7 @@ export type SafeResponse = { status: number; headers: Record<string, string>; bo
 
 export async function safeFetch(
   url: string,
-  options: { method?: string; headers?: Record<string, string>; body?: string; maxBytes?: number; timeoutMs?: number; allowHttp?: boolean; redirects?: number } = {},
+  options: { method?: string; headers?: Record<string, string>; body?: string; maxBytes?: number; timeoutMs?: number; allowHttp?: boolean; redirects?: number; manualRedirect?: boolean } = {},
 ): Promise<SafeResponse> {
   const target = new URL(url);
   if (target.protocol !== "https:" && !(options.allowHttp && target.protocol === "http:")) {
@@ -92,7 +92,7 @@ export async function safeFetch(
     request.end();
   });
   const redirects = options.redirects ?? 0;
-  if (response.status >= 300 && response.status < 400 && response.location) {
+  if (response.status >= 300 && response.status < 400 && response.location && !options.manualRedirect) {
     if (redirects <= 0) throw new UserFacingError("The remote server answered with a redirect, which is not followed.");
     return safeFetch(new URL(response.location, target).toString(), { ...options, redirects: redirects - 1, method: "GET", body: undefined });
   }

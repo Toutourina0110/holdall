@@ -20,7 +20,7 @@ export type RemoteEvent = EventFields & {
 
 export type Credentials =
   | { kind: "oauth"; accessToken: string; refreshToken: string; expiresAt: number }
-  | { kind: "basic"; serverUrl: string; username: string; password: string };
+  | { kind: "basic"; serverUrl: string; username: string; password: string; allowPrivate?: boolean };
 
 export type CalendarProvider = {
   listCalendars(credentials: Credentials): Promise<RemoteCalendar[]>;
