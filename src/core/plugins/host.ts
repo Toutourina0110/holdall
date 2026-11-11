@@ -8,7 +8,7 @@ import { callPluginApi } from "./api";
 import { installedDir } from "./install";
 import { pushToUser } from "./live";
 import { isUnsafePermission } from "./permissions";
-import { getInstalledPlugin, isPluginEnabledFor } from "./store";
+import { getInstalledPlugin, isPluginEnabledFor, listInstalledPlugins, usersWithPlugin } from "./store";
 
 type Pending = { resolve(value: unknown): void; reject(error: Error): void; timer: ReturnType<typeof setTimeout> };
 
@@ -20,7 +20,48 @@ type PluginProcess = {
   pending: Map<number, Pending>;
   calls: Map<string, string>;
   sequence: number;
+  stopped?: boolean;
 };
+
+function callerOf(proc: PluginProcess, pluginId: string, message: Record<string, unknown>): string | undefined {
+  const fromCall = message.callId ? proc.calls.get(String(message.callId)) : undefined;
+  if (fromCall) return fromCall;
+  const userId = typeof message.userId === "string" ? message.userId : undefined;
+  if (!userId || !getInstalledPlugin(pluginId)?.granted.has("background") || !isPluginEnabledFor(userId, pluginId)) return undefined;
+  return userId;
+}
+
+const restarts = new Map<string, { attempts: number; timer?: ReturnType<typeof setTimeout> }>();
+
+function runsInBackground(pluginId: string): boolean {
+  const installed = getInstalledPlugin(pluginId);
+  return Boolean(installed?.manifest.entry.server && installed.granted.has("background") && usersWithPlugin(pluginId).length > 0);
+}
+
+function scheduleRestart(pluginId: string): void {
+  if (!runsInBackground(pluginId)) return;
+  const state = restarts.get(pluginId) ?? { attempts: 0 };
+  if (state.timer) return;
+  const delay = Math.min(5000 * 2 ** state.attempts, 5 * 60 * 1000);
+  state.attempts += 1;
+  state.timer = setTimeout(() => {
+    state.timer = undefined;
+    ensureBackgroundPlugin(pluginId);
+  }, delay);
+  state.timer.unref?.();
+  restarts.set(pluginId, state);
+  log.warn("Background plugin stopped, starting it again soon", { pluginId, seconds: Math.round(delay / 1000) });
+}
+
+export function ensureBackgroundPlugin(pluginId: string): void {
+  if (!runsInBackground(pluginId)) return;
+  const proc = startPluginProcess(pluginId);
+  proc?.ready.then(() => restarts.delete(pluginId)).catch(() => undefined);
+}
+
+export function startBackgroundPlugins(): void {
+  for (const installed of listInstalledPlugins()) ensureBackgroundPlugin(installed.id);
+}
 
 const globalKey = Symbol.for("holdall.pluginHost");
 const store = globalThis as unknown as Record<symbol, Map<string, PluginProcess> | undefined>;
@@ -39,11 +80,9 @@ export function nodeFlags(dir: string, runner: string, has: (permission: string)
     "--permission",
     `--allow-fs-read=${dir}`,
     `--allow-fs-read=${runner}`,
-    "--allow-worker",
-    "--allow-wasi",
     "--max-old-space-size=512",
-    ...(has("fs:host") ? ["--allow-fs-read=*", "--allow-fs-write=*"] : []),
-    ...(has("process:spawn") ? ["--allow-child-process"] : []),
+    ...(has("fs:host") ? ["--allow-fs-read=*", "--allow-fs-write=*", "--allow-wasi"] : []),
+    ...(has("process:spawn") ? ["--allow-child-process", "--allow-worker"] : []),
     ...(has("network:direct") ? ["--allow-net"] : []),
   ];
 }
@@ -121,10 +160,21 @@ export function startPluginProcess(pluginId: string): PluginProcess | undefined 
           else call.resolve(message.result);
           break;
         }
+        case "users": {
+          const allowed = getInstalledPlugin(pluginId)?.granted.has("background");
+          if (child.connected) {
+            child.send({
+              type: "api.result",
+              id: message.id,
+              ...(allowed ? { result: usersWithPlugin(pluginId) } : { error: "The plugin was not granted the background permission." }),
+            });
+          }
+          break;
+        }
         case "api": {
-          const userId = proc.calls.get(String(message.callId));
+          const userId = callerOf(proc, pluginId, message);
           let reply: { result?: unknown; error?: string };
-          if (!userId) reply = { error: "API calls are only allowed while Holdall is calling the plugin." };
+          if (!userId) reply = { error: "API calls are only allowed while Holdall is calling the plugin, or with the background permission for a person who turned it on." };
           else {
             try {
               reply = { result: await callPluginApi(String(message.method), message.params, { pluginId, userId }) };
@@ -145,7 +195,8 @@ export function startPluginProcess(pluginId: string): PluginProcess | undefined 
         call.reject(new Error(`${pluginId} stopped.`));
       }
       proc.pending.clear();
-      processes.delete(pluginId);
+      if (processes.get(pluginId) === proc) processes.delete(pluginId);
+      if (!proc.stopped) scheduleRestart(pluginId);
     });
   });
   proc.ready.catch((error: Error) => log.warn("Plugin process failed", { pluginId, error: error.message }));
@@ -196,8 +247,14 @@ export async function pluginHooks(pluginId: string): Promise<Set<string>> {
 
 export function stopPluginProcess(pluginId: string): void {
   const proc = processes.get(pluginId);
-  if (proc) proc.child.kill();
+  if (proc) {
+    proc.stopped = true;
+    proc.child.kill();
+  }
   processes.delete(pluginId);
+  const restart = restarts.get(pluginId);
+  if (restart?.timer) clearTimeout(restart.timer);
+  restarts.delete(pluginId);
 }
 
 export function stopAllPluginProcesses(): void {

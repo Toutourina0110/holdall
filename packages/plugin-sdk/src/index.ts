@@ -18,6 +18,7 @@ export const permissions = [
   "system",
   "notifications",
   "storage",
+  "background",
   "ui:slots",
   "ui:replace",
 ] as const;
@@ -136,12 +137,14 @@ export type Methods = {
 
 export type MethodName = keyof Methods;
 
-export type HookContext = { userId: string; callId: string };
+export type HookContext = { userId: string; callId?: string };
 
 export type Holdall = {
   on<H extends HookName>(hook: H, handler: (payload: HookPayloads[H]["payload"], context: HookContext) => HookPayloads[H]["result"] | Promise<HookPayloads[H]["result"]>): void;
   handle<A = unknown, R = unknown>(name: string, handler: (args: A, context: HookContext) => R | Promise<R>): void;
   push(userId: string, event: string, data?: unknown): void;
+  users(): Promise<string[]>;
+  as(userId: string): HookContext;
   api<M extends MethodName>(method: M, params: Methods[M]["params"], context: HookContext): Promise<Methods[M]["result"]>;
   storage: {
     get(key: string, context: HookContext): Promise<unknown>;

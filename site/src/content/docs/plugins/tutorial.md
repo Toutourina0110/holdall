@@ -100,7 +100,7 @@ export default function setup(holdall) {
 Three rules to remember:
 
 1. **Always pass `context`** as the last argument of every call. It says which person the call is for. Calls without it are refused.
-2. **Calls only work inside a hook.** Holdall accepts API calls while it is calling one of your handlers, never in the background.
+2. **Calls work inside a hook or a server function.** To work on a timer, ask for the `background` permission (see [Background code](/holdall/plugins/server-and-hooks/#background-code)).
 3. **Each person has their own storage.** The same key holds different values for different people.
 
 The `try` around `notifications.show` matters: if the admin refused the optional permission, the call fails with a clear error, and the plugin keeps working.

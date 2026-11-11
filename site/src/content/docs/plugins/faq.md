@@ -25,7 +25,7 @@ Almost. With `system`, its server code runs as plain Node with no sandbox, on se
 
 ## Can my server code run on a timer?
 
-Not yet. Server code runs when Holdall calls one of your hooks. To refresh data regularly, do it from your widget or page when it opens, or when a hook fires.
+Yes, with the `background` permission: use `setInterval`, then `holdall.users()` and `holdall.as(userId)` to act for each person who turned the plugin on. See [Background code](/holdall/plugins/server-and-hooks/#background-code).
 
 ## Where do I keep settings?
 

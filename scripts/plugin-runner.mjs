@@ -14,7 +14,7 @@ function request(method, params, context) {
   const id = ++sequence;
   return new Promise((resolve, reject) => {
     pending.set(id, { resolve, reject });
-    send({ type: "api", id, method, params, callId: context?.callId });
+    send({ type: "api", id, method, params, callId: context?.callId, userId: context?.userId });
   });
 }
 
@@ -26,6 +26,16 @@ const holdall = {
   handle(name, handler) {
     functions.set(name, handler);
     send({ type: "fn.register", name });
+  },
+  users() {
+    const id = ++sequence;
+    return new Promise((resolve, reject) => {
+      pending.set(id, { resolve, reject });
+      send({ type: "users", id });
+    });
+  },
+  as(userId) {
+    return { userId };
   },
   push(userId, event, data) {
     send({ type: "push", userId, event, data });

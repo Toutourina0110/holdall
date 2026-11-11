@@ -22,6 +22,7 @@ The **Shown as** column is the sentence people read on the consent screen.
 | `network` | Connect to the internet addresses listed below | `network.fetch`, to the hosts in `network` |
 | `notifications` | Show you notifications | `notifications.show` |
 | `storage` | Keep its own private data on this server | `storage.get`, `storage.set`, `storage.delete` |
+| `background` | Keep running in the background and act for you at any time | Starting with Holdall, `holdall.users()`, `holdall.as(userId)` |
 | `ui:slots` | Add elements to the interface | Widgets, a page, the `dashboard.widgets` hook |
 | `network:any` | Connect to any address on the internet | `network.fetch` to any public `http` or `https` address, without listing hosts |
 | `network:local` | Connect to any address, including devices on your local network | Same as `network:any`, plus private addresses like `192.168.1.10` |
@@ -58,8 +59,8 @@ With these permissions, server code gets:
 | Permission | Server code can |
 |---|---|
 | `network:direct` | Use `fetch`, `WebSocket`, `net` or any network library directly, to any address |
-| `fs:host` | Read and write any file the Holdall process can |
-| `process:spawn` | Start programs with `child_process`, with the system `PATH` |
+| `fs:host` | Read and write any file the Holdall process can, and use WASI |
+| `process:spawn` | Start programs with `child_process`, with the system `PATH`, and use worker threads |
 | `system` | Everything Node can do: no permission model, native addons, no memory cap |
 
 Prefer the narrowest one: `process:spawn` to run one tool, `network:direct` for a WebSocket library, `system` only when nothing else works.

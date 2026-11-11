@@ -181,6 +181,8 @@ export default function (holdall) {
     expect(flags([])).not.toContain("--allow-net");
     expect(flags(["network:direct"])).toContain("--allow-net");
     expect(flags(["process:spawn"])).toContain("--allow-child-process");
+    expect(flags([])).not.toContain("--allow-wasi");
+    expect(flags([])).not.toContain("--allow-worker");
     expect(flags(["fs:host"])).toEqual(expect.arrayContaining(["--allow-fs-read=*", "--allow-fs-write=*"]));
   });
 
@@ -199,6 +201,43 @@ export default function (holdall) {
     await expect(callPluginApi("network.fetch", { url: "http://api.example.com/" }, context)).rejects.toThrow(/https/);
     await expect(callPluginApi("network.fetch", { url: "https://x/" }, { pluginId: "com.test.notes", userId: "alice" })).rejects.toThrow(/network/);
   });
+
+  it("runs background code only for people who turned the plugin on, and only with the background permission", async () => {
+    const { confirmInstall, stagePlugin } = await import("./install");
+    const { setPluginEnabledFor } = await import("./store");
+    const { ensureBackgroundPlugin, startPluginProcess } = await import("./host");
+    const { callPluginApi } = await import("./api");
+    const server = `
+export default function (holdall) {
+  setTimeout(async () => {
+    try {
+      const users = await holdall.users();
+      for (const userId of users) await holdall.storage.set("tick", users.length, holdall.as(userId));
+      await holdall.storage.set("tick", "forced", holdall.as("bob")).catch(() => {});
+    } catch (error) {
+      holdall.log("refused: " + error.message);
+    }
+  }, 50);
+}
+`;
+    for (const [id, permissions] of [
+      ["com.test.bg", ["storage", "background"]],
+      ["com.test.nobg", ["storage"]],
+    ] as const) {
+      const staged = stagePlugin(archive({ ...base, id, name: id, permissions: [...permissions], entry: { server: "server.mjs" } }, { "server.mjs": server }), {
+        source: "third-party",
+      });
+      confirmInstall(staged.stageId, [], "alice");
+      setPluginEnabledFor("alice", id, true);
+    }
+    ensureBackgroundPlugin("com.test.bg");
+    await startPluginProcess("com.test.nobg")!.ready;
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+    expect(await callPluginApi("storage.get", { key: "tick" }, { pluginId: "com.test.bg", userId: "alice" })).toBe(1);
+    setPluginEnabledFor("bob", "com.test.bg", true);
+    expect(await callPluginApi("storage.get", { key: "tick" }, { pluginId: "com.test.bg", userId: "bob" })).toBeNull();
+    expect(await callPluginApi("storage.get", { key: "tick" }, { pluginId: "com.test.nobg", userId: "alice" })).toBeNull();
+  }, 30000);
 
   it("signs plugin file links for one plugin and one person, for a limited time", async () => {
     const { signAssetToken, verifyAssetToken } = await import("./asset-token");

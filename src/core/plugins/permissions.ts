@@ -18,6 +18,7 @@ export const permissionCatalog = {
   system: "Full access: do anything Holdall itself can do, including reading the data of every account",
   notifications: "Show you notifications",
   storage: "Keep its own private data on this server",
+  background: "Keep running in the background and act for you at any time",
   "ui:slots": "Add elements to the interface",
   "ui:replace": "Replace elements of the interface, if you accept each one",
 } as const;

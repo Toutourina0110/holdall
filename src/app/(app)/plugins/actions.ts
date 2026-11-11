@@ -5,10 +5,10 @@ import { redirect } from "next/navigation";
 import { requireAdmin, requireSession } from "@/core/auth/session";
 import { getEnv } from "@/core/env";
 import { UserFacingError } from "@/core/errors";
-import { stopPluginProcess } from "@/core/plugins/host";
+import { ensureBackgroundPlugin, stopPluginProcess } from "@/core/plugins/host";
 import { confirmInstall, discardStaged, stagePlugin, stagePluginFromUrl, uninstallPlugin } from "@/core/plugins/install";
 import { stageFromRegistry } from "@/core/plugins/registry";
-import { setPluginEnabledFor, setPluginPermission } from "@/core/plugins/store";
+import { setPluginEnabledFor, setPluginPermission, usersWithPlugin } from "@/core/plugins/store";
 
 export type StageState = { error?: string };
 
@@ -47,6 +47,7 @@ export async function confirmInstallAction(formData: FormData): Promise<void> {
   const optional = formData.getAll("optional").map(String);
   const manifest = confirmInstall(stageId, optional, session.user.id);
   stopPluginProcess(manifest.id);
+  ensureBackgroundPlugin(manifest.id);
   revalidatePath("/", "layout");
   redirect("/plugins");
 }
@@ -72,6 +73,7 @@ export async function togglePermissionAction(pluginId: string, permission: strin
     return { error: error instanceof Error ? error.message : "The permission could not be changed." };
   }
   stopPluginProcess(pluginId);
+  ensureBackgroundPlugin(pluginId);
   revalidatePath("/", "layout");
   return {};
 }
@@ -92,5 +94,7 @@ export async function setPluginEnabledAction(pluginId: unknown, enabled: unknown
   const session = await requireSession();
   if (typeof pluginId !== "string" || typeof enabled !== "boolean") return;
   setPluginEnabledFor(session.user.id, pluginId, enabled);
+  if (enabled) ensureBackgroundPlugin(pluginId);
+  else if (usersWithPlugin(pluginId).length === 0) stopPluginProcess(pluginId);
   revalidatePath("/", "layout");
 }

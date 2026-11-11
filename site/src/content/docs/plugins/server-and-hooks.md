@@ -25,15 +25,17 @@ export default function setup(holdall) {
 | `holdall.storage.set(key, value, context)` | Shortcut for `storage.set`. |
 | `holdall.storage.delete(key, context)` | Shortcut for `storage.delete`. |
 | `holdall.fetch(url, init, context)` | Shortcut for `network.fetch`. `init` is `{ method, headers, body }` or `undefined`. |
+| `holdall.users()` | With `background`: the ids of everyone who turned your plugin on. |
+| `holdall.as(userId)` | With `background`: a `context` to act for that person outside a hook. |
 | `holdall.log(message)` | Write a line to the Holdall log, prefixed with your plugin id. |
 
 `context` is `{ userId, callId }`. Pass it, unchanged, as the last argument of every call: it tells Holdall which person the call is for.
 
 ## When your code runs
 
-- Holdall starts your process the first time one of your hooks is needed, and keeps it running.
-- Your default export runs once at start. Register your hooks there with `holdall.on`.
-- **API calls are only accepted while Holdall is calling one of your handlers.** A call made at start, in a timer or after your handler returned fails with *API calls are only allowed while Holdall is calling the plugin.* This guarantees a plugin only acts when something happens for a real person.
+- Holdall starts your process the first time one of your hooks or functions is needed, and keeps it running. With the `background` permission, it starts it as soon as Holdall starts, and starts it again if it crashes.
+- Your default export runs once at start. Register your hooks and functions there.
+- **Without `background`, API calls are only accepted while Holdall is calling one of your handlers**, with that call's `context`. This guarantees such a plugin only acts when something happens for a real person. With `background`, see [Background code](#background-code).
 - Each handler has **5 seconds** to answer (15 seconds for `notes.export.render`). After that, Holdall stops waiting and logs it.
 - If your process crashes, Holdall starts it again at the next hook.
 - Installing a new version stops the old process; the next hook starts the new one.
@@ -44,7 +46,7 @@ By default the process is started with the Node permission model:
 
 - it can read the files of your plugin folder, and nothing else;
 - it cannot write files, start programs, open network connections or load native addons;
-- it can use worker threads and WebAssembly;
+- it can run WebAssembly, but not WASI or worker threads;
 - it has 512 MB of memory.
 
 Everything else goes through `holdall` calls, checked against your permissions. Use `holdall.fetch` instead of `fetch`, and storage or `files.write` instead of the file system.
@@ -135,6 +137,28 @@ holdall.on("dashboard.widgets", (widgets) => {
   return weekend ? widgets.filter((widget) => widget.id !== "tasks.today") : widgets;
 });
 ```
+
+## Background code
+
+With the `background` permission, your server code can work on its own: on a timer, when a WebSocket receives a message, at start.
+
+```js
+export default function setup(holdall) {
+  setInterval(async () => {
+    for (const userId of await holdall.users()) {
+      const context = holdall.as(userId);
+      const response = await holdall.fetch("https://api.example.com/feed", undefined, context);
+      await holdall.storage.set("feed", JSON.parse(response.body), context);
+      holdall.push(userId, "feed", { updated: Date.now() });
+    }
+  }, 15 * 60 * 1000);
+}
+```
+
+- `holdall.users()` returns the ids of the people who turned the plugin on, right now.
+- `holdall.as(userId)` gives a `context` for one of them. Calls with it are checked like any other: the person must have the plugin turned on, and the plugin needs the permission of each method.
+- Holdall starts background plugins when it starts, when someone turns them on, and after an update. If the process crashes, it starts it again after 5 seconds, then waits longer each time, up to 5 minutes.
+- When nobody has the plugin turned on anymore, Holdall stops it.
 
 ## Server functions
 

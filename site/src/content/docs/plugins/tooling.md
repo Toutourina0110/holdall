@@ -137,7 +137,7 @@ Interface code runs in the browser: open the developer tools (F12), and pick you
 | *This plugin is turned off for this user.* | The person turned it off. Your code should show this message and stop. |
 | *Invalid parameters for X.* | A parameter is missing or has the wrong type. Check the [API reference](/holdall/plugins/api/). |
 | *Unknown plugin API method X.* | A typo in the method name, or a method this Holdall version does not have. |
-| *API calls are only allowed while Holdall is calling the plugin.* | Server code called the API outside a handler, or without `context`. |
+| *API calls are only allowed while Holdall is calling the plugin, or with the background permission...* | Server code called the API outside a handler without `background`, or with a `context` for someone who did not turn the plugin on. |
 | *The plugin did not declare X in its network list.* | Add the host to `network`. |
 | *Plugins can only use https addresses.* | Use `https://`. |
 | *X took too long to answer.* | Your handler took more than 5 seconds (15 for `notes.export.render`), or an interface call more than 15. |

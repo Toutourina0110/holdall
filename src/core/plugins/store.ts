@@ -56,6 +56,15 @@ export function setPluginEnabledFor(userId: string, pluginId: string, enabled: b
     .run();
 }
 
+export function usersWithPlugin(pluginId: string): string[] {
+  return getDb()
+    .select({ userId: userPlugin.userId })
+    .from(userPlugin)
+    .where(and(eq(userPlugin.pluginId, pluginId), eq(userPlugin.enabled, true)))
+    .all()
+    .map((row) => row.userId);
+}
+
 export function pluginsEnabledFor(userId: string): InstalledPlugin[] {
   return listInstalledPlugins().filter((item) => isPluginEnabledFor(userId, item.id));
 }
