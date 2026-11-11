@@ -27,6 +27,8 @@ export default function setup(holdall) {
 | `holdall.fetch(url, init, context)` | Shortcut for `network.fetch`. `init` is `{ method, headers, body }` or `undefined`. |
 | `holdall.users()` | With `background`: the ids of everyone who turned your plugin on. |
 | `holdall.as(userId)` | With `background`: a `context` to act for that person outside a hook. |
+| `holdall.userDir(context)` | The private data folder of that person. See [Data folder](#data-folder). |
+| `holdall.sharedDir()` | The data folder shared by everyone using the plugin. |
 | `holdall.log(message)` | Write a line to the Holdall log, prefixed with your plugin id. |
 
 `context` is `{ userId, callId }`. Pass it, unchanged, as the last argument of every call: it tells Holdall which person the call is for.
@@ -44,7 +46,7 @@ export default function setup(holdall) {
 
 By default the process is started with the Node permission model:
 
-- it can read the files of your plugin folder, and nothing else;
+- it can read the files of your plugin folder, read and write its [data folder](#data-folder), and nothing else;
 - it cannot write files, start programs, open network connections or load native addons;
 - it can run WebAssembly, but not WASI or worker threads;
 - it has 512 MB of memory.
@@ -159,6 +161,29 @@ export default function setup(holdall) {
 - `holdall.as(userId)` gives a `context` for one of them. Calls with it are checked like any other: the person must have the plugin turned on, and the plugin needs the permission of each method.
 - Holdall starts background plugins when it starts, when someone turns them on, and after an update. If the process crashes, it starts it again after 5 seconds, then waits longer each time, up to 5 minutes.
 - When nobody has the plugin turned on anymore, Holdall stops it.
+
+## Data folder
+
+Every plugin with server code gets its own folder on disk, where it can read and write anything with `fs`, without any permission: SQLite files, caches, downloads, logs.
+
+```js
+import fs from "node:fs";
+import path from "node:path";
+
+holdall.handle("save", ({ text }, context) => {
+  fs.writeFileSync(path.join(holdall.userDir(context), "draft.md"), text);
+});
+```
+
+| Folder | For |
+|---|---|
+| `holdall.userDir(context)` | One person's data. Created on first use. |
+| `holdall.sharedDir()` | Data for everyone: caches, downloaded models, shared state. |
+
+- The folders live in the Holdall data folder, under `plugin-data/<plugin id>/`, so they are part of every backup.
+- A person's folder is deleted with their account. The whole plugin folder is deleted when the plugin is uninstalled, and kept on updates.
+- Your code can technically read every person's folder of your plugin: always use the `context` of the call, and never show one person's data to another.
+- Use storage for small values the interface reads directly, and the data folder for files and bigger data.
 
 ## Server functions
 

@@ -31,3 +31,8 @@ export function pluginPath(dataDir: string, pluginId: string, ...segments: strin
   if (!/^[a-z0-9]+(\.[a-z0-9-]+)+$/.test(pluginId)) throw new Error("Invalid plugin id for a file path.");
   return safeJoin(path.join(dataDir, "plugins", pluginId), ...segments);
 }
+
+export function pluginDataPath(dataDir: string, pluginId: string, ...segments: string[]): string {
+  if (!/^[a-z0-9]+(\.[a-z0-9-]+)+$/.test(pluginId)) throw new Error("Invalid plugin id for a file path.");
+  return safeJoin(path.join(dataDir, "plugin-data", pluginId), ...segments);
+}

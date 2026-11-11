@@ -1,9 +1,10 @@
 import { spawn, type ChildProcess } from "node:child_process";
+import fs from "node:fs";
 import { randomUUID } from "node:crypto";
 import path from "node:path";
 import { getEnv } from "@/core/env";
 import { createLogger } from "@/core/log";
-import { safeJoin } from "@/core/paths";
+import { pluginDataPath, safeJoin } from "@/core/paths";
 import { callPluginApi } from "./api";
 import { installedDir } from "./install";
 import { pushToUser } from "./live";
@@ -74,12 +75,13 @@ export function runnerPath(): string {
   return path.join(process.env.HOLDALL_ROOT ?? process.cwd(), "scripts", "plugin-runner.mjs");
 }
 
-export function nodeFlags(dir: string, runner: string, has: (permission: string) => boolean): string[] {
+export function nodeFlags(dir: string, runner: string, has: (permission: string) => boolean, dataDir?: string): string[] {
   if (has("system")) return [];
   return [
     "--permission",
     `--allow-fs-read=${dir}`,
     `--allow-fs-read=${runner}`,
+    ...(dataDir ? [`--allow-fs-read=${dataDir}`, `--allow-fs-write=${dataDir}`] : []),
     "--max-old-space-size=512",
     ...(has("fs:host") ? ["--allow-fs-read=*", "--allow-fs-write=*", "--allow-wasi"] : []),
     ...(has("process:spawn") ? ["--allow-child-process", "--allow-worker"] : []),
@@ -104,8 +106,14 @@ export function startPluginProcess(pluginId: string): PluginProcess | undefined 
   const entry = safeJoin(dir, serverEntry);
   const runner = runnerPath();
   const has = (permission: string) => installed.granted.has(permission) && (getEnv().allowUnsafePlugins || !isUnsafePermission(permission));
-  const env: NodeJS.ProcessEnv = has("system") || has("process:spawn") ? hostEnv() : { NODE_ENV: process.env.NODE_ENV ?? "production" };
-  const child: ChildProcess = spawn(process.execPath, [...nodeFlags(dir, runner, has), runner, entry], {
+  const dataDir = pluginDataPath(getEnv().dataDir, pluginId);
+  fs.mkdirSync(path.join(dataDir, "shared"), { recursive: true });
+  fs.mkdirSync(path.join(dataDir, "users"), { recursive: true });
+  const env: NodeJS.ProcessEnv = {
+    ...(has("system") || has("process:spawn") ? hostEnv() : { NODE_ENV: process.env.NODE_ENV ?? "production" }),
+    HOLDALL_PLUGIN_DATA: dataDir,
+  };
+  const child: ChildProcess = spawn(process.execPath, [...nodeFlags(dir, runner, has, dataDir), runner, entry], {
     cwd: dir,
     stdio: ["ignore", "pipe", "pipe", "ipc"],
     env,
@@ -245,18 +253,24 @@ export async function pluginHooks(pluginId: string): Promise<Set<string>> {
   return proc.hooks;
 }
 
-export function stopPluginProcess(pluginId: string): void {
+export function stopPluginProcess(pluginId: string): Promise<void> {
   const proc = processes.get(pluginId);
-  if (proc) {
-    proc.stopped = true;
-    proc.child.kill();
-  }
   processes.delete(pluginId);
   const restart = restarts.get(pluginId);
   if (restart?.timer) clearTimeout(restart.timer);
   restarts.delete(pluginId);
+  if (!proc || proc.child.exitCode !== null || proc.child.signalCode !== null) return Promise.resolve();
+  proc.stopped = true;
+  return new Promise((resolve) => {
+    const done = setTimeout(resolve, 5000);
+    proc.child.once("exit", () => {
+      clearTimeout(done);
+      resolve();
+    });
+    proc.child.kill();
+  });
 }
 
-export function stopAllPluginProcesses(): void {
-  for (const id of [...processes.keys()]) stopPluginProcess(id);
+export async function stopAllPluginProcesses(): Promise<void> {
+  await Promise.all([...processes.keys()].map((id) => stopPluginProcess(id)));
 }

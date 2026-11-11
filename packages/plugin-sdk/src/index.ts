@@ -145,6 +145,8 @@ export type Holdall = {
   push(userId: string, event: string, data?: unknown): void;
   users(): Promise<string[]>;
   as(userId: string): HookContext;
+  sharedDir(): string;
+  userDir(context: HookContext): string;
   api<M extends MethodName>(method: M, params: Methods[M]["params"], context: HookContext): Promise<Methods[M]["result"]>;
   storage: {
     get(key: string, context: HookContext): Promise<unknown>;

@@ -41,7 +41,7 @@ Some permissions are marked on the review screen:
 
 | Mark | Permissions | Why |
 |---|---|---|
-| **Sensitive** | `network:any`, `network:local` | The plugin can send what it reads anywhere, or reach the machines of the local network. |
+| **Sensitive** | `network:any`, `network:local`, `background` | The plugin can send what it reads anywhere, reach the machines of the local network, or act for you when you are not using it. |
 | **Dangerous** | `network:direct`, `fs:host`, `process:spawn`, `system` | The plugin leaves the sandbox: it can read every account's data, change any file, or run programs. |
 
 ### Dangerous permissions

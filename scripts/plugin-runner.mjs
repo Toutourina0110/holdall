@@ -1,3 +1,5 @@
+import fs from "node:fs";
+import path from "node:path";
 import { pathToFileURL } from "node:url";
 
 const entry = process.argv[2];
@@ -36,6 +38,16 @@ const holdall = {
   },
   as(userId) {
     return { userId };
+  },
+  sharedDir() {
+    return path.join(process.env.HOLDALL_PLUGIN_DATA, "shared");
+  },
+  userDir(context) {
+    const userId = String(context?.userId ?? "");
+    if (!/^[A-Za-z0-9_-]{1,64}$/.test(userId)) throw new Error("Pass the context of a person to get their folder.");
+    const dir = path.join(process.env.HOLDALL_PLUGIN_DATA, "users", userId);
+    fs.mkdirSync(dir, { recursive: true });
+    return dir;
   },
   push(userId, event, data) {
     send({ type: "push", userId, event, data });

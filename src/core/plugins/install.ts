@@ -6,6 +6,7 @@ import packageJson from "../../../package.json";
 import { getDb } from "@/core/db/client";
 import { plugin, pluginPermission } from "@/core/db/schema";
 import { getEnv } from "@/core/env";
+import { pluginDataPath } from "@/core/paths";
 import { isUnsafePermission } from "./permissions";
 import { UserFacingError } from "@/core/errors";
 import { safeJoin } from "@/core/paths";
@@ -103,7 +104,7 @@ export function confirmInstall(stageId: string, grantedOptional: string[], insta
     grantedOptional.filter((permission) => manifest.optionalPermissions.includes(permission) && (getEnv().allowUnsafePlugins || !isUnsafePermission(permission))),
   );
   const target = installedDir(manifest.id);
-  fs.rmSync(target, { recursive: true, force: true });
+  fs.rmSync(target, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
   fs.mkdirSync(path.dirname(target), { recursive: true });
   fs.renameSync(path.join(stagingDir(stageId), "files"), target);
   discardStaged(stageId);
@@ -127,5 +128,6 @@ export function confirmInstall(stageId: string, grantedOptional: string[], insta
 
 export function uninstallPlugin(pluginId: string): void {
   getDb().delete(plugin).where(eq(plugin.id, pluginId)).run();
-  fs.rmSync(installedDir(pluginId), { recursive: true, force: true });
+  fs.rmSync(installedDir(pluginId), { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
+  fs.rmSync(pluginDataPath(getEnv().dataDir, pluginId), { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
 }

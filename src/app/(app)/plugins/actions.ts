@@ -6,7 +6,7 @@ import { requireAdmin, requireSession } from "@/core/auth/session";
 import { getEnv } from "@/core/env";
 import { UserFacingError } from "@/core/errors";
 import { ensureBackgroundPlugin, stopPluginProcess } from "@/core/plugins/host";
-import { confirmInstall, discardStaged, stagePlugin, stagePluginFromUrl, uninstallPlugin } from "@/core/plugins/install";
+import { confirmInstall, discardStaged, readStaged, stagePlugin, stagePluginFromUrl, uninstallPlugin } from "@/core/plugins/install";
 import { stageFromRegistry } from "@/core/plugins/registry";
 import { setPluginEnabledFor, setPluginPermission, usersWithPlugin } from "@/core/plugins/store";
 
@@ -45,8 +45,8 @@ export async function confirmInstallAction(formData: FormData): Promise<void> {
   if (getEnv().demoMode) throw new UserFacingError(demoOff);
   const stageId = String(formData.get("stageId") ?? "");
   const optional = formData.getAll("optional").map(String);
+  await stopPluginProcess(readStaged(stageId).manifest.id);
   const manifest = confirmInstall(stageId, optional, session.user.id);
-  stopPluginProcess(manifest.id);
   ensureBackgroundPlugin(manifest.id);
   revalidatePath("/", "layout");
   redirect("/plugins");
@@ -60,7 +60,7 @@ export async function cancelInstallAction(formData: FormData): Promise<void> {
 
 export async function uninstallAction(pluginId: string): Promise<void> {
   await requireAdmin();
-  stopPluginProcess(pluginId);
+  await stopPluginProcess(pluginId);
   uninstallPlugin(pluginId);
   revalidatePath("/", "layout");
 }
@@ -72,7 +72,7 @@ export async function togglePermissionAction(pluginId: string, permission: strin
   } catch (error) {
     return { error: error instanceof Error ? error.message : "The permission could not be changed." };
   }
-  stopPluginProcess(pluginId);
+  await stopPluginProcess(pluginId);
   ensureBackgroundPlugin(pluginId);
   revalidatePath("/", "layout");
   return {};
@@ -95,6 +95,6 @@ export async function setPluginEnabledAction(pluginId: unknown, enabled: unknown
   if (typeof pluginId !== "string" || typeof enabled !== "boolean") return;
   setPluginEnabledFor(session.user.id, pluginId, enabled);
   if (enabled) ensureBackgroundPlugin(pluginId);
-  else if (usersWithPlugin(pluginId).length === 0) stopPluginProcess(pluginId);
+  else if (usersWithPlugin(pluginId).length === 0) await stopPluginProcess(pluginId);
   revalidatePath("/", "layout");
 }

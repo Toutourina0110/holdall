@@ -1,12 +1,13 @@
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import fs from "node:fs";
+import path from "node:path";
 import { and, eq, gt, isNull, sql } from "drizzle-orm";
 import { z } from "zod";
 import { getDb } from "@/core/db/client";
 import { appSetting, invitation, passwordReset, user } from "@/core/db/schema";
 import { getEnv } from "@/core/env";
 import { UserFacingError } from "@/core/errors";
-import { userPath, type UserArea } from "@/core/paths";
+import { pluginDataPath, userPath, type UserArea } from "@/core/paths";
 import { getAuth } from "./server";
 import { withSignupGrant } from "./signup-grant";
 
@@ -188,4 +189,14 @@ const userAreas: UserArea[] = ["notes", "files", "downloads"];
 export function deleteAccount(userId: string): void {
   getDb().delete(user).where(eq(user.id, userId)).run();
   for (const area of userAreas) fs.rmSync(userPath(getEnv().dataDir, area, userId), { recursive: true, force: true });
+  const pluginData = path.join(getEnv().dataDir, "plugin-data");
+  if (fs.existsSync(pluginData)) {
+    for (const pluginId of fs.readdirSync(pluginData)) {
+      try {
+        fs.rmSync(pluginDataPath(getEnv().dataDir, pluginId, "users", userId), { recursive: true, force: true });
+      } catch {
+        continue;
+      }
+    }
+  }
 }

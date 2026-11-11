@@ -13,7 +13,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  (await import("./host")).stopAllPluginProcesses();
+  await (await import("./host")).stopAllPluginProcesses();
   await db.cleanup();
 });
 

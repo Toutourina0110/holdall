@@ -29,7 +29,11 @@ Yes, with the `background` permission: use `setInterval`, then `holdall.users()`
 
 ## Where do I keep settings?
 
-In storage, with a form on your page: `storage.set("settings", {...})`. Each person has their own.
+In storage, with a form on your page: `storage.set("settings", {...})`. Each person has their own. Bigger data goes in your [data folder](/holdall/plugins/server-and-hooks/#data-folder).
+
+## Can I use SQLite or keep big files?
+
+Yes, in your [data folder](/holdall/plugins/server-and-hooks/#data-folder). A pure JavaScript or WebAssembly SQLite works in the sandbox; a native one needs `system`.
 
 ## How do I know who is using the plugin?
 

@@ -58,6 +58,7 @@ export type PermissionRisk = "strong" | "unsafe";
 const risks: Partial<Record<BasePermission, PermissionRisk>> = {
   "network:any": "strong",
   "network:local": "strong",
+  background: "strong",
   "network:direct": "unsafe",
   "fs:host": "unsafe",
   "process:spawn": "unsafe",

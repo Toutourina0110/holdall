@@ -35,12 +35,13 @@ beforeAll(async () => {
   db = await useTempDatabase("sandbox");
   await insertUser("alice");
   await insertUser("bob");
+  await insertUser("carol");
   secretPath = path.join(db.dataDir, "secret.txt");
   fs.writeFileSync(secretPath, "do not read");
 });
 
 afterAll(async () => {
-  (await import("./host")).stopAllPluginProcesses();
+  await (await import("./host")).stopAllPluginProcesses();
   await db.cleanup();
 });
 
@@ -237,6 +238,45 @@ export default function (holdall) {
     setPluginEnabledFor("bob", "com.test.bg", true);
     expect(await callPluginApi("storage.get", { key: "tick" }, { pluginId: "com.test.bg", userId: "bob" })).toBeNull();
     expect(await callPluginApi("storage.get", { key: "tick" }, { pluginId: "com.test.nobg", userId: "alice" })).toBeNull();
+  }, 30000);
+
+  it("gives server code a private data folder, and nothing outside it", async () => {
+    const { confirmInstall, stagePlugin, uninstallPlugin } = await import("./install");
+    const { setPluginEnabledFor } = await import("./store");
+    const { callPluginFunction, stopPluginProcess } = await import("./host");
+    const { deleteAccount } = await import("@/core/auth/accounts");
+    const server = `
+import fs from "node:fs";
+import path from "node:path";
+export default function (holdall) {
+  holdall.handle("save", ({ text, outside }, context) => {
+    fs.writeFileSync(path.join(holdall.userDir(context), "note.txt"), text);
+    fs.writeFileSync(path.join(holdall.sharedDir(), "count.txt"), "1");
+    let escaped = "blocked";
+    try { fs.writeFileSync(outside, "x"); escaped = "written"; } catch {}
+    return { mine: fs.readFileSync(path.join(holdall.userDir(context), "note.txt"), "utf8"), escaped };
+  });
+}
+`;
+    const staged = stagePlugin(archive({ ...base, id: "com.test.data", name: "Data", entry: { server: "server.mjs" } }, { "server.mjs": server }), {
+      source: "third-party",
+    });
+    confirmInstall(staged.stageId, [], "alice");
+    setPluginEnabledFor("alice", "com.test.data", true);
+    setPluginEnabledFor("carol", "com.test.data", true);
+    const outside = path.join(db.dataDir, "escape.txt");
+    expect(await callPluginFunction("com.test.data", "save", { text: "hi", outside }, "alice")).toEqual({ mine: "hi", escaped: "blocked" });
+    await callPluginFunction("com.test.data", "save", { text: "carol", outside }, "carol");
+    const root = path.join(db.dataDir, "plugin-data", "com.test.data");
+    expect(fs.readFileSync(path.join(root, "users", "alice", "note.txt"), "utf8")).toBe("hi");
+    expect(fs.existsSync(path.join(root, "shared", "count.txt"))).toBe(true);
+    expect(fs.existsSync(outside)).toBe(false);
+    deleteAccount("carol");
+    expect(fs.existsSync(path.join(root, "users", "carol"))).toBe(false);
+    expect(fs.existsSync(path.join(root, "users", "alice"))).toBe(true);
+    await stopPluginProcess("com.test.data");
+    uninstallPlugin("com.test.data");
+    expect(fs.existsSync(root)).toBe(false);
   }, 30000);
 
   it("signs plugin file links for one plugin and one person, for a limited time", async () => {
