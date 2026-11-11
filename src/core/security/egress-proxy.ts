@@ -33,6 +33,8 @@ function start(): Promise<string> {
     try {
       const target = new URL(request.url ?? "");
       if (target.protocol !== "http:") throw new Error("Only http is forwarded without CONNECT.");
+      if ((target.port || "80") !== "80") throw new Error("Only port 80 is forwarded without CONNECT.");
+      if (request.method !== "GET" && request.method !== "HEAD") throw new Error("Only GET and HEAD are forwarded.");
       const { address, family } = await publicAddress(target.hostname);
       const headers = { ...request.headers };
       delete headers["proxy-authorization"];
