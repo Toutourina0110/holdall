@@ -2,13 +2,13 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { requireAdmin } from "@/core/auth/session";
+import { requireAdmin, requireSession } from "@/core/auth/session";
 import { getEnv } from "@/core/env";
 import { UserFacingError } from "@/core/errors";
 import { stopPluginProcess } from "@/core/plugins/host";
 import { confirmInstall, discardStaged, stagePlugin, stagePluginFromUrl, uninstallPlugin } from "@/core/plugins/install";
 import { stageFromRegistry } from "@/core/plugins/registry";
-import { setPluginPermission } from "@/core/plugins/store";
+import { setPluginEnabledFor, setPluginPermission } from "@/core/plugins/store";
 
 export type StageState = { error?: string };
 
@@ -37,7 +37,7 @@ export async function stageUploadAction(_state: StageState, formData: FormData):
   } catch (error) {
     return { error: message(error) };
   }
-  redirect(`/admin/plugins/install/${stageId}`);
+  redirect(`/plugins/install/${stageId}`);
 }
 
 export async function confirmInstallAction(formData: FormData): Promise<void> {
@@ -48,13 +48,13 @@ export async function confirmInstallAction(formData: FormData): Promise<void> {
   const manifest = confirmInstall(stageId, optional, session.user.id);
   stopPluginProcess(manifest.id);
   revalidatePath("/", "layout");
-  redirect("/admin/plugins");
+  redirect("/plugins");
 }
 
 export async function cancelInstallAction(formData: FormData): Promise<void> {
   await requireAdmin();
   discardStaged(String(formData.get("stageId") ?? ""));
-  redirect("/admin/plugins");
+  redirect("/plugins");
 }
 
 export async function uninstallAction(pluginId: string): Promise<void> {
@@ -85,5 +85,12 @@ export async function stageFromStoreAction(id: string): Promise<StageState> {
   } catch (error) {
     return { error: message(error) };
   }
-  redirect(`/admin/plugins/install/${stageId}`);
+  redirect(`/plugins/install/${stageId}`);
+}
+
+export async function setPluginEnabledAction(pluginId: unknown, enabled: unknown): Promise<void> {
+  const session = await requireSession();
+  if (typeof pluginId !== "string" || typeof enabled !== "boolean") return;
+  setPluginEnabledFor(session.user.id, pluginId, enabled);
+  revalidatePath("/", "layout");
 }

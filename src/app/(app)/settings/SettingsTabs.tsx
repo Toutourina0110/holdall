@@ -12,7 +12,6 @@ export function SettingsTabs() {
     { href: "/settings", label: t.tabAccount },
     { href: "/settings/appearance", label: t.tabAppearance },
     { href: "/settings/layout", label: t.tabLayout },
-    { href: "/settings/plugins", label: t.tabPlugins },
   ];
   return (
     <nav className={styles.tabs} aria-label={t.title}>

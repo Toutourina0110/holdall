@@ -1,17 +1,18 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { requireAdmin } from "@/core/auth/session";
+import { requireSession } from "@/core/auth/session";
 import { UserFacingError } from "@/core/errors";
 import { satisfies } from "@/core/plugins/manifest";
 import { describePermission } from "@/core/plugins/permissions";
 import { loadRegistry } from "@/core/plugins/registry";
-import { listInstalledPlugins } from "@/core/plugins/store";
+import { isPluginEnabledFor, listInstalledPlugins } from "@/core/plugins/store";
 import { strings } from "@/core/strings";
 import { PageHeader } from "@/ui/PageHeader";
 import { InstalledPanel, InstallPanel, StorePanel, type StoreRow } from "./PluginAdmin";
-import styles from "../admin.module.css";
+import { PluginToggles } from "./PluginToggles";
+import styles from "../admin/admin.module.css";
 
-export const metadata: Metadata = { title: strings.plugins.adminTitle };
+export const metadata: Metadata = { title: strings.plugins.title };
 
 async function StoreSection({ installed }: { installed: Map<string, string> }) {
   let store: StoreRow[] = [];
@@ -36,9 +37,21 @@ async function StoreSection({ installed }: { installed: Map<string, string> }) {
   return <StorePanel entries={store} error={storeError} />;
 }
 
-export default async function AdminPluginsPage() {
-  await requireAdmin();
-  const plugins = listInstalledPlugins().map((item) => ({
+export default async function PluginsPage() {
+  const session = await requireSession();
+  const isAdmin = session.user.role === "admin";
+  const installed = listInstalledPlugins();
+  const toggles = installed.map((item) => ({
+    id: item.id,
+    name: item.manifest.name,
+    version: item.version,
+    author: item.manifest.author.name,
+    description: item.manifest.description,
+    source: item.source,
+    enabled: isPluginEnabledFor(session.user.id, item.id),
+    permissions: [...item.granted].map(describePermission),
+  }));
+  const managed = installed.map((item) => ({
     id: item.id,
     name: item.manifest.name,
     version: item.version,
@@ -54,12 +67,17 @@ export default async function AdminPluginsPage() {
   }));
   return (
     <div className={styles.page}>
-      <PageHeader title={strings.plugins.adminTitle} intro={strings.plugins.adminIntro} />
-      <Suspense fallback={<StorePanel entries={[]} loading />}>
-        <StoreSection installed={new Map(plugins.map((item) => [item.id, item.version]))} />
-      </Suspense>
-      <InstallPanel />
-      <InstalledPanel plugins={plugins} />
+      <PageHeader title={strings.plugins.title} intro={isAdmin ? strings.plugins.adminIntro : strings.plugins.intro} />
+      <PluginToggles plugins={toggles} isAdmin={isAdmin} />
+      {isAdmin && (
+        <>
+          <Suspense fallback={<StorePanel entries={[]} loading />}>
+            <StoreSection installed={new Map(installed.map((item) => [item.id, item.version]))} />
+          </Suspense>
+          <InstallPanel />
+          <InstalledPanel plugins={managed} />
+        </>
+      )}
     </div>
   );
 }

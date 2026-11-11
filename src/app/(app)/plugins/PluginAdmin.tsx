@@ -5,7 +5,7 @@ import { strings } from "@/core/strings";
 import { Button, Chip, Field, Notice } from "@/ui/controls";
 import { Panel, PanelEmpty, PanelForm, PanelRow } from "@/ui/Panel";
 import { stageFromStoreAction, stageUploadAction, togglePermissionAction, uninstallAction, type StageState } from "./actions";
-import styles from "../admin.module.css";
+import styles from "../admin/admin.module.css";
 
 export type AdminPluginRow = {
   id: string;

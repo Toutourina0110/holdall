@@ -1,6 +1,6 @@
 # Writing Holdall plugins
 
-A plugin is a `.zip` archive with a `holdall.plugin.json` manifest at its root. Holdall checks the archive, shows the permissions it asks for, and installs it only after an admin accepts. Each person then turns the plugin on for themselves in **Settings, Plugins**.
+A plugin is a `.zip` archive with a `holdall.plugin.json` manifest at its root. Holdall checks the archive, shows the permissions it asks for, and installs it only after an admin accepts. Each person then turns the plugin on for themselves on the **Plugins** page.
 
 A working example lives in `examples/plugins/hello-widget`.
 
@@ -207,7 +207,7 @@ To publish:
 
 1. Create a GitHub release in your own repository and attach the archive.
 2. Open a pull request on `holdall-registry` that adds your entry to `index.json`. The check downloads the archive and compares its checksum.
-3. Once merged, the plugin appears in **Admin, Plugins, Store** on every Holdall within 10 minutes.
+3. Once merged, the plugin appears in the **Store** section of the **Plugins** page on every Holdall within 10 minutes.
 
 When an admin installs from the store, Holdall downloads the archive, refuses it if the checksum or the id and version differ from the listing, and then shows the same consent screen as a manual install. Plugins without `official` show the third-party banner.
 

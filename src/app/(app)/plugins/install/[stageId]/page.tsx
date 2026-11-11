@@ -8,7 +8,7 @@ import { Button, Chip, Notice } from "@/ui/controls";
 import { PageHeader } from "@/ui/PageHeader";
 import { Panel, PanelForm, PanelRow } from "@/ui/Panel";
 import { cancelInstallAction, confirmInstallAction } from "../../actions";
-import styles from "../../../admin.module.css";
+import styles from "../../../admin/admin.module.css";
 import consent from "./consent.module.css";
 
 export const metadata: Metadata = { title: strings.plugins.consentTitle };

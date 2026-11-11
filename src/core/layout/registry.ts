@@ -28,7 +28,7 @@ export function registerSlotContributor(key: string, contributor: Contributor): 
 function coreItems(isAdmin: boolean): SlotItem[] {
   const items: SlotItem[] = [
     { id: "core.today", slot: "rail.main", label: "Today", icon: "today", href: "/", order: 0, source: "core" },
-    { id: "core.plugins", slot: "rail.system", label: "Plugins", icon: "plugins", href: "/settings/plugins", order: 80, source: "core" },
+    { id: "core.plugins", slot: "rail.system", label: "Plugins", icon: "plugins", href: "/plugins", order: 80, source: "core" },
     { id: "core.settings", slot: "rail.system", label: "Settings", icon: "settings", href: "/settings", order: 90, source: "core" },
   ];
   if (isAdmin) items.push({ id: "core.admin", slot: "rail.system", label: "Admin", icon: "admin", href: "/admin", order: 95, source: "core" });

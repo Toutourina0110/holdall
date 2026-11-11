@@ -22,16 +22,15 @@ function examplePluginZip(): Buffer {
 test("an admin installs the example plugin and its widget appears on Today", async ({ page }) => {
   await signIn(page);
 
-  await page.goto("/admin/plugins");
+  await page.goto("/plugins");
   await page.getByLabel("Plugin archive").setInputFiles({ name: "hello-widget.zip", mimeType: "application/zip", buffer: examplePluginZip() });
   await page.getByRole("button", { name: "Review the plugin" }).click();
   await expect(page.getByText("Third-party plugin. Not made, reviewed or endorsed by the Holdall team.")).toBeVisible();
   await expect(page.getByText("Keep its own private data on this server")).toBeVisible();
   await page.getByRole("button", { name: "Accept and install" }).click();
-  await page.waitForURL("/admin/plugins");
-  await expect(page.getByText("Hello widget")).toBeVisible();
+  await page.waitForURL("/plugins");
+  await expect(page.getByText("Hello widget").first()).toBeVisible();
 
-  await page.goto("/settings/plugins");
   await page.getByRole("button", { name: "On" }).click();
   await page.waitForTimeout(500);
 

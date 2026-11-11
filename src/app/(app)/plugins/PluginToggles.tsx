@@ -5,7 +5,7 @@ import { strings } from "@/core/strings";
 import { Chip, Segmented } from "@/ui/controls";
 import { Panel, PanelEmpty, PanelRow } from "@/ui/Panel";
 import { setPluginEnabledAction } from "./actions";
-import styles from "../settings.module.css";
+import styles from "../admin/admin.module.css";
 
 export type UserPluginRow = {
   id: string;
