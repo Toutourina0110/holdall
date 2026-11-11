@@ -40,13 +40,16 @@ export default function setup(holdall) {
 
 ## The sandbox
 
-The process is started with the Node permission model:
+By default the process is started with the Node permission model:
 
 - it can read the files of your plugin folder, and nothing else;
-- it cannot write files, start programs, open network connections, load native addons, or use `eval`;
-- it has 128 MB of memory.
+- it cannot write files, start programs, open network connections or load native addons;
+- it can use worker threads and WebAssembly;
+- it has 512 MB of memory.
 
 Everything else goes through `holdall` calls, checked against your permissions. Use `holdall.fetch` instead of `fetch`, and storage or `files.write` instead of the file system.
+
+Need more? The [dangerous permissions](/holdall/plugins/permissions/#dangerous-permissions) open the sandbox step by step: `network:direct` for your own network connections, `fs:host` for any file, `process:spawn` to start programs, `system` for no sandbox at all.
 
 :::note
 The Node permission model blocks what ordinary code can do. It is not a full security boundary against someone who finds a bug in Node itself, which is why admins review every plugin before installing it.

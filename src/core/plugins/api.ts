@@ -57,7 +57,7 @@ registerPluginApi("storage.delete", "storage", z.object({ key: storageKey }), ({
 
 registerPluginApi(
   "network.fetch",
-  "network",
+  null,
   z.object({
     url: z.url(),
     method: z.enum(["GET", "POST", "PUT", "PATCH", "DELETE"]).default("GET"),
@@ -66,13 +66,25 @@ registerPluginApi(
   }),
   async ({ url, method, headers, body }, context) => {
     const installed = getInstalledPlugin(context.pluginId)!;
+    const anyHost = installed.granted.has("network:any") || installed.granted.has("network:local");
+    const local = installed.granted.has("network:local");
+    if (!anyHost && !installed.granted.has("network")) throw new PluginPermissionError("The plugin was not granted the network permission.");
     const target = new URL(url);
-    if (target.protocol !== "https:") throw new PluginPermissionError("Plugins can only use https addresses.");
-    if (!installed.manifest.network.includes(target.hostname)) {
+    if (target.protocol !== "https:" && !(anyHost && target.protocol === "http:")) throw new PluginPermissionError("Plugins can only use https addresses.");
+    if (!anyHost && !installed.manifest.network.includes(target.hostname)) {
       throw new PluginPermissionError(`The plugin did not declare ${target.hostname} in its network list.`);
     }
     const forwarded = Object.fromEntries(Object.entries(headers ?? {}).filter(([name]) => !/^(cookie|host|authorization-holdall)$/i.test(name)));
-    const response = await safeFetch(target.toString(), { method, headers: forwarded, body, maxBytes: 2 * 1024 * 1024, timeoutMs: 15000 });
+    const response = await safeFetch(target.toString(), {
+      method,
+      headers: forwarded,
+      body,
+      maxBytes: anyHost ? 20 * 1024 * 1024 : 2 * 1024 * 1024,
+      timeoutMs: anyHost ? 60000 : 15000,
+      allowHttp: anyHost,
+      allowPrivate: local,
+      redirects: anyHost ? 5 : 0,
+    });
     return { status: response.status, headers: response.headers, body: response.body.toString("utf8") };
   },
 );

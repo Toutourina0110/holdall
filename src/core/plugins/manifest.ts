@@ -59,7 +59,8 @@ export const manifestSchema = z
   })
   .strict()
   .superRefine((manifest, ctx) => {
-    if (manifest.network.length > 0 && !manifest.permissions.includes("network") && !manifest.optionalPermissions.includes("network")) {
+    const all = [...manifest.permissions, ...manifest.optionalPermissions];
+    if (manifest.network.length > 0 && !["network", "network:any", "network:local"].some((permission) => all.includes(permission))) {
       ctx.addIssue({ code: "custom", message: "Declare the network permission to use network domains.", path: ["network"] });
     }
     for (const hook of manifest.contributes.hooks) {

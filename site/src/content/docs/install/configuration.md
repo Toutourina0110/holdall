@@ -41,6 +41,7 @@ openssl rand -base64 48
 | `DEMO_RESET_MINUTES` | `60` | Lifetime of a demo account, at least 5. |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | empty | Google Calendar sync. See [Calendar sync](/holdall/install/calendar-sync/). |
 | `MICROSOFT_CLIENT_ID`, `MICROSOFT_CLIENT_SECRET`, `MICROSOFT_TENANT_ID` | empty, empty, `common` | Outlook and Microsoft 365 sync. |
+| `ALLOW_UNSAFE_PLUGINS` | `false` on a server, `true` on the desktop app | Allow plugins with dangerous permissions (`system`, `fs:host`, `process:spawn`, `network:direct`). Such a plugin can read every account's data. See [Permissions](/holdall/plugins/permissions/#dangerous-permissions). |
 | `PLUGIN_REGISTRY_URL` | official registry | Address of the plugin store index, if you use a mirror. |
 | `MAX_CONCURRENT_JOBS` | `2` | Background jobs (downloads, conversions, sync) that run at the same time. |
 | `MAX_UPLOAD_MB` | `500` | Largest file a person can upload. |

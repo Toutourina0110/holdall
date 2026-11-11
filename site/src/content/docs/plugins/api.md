@@ -63,14 +63,14 @@ Permission `storage`. **Params** `{ key }`. **Returns** `true`.
 
 ### `network.fetch`
 
-Permission `network`. **Params** `{ url, method?, headers?, body? }`.
+Permission `network`, `network:any` or `network:local`. **Params** `{ url, method?, headers?, body? }`.
 
-- `url`: an `https` address whose host is listed in the manifest's `network`.
+- `url`: with `network`, an `https` address whose host is listed in the manifest's `network`. With `network:any`, any public `http` or `https` address. With `network:local`, private addresses too.
 - `method`: `GET` (default), `POST`, `PUT`, `PATCH` or `DELETE`.
 - `headers`: an object of strings. `Cookie` and `Host` are removed.
 - `body`: a string, up to 1 MB.
 
-**Returns** `{ status, headers, body }`, with `body` as text. Answers are limited to 2 MB and 15 seconds. Private and local network addresses are always refused, even if the host name points to one.
+**Returns** `{ status, headers, body }`, with `body` as text. With `network`, answers are limited to 2 MB and 15 seconds, redirects are not followed, and private addresses are refused even if a host name points to one. With `network:any` or `network:local`, answers can be 20 MB and 60 seconds, and up to 5 redirects are followed.
 
 ## Notes
 

@@ -23,10 +23,46 @@ The **Shown as** column is the sentence people read on the consent screen.
 | `notifications` | Show you notifications | `notifications.show` |
 | `storage` | Keep its own private data on this server | `storage.get`, `storage.set`, `storage.delete` |
 | `ui:slots` | Add elements to the interface | Widgets, a page, the `dashboard.widgets` hook |
+| `network:any` | Connect to any address on the internet | `network.fetch` to any public `http` or `https` address, without listing hosts |
+| `network:local` | Connect to any address, including devices on your local network | Same as `network:any`, plus private addresses like `192.168.1.10` |
+| `network:direct` | Open its own network connections to any address | Server code uses `fetch`, `WebSocket` or any network library directly |
+| `fs:host` | Read and change any file on this computer or server | Server code uses `fs` anywhere |
+| `process:spawn` | Start programs on this computer or server | Server code uses `child_process` |
+| `system` | Full access | Server code runs as plain Node, with no sandbox at all |
 | `ui:replace` | Replace elements of the interface | Nothing yet, see [Not available yet](/holdall/plugins/overview/#not-available-yet) |
 | `hooks:<name>` | The hook's description | Receiving that hook, see [Server code and hooks](/holdall/plugins/server-and-hooks/) |
 
 A hook also needs the permission of the data it carries: `hooks:notes.saved` is useless without `notes:read`.
+
+## Sensitive and dangerous permissions
+
+Some permissions are marked on the review screen:
+
+| Mark | Permissions | Why |
+|---|---|---|
+| **Sensitive** | `network:any`, `network:local` | The plugin can send what it reads anywhere, or reach the machines of the local network. |
+| **Dangerous** | `network:direct`, `fs:host`, `process:spawn`, `system` | The plugin leaves the sandbox: it can read every account's data, change any file, or run programs. |
+
+### Dangerous permissions
+
+Dangerous permissions only work where the admin allows them with `ALLOW_UNSAFE_PLUGINS=true`. It is on by default in the desktop app, where there is one person and one computer, and off by default on a server.
+
+When it is off:
+
+- a plugin that **requires** a dangerous permission is refused at install, with a message naming the setting;
+- a dangerous **optional** permission is shown unchecked and cannot be granted;
+- if the setting is turned off later, dangerous permissions already granted stop working at the next start of the plugin.
+
+With these permissions, server code gets:
+
+| Permission | Server code can |
+|---|---|
+| `network:direct` | Use `fetch`, `WebSocket`, `net` or any network library directly, to any address |
+| `fs:host` | Read and write any file the Holdall process can |
+| `process:spawn` | Start programs with `child_process`, with the system `PATH` |
+| `system` | Everything Node can do: no permission model, native addons, no memory cap |
+
+Prefer the narrowest one: `process:spawn` to run one tool, `network:direct` for a WebSocket library, `system` only when nothing else works.
 
 ## Required or optional
 
@@ -38,4 +74,4 @@ A hook also needs the permission of the data it carries: `hooks:notes.saved` is 
 
 - Ask for as little as possible. People are more likely to install a plugin that asks for two permissions than for ten.
 - Prefer `read` over `write` when you only display data.
-- Declare exactly the hosts you call in `network`. Holdall refuses any other host, plain `http`, and private network addresses.
+- Declare exactly the hosts you call in `network` when you can. With only `network`, Holdall refuses any other host, plain `http`, and private network addresses. Ask for `network:any` only if the hosts are chosen by the person (a feed reader, a webhook).

@@ -1,3 +1,5 @@
+import { getEnv } from "@/core/env";
+import { isUnsafePermission } from "./permissions";
 import { and, eq } from "drizzle-orm";
 import { getDb } from "@/core/db/client";
 import { plugin, pluginPermission, pluginStorage, userPlugin } from "@/core/db/schema";
@@ -63,6 +65,9 @@ export function setPluginPermission(pluginId: string, permission: string, grante
   if (!installed) throw new Error("This plugin is not installed.");
   if (!installed.manifest.optionalPermissions.includes(permission)) {
     throw new Error("Only optional permissions can be changed. Uninstall the plugin to remove a required one.");
+  }
+  if (granted && isUnsafePermission(permission) && !getEnv().allowUnsafePlugins) {
+    throw new Error("This permission can harm the server and is turned off here. Set ALLOW_UNSAFE_PLUGINS=true to allow it.");
   }
   getDb()
     .insert(pluginPermission)

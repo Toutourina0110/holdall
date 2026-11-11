@@ -6,6 +6,7 @@ import packageJson from "../../../package.json";
 import { getDb } from "@/core/db/client";
 import { plugin, pluginPermission } from "@/core/db/schema";
 import { getEnv } from "@/core/env";
+import { isUnsafePermission } from "./permissions";
 import { UserFacingError } from "@/core/errors";
 import { safeJoin } from "@/core/paths";
 import { safeFetch } from "@/core/security/safe-fetch";
@@ -40,6 +41,12 @@ export function stagePlugin(archive: Uint8Array, options: { expectedSha256?: str
   const { manifest, files, sha256 } = unpackPlugin(archive, options.expectedSha256);
   if (!satisfies(appVersion, manifest.holdall)) {
     throw new UserFacingError(`${manifest.name} needs Holdall ${manifest.holdall}. This Holdall is ${appVersion}.`);
+  }
+  const unsafe = manifest.permissions.filter(isUnsafePermission);
+  if (unsafe.length > 0 && !getEnv().allowUnsafePlugins) {
+    throw new UserFacingError(
+      `${manifest.name} needs ${unsafe.join(", ")}, which can harm this server. Plugins like this are turned off here. An admin can allow them by setting ALLOW_UNSAFE_PLUGINS=true.`,
+    );
   }
   for (const [dependency, range] of Object.entries(manifest.dependencies)) {
     const installed = getInstalledPlugin(dependency);
@@ -92,7 +99,9 @@ export function discardStaged(stageId: string): void {
 export function confirmInstall(stageId: string, grantedOptional: string[], installedBy: string): PluginManifest {
   const staged = readStaged(stageId);
   const { manifest } = staged;
-  const optional = new Set(grantedOptional.filter((permission) => manifest.optionalPermissions.includes(permission)));
+  const optional = new Set(
+    grantedOptional.filter((permission) => manifest.optionalPermissions.includes(permission) && (getEnv().allowUnsafePlugins || !isUnsafePermission(permission))),
+  );
   const target = installedDir(manifest.id);
   fs.rmSync(target, { recursive: true, force: true });
   fs.mkdirSync(path.dirname(target), { recursive: true });

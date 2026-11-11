@@ -14,6 +14,7 @@ export type Env = {
   maxUploadMb: number;
   pluginRegistryUrl: string;
   ytdlpAutoUpdate: boolean;
+  allowUnsafePlugins: boolean;
   googleClientId?: string;
   googleClientSecret?: string;
   microsoftClientId?: string;
@@ -48,6 +49,8 @@ const envSchema = z.object({
   MAX_UPLOAD_MB: z.coerce.number().int().min(1).default(500),
   PLUGIN_REGISTRY_URL: optional.pipe(z.url().optional()),
   YTDLP_AUTO_UPDATE: flag("true"),
+  HOLDALL_TARGET: z.string().optional(),
+  ALLOW_UNSAFE_PLUGINS: z.enum(["true", "false", "1", "0", ""]).optional(),
   GOOGLE_CLIENT_ID: optional,
   GOOGLE_CLIENT_SECRET: optional,
   MICROSOFT_CLIENT_ID: optional,
@@ -80,6 +83,7 @@ export function parseEnv(source: Record<string, string | undefined>, cwd: string
     maxUploadMb: data.MAX_UPLOAD_MB,
     pluginRegistryUrl: data.PLUGIN_REGISTRY_URL ?? defaultRegistryUrl,
     ytdlpAutoUpdate: data.YTDLP_AUTO_UPDATE,
+    allowUnsafePlugins: data.ALLOW_UNSAFE_PLUGINS ? data.ALLOW_UNSAFE_PLUGINS === "true" || data.ALLOW_UNSAFE_PLUGINS === "1" : data.HOLDALL_TARGET === "desktop",
     googleClientId: data.GOOGLE_CLIENT_ID,
     googleClientSecret: data.GOOGLE_CLIENT_SECRET,
     microsoftClientId: data.MICROSOFT_CLIENT_ID,

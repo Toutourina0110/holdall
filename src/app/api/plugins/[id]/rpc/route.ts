@@ -2,6 +2,7 @@ import { z } from "zod";
 import { apiSession, unauthorized } from "@/core/auth/session";
 import { getEnv } from "@/core/env";
 import { callPluginApi, PluginPermissionError } from "@/core/plugins/api";
+import { readLimitedText } from "@/core/security/read-body";
 
 const body = z.object({ method: z.string().max(80), params: z.unknown() });
 
@@ -10,7 +11,15 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   if (!session) return unauthorized();
   const origin = request.headers.get("origin");
   if (origin && origin !== new URL(getEnv().appUrl).origin) return Response.json({ error: "Cross-origin calls are not allowed." }, { status: 403 });
-  const parsed = body.safeParse(await request.json().catch(() => null));
+  const text = await readLimitedText(request, 8 * 1024 * 1024);
+  if (text === undefined) return Response.json({ error: "The call is larger than 8 MB." }, { status: 413 });
+  let json: unknown = null;
+  try {
+    json = JSON.parse(text);
+  } catch {
+    json = null;
+  }
+  const parsed = body.safeParse(json);
   if (!parsed.success) return Response.json({ error: "Send a method and params." }, { status: 400 });
   try {
     const result = await callPluginApi(parsed.data.method, parsed.data.params, { pluginId: (await params).id, userId: session.user.id });

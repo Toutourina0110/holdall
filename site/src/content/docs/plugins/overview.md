@@ -23,6 +23,7 @@ An admin installs it once for the whole server, after reviewing what it asks for
 | Notify the person | `notifications.show`, shown under the bell in the top bar | [API reference](/holdall/plugins/api/) |
 | React when something happens | Action hooks, in server code | [Server code and hooks](/holdall/plugins/server-and-hooks/) |
 | Change what Holdall shows | Filter hooks: export formats, event titles and colors, Today widgets | [Server code and hooks](/holdall/plugins/server-and-hooks/) |
+| Run programs, use any file, open raw connections | Dangerous permissions, where the admin allows them | [Permissions](/holdall/plugins/permissions/#dangerous-permissions) |
 | Restyle Holdall | A theme plugin | [Themes](/holdall/plugins/themes/) |
 
 ## Types
@@ -39,7 +40,7 @@ An admin installs it once for the whole server, after reviewing what it asks for
 ## How a plugin is kept safe
 
 - **Interface code** runs in a sandboxed iframe. It cannot read the session, the cookies or the Holdall page. It talks to Holdall only through messages.
-- **Server code** runs in its own Node process, which cannot read other files, write files, start programs or open network connections by itself.
+- **Server code** runs in its own Node process, which cannot read other files, write files, start programs or open network connections by itself, unless the plugin was granted a [dangerous permission](/holdall/plugins/permissions/#dangerous-permissions).
 - **Every call** is checked against the permissions the admin granted, and only reaches the data of the person using the plugin.
 - **Plugins outside the official registry** show a banner saying they are not reviewed by the Holdall team.
 

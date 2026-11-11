@@ -38,13 +38,13 @@ export type SafeResponse = { status: number; headers: Record<string, string>; bo
 
 export async function safeFetch(
   url: string,
-  options: { method?: string; headers?: Record<string, string>; body?: string; maxBytes?: number; timeoutMs?: number; allowHttp?: boolean; redirects?: number; manualRedirect?: boolean } = {},
+  options: { method?: string; headers?: Record<string, string>; body?: string; maxBytes?: number; timeoutMs?: number; allowHttp?: boolean; redirects?: number; manualRedirect?: boolean; allowPrivate?: boolean } = {},
 ): Promise<SafeResponse> {
   const target = new URL(url);
   if (target.protocol !== "https:" && !(options.allowHttp && target.protocol === "http:")) {
     throw new UserFacingError("Only https addresses are allowed.");
   }
-  if (net.isIP(target.hostname.replace(/^\[|\]$/g, "")) && isBlockedAddress(target.hostname.replace(/^\[|\]$/g, ""))) {
+  if (!options.allowPrivate && net.isIP(target.hostname.replace(/^\[|\]$/g, "")) && isBlockedAddress(target.hostname.replace(/^\[|\]$/g, ""))) {
     throw new UserFacingError(`${target.hostname} is a private or internal address.`);
   }
   const maxBytes = options.maxBytes ?? 2 * 1024 * 1024;
@@ -52,7 +52,7 @@ export async function safeFetch(
   const response = await new Promise<SafeResponse & { location?: string }>((resolve, reject) => {
     const request = client.request(
       target,
-      { method: options.method ?? "GET", headers: options.headers, lookup: guardedLookup, timeout: options.timeoutMs ?? 15000 },
+      { method: options.method ?? "GET", headers: options.headers, lookup: options.allowPrivate ? undefined : guardedLookup, timeout: options.timeoutMs ?? 15000 },
       (incoming) => {
         const declared = Number(incoming.headers["content-length"] ?? 0);
         if (declared > maxBytes) {

@@ -17,7 +17,11 @@ Yes. Use the player the site gives you (an `<iframe>` or its script). Fullscreen
 
 ## Can my server code use npm packages?
 
-Yes, if you bundle them into your server file. Packages that need native addons, write files, start programs or open network connections will not work in the sandbox.
+Yes, if you bundle them into your server file. Packages that need native addons, write files, start programs or open network connections need the matching [dangerous permission](/holdall/plugins/permissions/#dangerous-permissions).
+
+## Can a plugin really do anything?
+
+Almost. With `system`, its server code runs as plain Node with no sandbox, on servers where the admin allowed it. The only thing no plugin ever gets is the Holdall session of the person using it.
 
 ## Can my server code run on a timer?
 

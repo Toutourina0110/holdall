@@ -1,11 +1,13 @@
 import { spawn, type ChildProcess } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import path from "node:path";
+import { getEnv } from "@/core/env";
 import { createLogger } from "@/core/log";
 import { safeJoin } from "@/core/paths";
 import { callPluginApi } from "./api";
 import { installedDir } from "./install";
 import { pushToUser } from "./live";
+import { isUnsafePermission } from "./permissions";
 import { getInstalledPlugin, isPluginEnabledFor } from "./store";
 
 type Pending = { resolve(value: unknown): void; reject(error: Error): void; timer: ReturnType<typeof setTimeout> };
@@ -31,6 +33,28 @@ export function runnerPath(): string {
   return path.join(process.env.HOLDALL_ROOT ?? process.cwd(), "scripts", "plugin-runner.mjs");
 }
 
+export function nodeFlags(dir: string, runner: string, has: (permission: string) => boolean): string[] {
+  if (has("system")) return [];
+  return [
+    "--permission",
+    `--allow-fs-read=${dir}`,
+    `--allow-fs-read=${runner}`,
+    "--allow-worker",
+    "--allow-wasi",
+    "--max-old-space-size=512",
+    ...(has("fs:host") ? ["--allow-fs-read=*", "--allow-fs-write=*"] : []),
+    ...(has("process:spawn") ? ["--allow-child-process"] : []),
+    ...(has("network:direct") ? ["--allow-net"] : []),
+  ];
+}
+
+function hostEnv(): NodeJS.ProcessEnv {
+  const keep = ["PATH", "Path", "PATHEXT", "SystemRoot", "SYSTEMROOT", "WINDIR", "HOME", "USERPROFILE", "TEMP", "TMP", "LANG", "TZ"];
+  const env: NodeJS.ProcessEnv = { NODE_ENV: process.env.NODE_ENV ?? "production" };
+  for (const name of keep) if (process.env[name]) env[name] = process.env[name]!;
+  return env;
+}
+
 export function startPluginProcess(pluginId: string): PluginProcess | undefined {
   const existing = processes.get(pluginId);
   if (existing && existing.child.exitCode === null) return existing;
@@ -40,11 +64,14 @@ export function startPluginProcess(pluginId: string): PluginProcess | undefined 
   const dir = installedDir(pluginId);
   const entry = safeJoin(dir, serverEntry);
   const runner = runnerPath();
-  const child = spawn(
-    process.execPath,
-    ["--permission", `--allow-fs-read=${dir}`, `--allow-fs-read=${runner}`, "--max-old-space-size=128", "--disallow-code-generation-from-strings", runner, entry],
-    { cwd: dir, stdio: ["ignore", "pipe", "pipe", "ipc"], env: { NODE_ENV: process.env.NODE_ENV ?? "production" }, windowsHide: true },
-  );
+  const has = (permission: string) => installed.granted.has(permission) && (getEnv().allowUnsafePlugins || !isUnsafePermission(permission));
+  const env: NodeJS.ProcessEnv = has("system") || has("process:spawn") ? hostEnv() : { NODE_ENV: process.env.NODE_ENV ?? "production" };
+  const child: ChildProcess = spawn(process.execPath, [...nodeFlags(dir, runner, has), runner, entry], {
+    cwd: dir,
+    stdio: ["ignore", "pipe", "pipe", "ipc"],
+    env,
+    windowsHide: true,
+  });
   const proc: PluginProcess = { child, hooks: new Set(), functions: new Set(), pending: new Map(), calls: new Map(), sequence: 0, ready: Promise.resolve() };
   proc.ready = new Promise<void>((resolve, reject) => {
     const timer = setTimeout(() => reject(new Error(`${pluginId} did not start in time.`)), 10000);

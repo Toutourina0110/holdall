@@ -45,8 +45,9 @@ Plugins that do not come from the official registry show the banner **"Third-par
 
 ## How plugins are kept apart
 
-- A plugin's interface runs in a sandboxed frame: it cannot read your session, your cookies or the Holdall page.
+- A plugin's interface runs in a sandboxed frame: it cannot read your session, your cookies or the Holdall page. It can load content from any website and send data to it, so anything the plugin can read could leave the server. The review screen says so.
 - A plugin's server code runs in its own process, which cannot read other files, start programs or open network connections by itself.
 - Every request a plugin makes is checked against the permissions you granted, and only reaches the data of the person using it.
+- **Dangerous** permissions (full access, any file, starting programs, raw network) leave that sandbox: such a plugin can read every account's data. On a server they are refused unless the admin sets `ALLOW_UNSAFE_PLUGINS=true`. The desktop app allows them, since it has one person and one computer.
 
 Read [Write plugins](/holdall/plugins/overview/) for the details.

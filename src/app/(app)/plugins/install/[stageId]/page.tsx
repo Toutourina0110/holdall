@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { requireAdmin } from "@/core/auth/session";
 import { UserFacingError } from "@/core/errors";
 import { readStaged } from "@/core/plugins/install";
-import { describePermission } from "@/core/plugins/permissions";
+import { describePermission, isUnsafePermission, permissionRisk } from "@/core/plugins/permissions";
+import { getEnv } from "@/core/env";
 import { strings } from "@/core/strings";
 import { Button, Chip, Notice } from "@/ui/controls";
 import { PageHeader } from "@/ui/PageHeader";
@@ -31,6 +32,15 @@ export default async function ConsentPage({ params }: { params: Promise<{ stageI
   const { manifest, previous } = staged;
   const known = new Set(previous?.granted ?? []);
   const isNew = (permission: string) => Boolean(previous) && !known.has(permission);
+  const unsafeAllowed = getEnv().allowUnsafePlugins;
+  const all = [...manifest.permissions, ...manifest.optionalPermissions];
+  const hasInterface = Boolean(manifest.entry.ui || manifest.contributes.page || manifest.contributes.widgets.length > 0);
+  const readsData = all.some((permission) => /:read$/.test(permission) || permission === "storage");
+  const riskChip = (permission: string) => {
+    const risk = permissionRisk(permission);
+    if (!risk) return null;
+    return <Chip icon="alert">{risk === "unsafe" ? t.riskUnsafe : t.riskStrong}</Chip>;
+  };
   return (
     <div className={styles.page}>
       <PageHeader title={`${t.consentTitle}: ${manifest.name}`} intro={manifest.description} />
@@ -39,6 +49,8 @@ export default async function ConsentPage({ params }: { params: Promise<{ stageI
           <strong>{t.thirdPartyBanner}</strong>
         </div>
       )}
+      {all.some((permission) => isUnsafePermission(permission)) && <Notice tone="error">{t.unsafeNotice}</Notice>}
+      {hasInterface && readsData && <Notice tone="warn">{t.interfaceNotice}</Notice>}
       <form>
         <input type="hidden" name="stageId" value={stageId} />
         <Panel title={t.aboutTitle}>
@@ -71,19 +83,28 @@ export default async function ConsentPage({ params }: { params: Promise<{ stageI
                 </span>
               </label>
               {isNew(permission) && <Chip>{t.newPermission}</Chip>}
+              {riskChip(permission)}
               <Chip>{t.required}</Chip>
             </PanelRow>
           ))}
           {manifest.optionalPermissions.map((permission) => (
             <PanelRow key={permission}>
               <label className={consent.permission}>
-                <input type="checkbox" name="optional" value={permission} defaultChecked />
+                <input
+                  type="checkbox"
+                  name="optional"
+                  value={permission}
+                  defaultChecked={!permissionRisk(permission)}
+                  disabled={isUnsafePermission(permission) && !unsafeAllowed}
+                />
                 <span>
                   <span className={styles.strong}>{describePermission(permission)}</span>
                   <span className={consent.id}>{permission}</span>
+                  {isUnsafePermission(permission) && !unsafeAllowed && <span className={consent.id}>{t.unsafeBlocked}</span>}
                 </span>
               </label>
               {isNew(permission) && <Chip>{t.newPermission}</Chip>}
+              {riskChip(permission)}
               <Chip>{t.optional}</Chip>
             </PanelRow>
           ))}

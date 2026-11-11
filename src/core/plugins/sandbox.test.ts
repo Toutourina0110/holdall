@@ -154,6 +154,52 @@ export default function (holdall) {
     stopBob();
   }, 30000);
 
+  it("refuses dangerous permissions unless the server allows them, and maps the others to Node flags", async () => {
+    const { confirmInstall, stagePlugin } = await import("./install");
+    const { getInstalledPlugin, setPluginPermission } = await import("./store");
+    const { nodeFlags } = await import("./host");
+    const { getEnv } = await import("@/core/env");
+    expect(getEnv().allowUnsafePlugins).toBe(false);
+    expect(() =>
+      stagePlugin(archive({ ...base, id: "com.test.root", name: "Root", permissions: ["system"], entry: { server: "s.mjs" } }, { "s.mjs": "export default () => {}" }), {
+        source: "third-party",
+      }),
+    ).toThrow(/ALLOW_UNSAFE_PLUGINS/);
+    const staged = stagePlugin(
+      archive({ ...base, id: "com.test.maybe", name: "Maybe", optionalPermissions: ["fs:host", "network:any"], entry: { server: "s.mjs" } }, { "s.mjs": "export default () => {}" }),
+      { source: "third-party" },
+    );
+    confirmInstall(staged.stageId, ["fs:host", "network:any"], "alice");
+    const granted = getInstalledPlugin("com.test.maybe")!.granted;
+    expect(granted.has("fs:host")).toBe(false);
+    expect(granted.has("network:any")).toBe(true);
+    expect(() => setPluginPermission("com.test.maybe", "fs:host", true)).toThrow(/ALLOW_UNSAFE_PLUGINS/);
+
+    const flags = (permissions: string[]) => nodeFlags("/plugin", "/runner.mjs", (permission) => permissions.includes(permission));
+    expect(flags(["system"])).toEqual([]);
+    expect(flags([])).toContain("--permission");
+    expect(flags([])).not.toContain("--allow-net");
+    expect(flags(["network:direct"])).toContain("--allow-net");
+    expect(flags(["process:spawn"])).toContain("--allow-child-process");
+    expect(flags(["fs:host"])).toEqual(expect.arrayContaining(["--allow-fs-read=*", "--allow-fs-write=*"]));
+  });
+
+  it("keeps network.fetch to declared https hosts unless broader network permissions were granted", async () => {
+    const { confirmInstall, stagePlugin } = await import("./install");
+    const { setPluginEnabledFor } = await import("./store");
+    const { callPluginApi } = await import("./api");
+    const staged = stagePlugin(
+      archive({ ...base, id: "com.test.net", name: "Net", permissions: ["network"], network: ["api.example.com"], entry: { ui: "u.html" } }, { "u.html": "x" }),
+      { source: "third-party" },
+    );
+    confirmInstall(staged.stageId, [], "alice");
+    setPluginEnabledFor("alice", "com.test.net", true);
+    const context = { pluginId: "com.test.net", userId: "alice" };
+    await expect(callPluginApi("network.fetch", { url: "https://other.example.com/" }, context)).rejects.toThrow(/did not declare/);
+    await expect(callPluginApi("network.fetch", { url: "http://api.example.com/" }, context)).rejects.toThrow(/https/);
+    await expect(callPluginApi("network.fetch", { url: "https://x/" }, { pluginId: "com.test.notes", userId: "alice" })).rejects.toThrow(/network/);
+  });
+
   it("signs plugin file links for one plugin and one person, for a limited time", async () => {
     const { signAssetToken, verifyAssetToken } = await import("./asset-token");
     const token = signAssetToken("com.test.live", "alice", 1000);

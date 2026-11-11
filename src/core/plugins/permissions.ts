@@ -10,6 +10,12 @@ export const permissionCatalog = {
   "downloads:read": "See your downloads",
   "downloads:create": "Start downloads for you",
   network: "Connect to the internet addresses listed below",
+  "network:any": "Connect to any address on the internet",
+  "network:local": "Connect to any address, including devices on your local network like a router, a NAS or a smart home hub",
+  "network:direct": "Open its own network connections to any address, including your local network",
+  "fs:host": "Read and change any file on this computer or server",
+  "process:spawn": "Start programs on this computer or server",
+  system: "Full access: do anything Holdall itself can do, including reading the data of every account",
   notifications: "Show you notifications",
   storage: "Keep its own private data on this server",
   "ui:slots": "Add elements to the interface",
@@ -44,4 +50,23 @@ export function describePermission(value: string): string {
     if (hook) return `${hook.description} (${value.slice("hooks:".length)})`;
   }
   return value;
+}
+
+export type PermissionRisk = "strong" | "unsafe";
+
+const risks: Partial<Record<BasePermission, PermissionRisk>> = {
+  "network:any": "strong",
+  "network:local": "strong",
+  "network:direct": "unsafe",
+  "fs:host": "unsafe",
+  "process:spawn": "unsafe",
+  system: "unsafe",
+};
+
+export function permissionRisk(value: string): PermissionRisk | undefined {
+  return risks[value as BasePermission];
+}
+
+export function isUnsafePermission(value: string): boolean {
+  return permissionRisk(value) === "unsafe";
 }

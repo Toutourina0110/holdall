@@ -3,6 +3,7 @@ import { apiSession, unauthorized } from "@/core/auth/session";
 import { getEnv } from "@/core/env";
 import { callPluginFunction, PluginCallError } from "@/core/plugins/host";
 import { getInstalledPlugin, isPluginEnabledFor } from "@/core/plugins/store";
+import { readLimitedText } from "@/core/security/read-body";
 
 const body = z.object({ name: z.string().regex(/^[A-Za-z0-9_.:-]{1,80}$/), args: z.unknown() });
 
@@ -16,8 +17,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   if (!installed?.manifest.entry.server || !isPluginEnabledFor(session.user.id, id)) {
     return Response.json({ error: "This plugin is not available for your account." }, { status: 404 });
   }
-  const text = await request.text();
-  if (text.length > 1024 * 1024) return Response.json({ error: "The call is larger than 1 MB." }, { status: 413 });
+  const text = await readLimitedText(request, 1024 * 1024);
+  if (text === undefined) return Response.json({ error: "The call is larger than 1 MB." }, { status: 413 });
   let parsed;
   try {
     parsed = body.safeParse(JSON.parse(text));
