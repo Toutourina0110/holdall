@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<style>
+  body { margin: 0; padding: 16px; font-family: "IBM Plex Sans", sans-serif; font-size: 14px; background: var(--color-surface, #fff); color: var(--color-text, #1b2833); }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { padding: 8px 0; border-bottom: 1px solid var(--color-line, #d5dde3); text-align: left; }
+  td:last-child, th:last-child { text-align: right; font-variant-numeric: tabular-nums; }
+  th { color: var(--color-muted, #55616b); font-weight: 600; }
+  p { color: var(--color-muted, #55616b); }
+</style>
+</head>
+<body>
+<table>
+  <thead><tr><th>Day</th><th>Words</th></tr></thead>
+  <tbody id="rows"></tbody>
+</table>
+<p id="empty" hidden>Nothing yet. Edit a note, then come back.</p>
+<script>
+  let next = 0;
+  const waiting = new Map();
+  addEventListener("message", (event) => {
+    const data = event.data;
+    if (event.source !== parent || !data || data.type !== "holdall:response") return;
+    const call = waiting.get(data.id);
+    if (!call) return;
+    waiting.delete(data.id);
+    data.error ? call.reject(new Error(data.error)) : call.resolve(data.result);
+  });
+  function holdall(method, params) {
+    const id = ++next;
+    return new Promise((resolve, reject) => {
+      waiting.set(id, { resolve, reject });
+      parent.postMessage({ type: "holdall:request", id, method, params }, "*");
+    });
+  }
+  (async () => {
+    const tokens = await holdall("theme.tokens");
+    for (const [name, value] of Object.entries(tokens)) document.documentElement.style.setProperty(name, value);
+    const days = (await holdall("storage.get", { key: "days" })) || [];
+    document.getElementById("empty").hidden = days.length > 0;
+    for (const day of days) {
+      const value = await holdall("storage.get", { key: "day:" + day });
+      const total = value ? Object.values(value.notes).reduce((sum, words) => sum + words, 0) : 0;
+      const row = document.createElement("tr");
+      const dayCell = document.createElement("td");
+      const wordCell = document.createElement("td");
+      dayCell.textContent = day;
+      wordCell.textContent = total.toLocaleString("en-GB");
+      row.append(dayCell, wordCell);
+      document.getElementById("rows").append(row);
+    }
+  })().catch((error) => {
+    const empty = document.getElementById("empty");
+    empty.hidden = false;
+    empty.textContent = error.message;
+  });
+</script>
+</body>
+</html>

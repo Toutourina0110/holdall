@@ -42,6 +42,20 @@
       "archive": "https://github.com/Toutourina0110/holdall-registry/releases/download/paper-theme-1.0.0/io.github.toutourina0110.paper-theme-1.0.0.zip",
       "sha256": "2cbbcdb53f3137190910823f30ea4bd92e55314b785660557af28664bab139ae",
       "official": true
+    },
+    {
+      "id": "io.github.toutourina0110.word-count",
+      "name": "Word count",
+      "version": "1.0.0",
+      "type": "extension",
+      "description": "Tutorial plugin: counts the words in the notes you edit each day, with a Today widget, a page and a notification when you reach your goal.",
+      "author": {
+        "name": "Holdall",
+        "url": "https://github.com/Toutourina0110/holdall"
+      },
+      "archive": "https://github.com/Toutourina0110/holdall-registry/releases/download/word-count-1.0.0/io.github.toutourina0110.word-count-1.0.0.zip",
+      "sha256": "3a51f2ea3e8a038f5d33bff6ccb461c2f6f694af402fdf4541daa5095d65093d",
+      "official": true
     }
   ]
 }

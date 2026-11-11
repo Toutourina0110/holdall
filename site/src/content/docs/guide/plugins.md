@@ -9,6 +9,10 @@ Plugins add pages, widgets on **Today**, reactions to events (for example when a
 
 **On your account** lists every plugin installed on this Holdall. Use **On** and **Off** to choose which ones you use. Each row shows what the plugin is allowed to do. A plugin you turn off does nothing for your account.
 
+## Notifications
+
+Plugins with the **Show you notifications** permission can send you messages. The bell in the top bar shows how many are unread. Open it to read them, **Mark all as read**, delete one, or **Clear all**. Holdall keeps your last 100.
+
 ## Install a plugin (admins)
 
 Admins see three more sections on the same page.

@@ -120,6 +120,29 @@ describe("plugin sandbox", () => {
     expect(listNotifications("bob")).toHaveLength(0);
   });
 
+  it("runs the tutorial plugin from the documentation", async () => {
+    await import("@/modules/notes/register");
+    const { confirmInstall, stagePlugin } = await import("./install");
+    const { setPluginEnabledFor } = await import("./store");
+    const { callPluginApi } = await import("./api");
+    const { doAction } = await import("./hooks");
+    const { createNote } = await import("@/modules/notes/store");
+    const { listNotifications } = await import("@/core/notifications/store");
+    const root = path.join(process.cwd(), "examples", "plugins", "word-count");
+    const files: Record<string, string> = {};
+    for (const name of ["server.mjs", "ui/widget.html", "ui/page.html"]) files[name] = fs.readFileSync(path.join(root, name), "utf8");
+    const manifest = JSON.parse(fs.readFileSync(path.join(root, "holdall.plugin.json"), "utf8"));
+    const staged = stagePlugin(archive(manifest, files), { source: "third-party" });
+    confirmInstall(staged.stageId, ["notifications"], "alice");
+    setPluginEnabledFor("alice", manifest.id, true);
+    const note = createNote("alice", { title: "Draft", content: Array.from({ length: 520 }, () => "word").join(" ") });
+    await doAction("notes.saved", { id: note.id, title: note.title }, { userId: "alice" });
+    const today = new Date().toISOString().slice(0, 10);
+    const day = (await callPluginApi("storage.get", { key: `day:${today}` }, { pluginId: manifest.id, userId: "alice" })) as { notes: Record<string, number> };
+    expect(day.notes[note.id]).toBe(520);
+    expect(listNotifications("alice").some((row) => row.title === "You wrote 520 words today")).toBe(true);
+  }, 30000);
+
   it("only accepts filter answers that keep to what Holdall offered", async () => {
     const { confirmInstall, stagePlugin } = await import("./install");
     const { setPluginEnabledFor } = await import("./store");

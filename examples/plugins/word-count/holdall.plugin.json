@@ -1,0 +1,18 @@
+{
+  "id": "io.github.toutourina0110.word-count",
+  "name": "Word count",
+  "version": "1.0.0",
+  "type": "extension",
+  "description": "Tutorial plugin: counts the words in the notes you edit each day, with a Today widget, a page and a notification when you reach your goal.",
+  "author": { "name": "Holdall", "url": "https://github.com/Toutourina0110/holdall" },
+  "license": "AGPL-3.0-or-later",
+  "holdall": ">=0.0.1",
+  "permissions": ["ui:slots", "storage", "notes:read", "hooks:notes.saved"],
+  "optionalPermissions": ["notifications"],
+  "entry": { "server": "server.mjs", "ui": "ui/page.html" },
+  "contributes": {
+    "hooks": ["notes.saved"],
+    "widgets": [{ "id": "today", "title": "Words today", "entry": "ui/widget.html", "width": 1 }],
+    "page": { "title": "Word count", "entry": "ui/page.html" }
+  }
+}

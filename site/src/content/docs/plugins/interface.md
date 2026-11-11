@@ -1,23 +1,42 @@
 ---
 title: Interface code
-description: Pages and widgets in a sandboxed iframe, and the methods they can call.
+description: Widgets and pages in a sandboxed iframe, how they talk to Holdall, and how to match the theme.
 ---
 
-Pages and widgets are HTML files shown in a sandboxed iframe (`sandbox="allow-scripts"`, no same origin). They cannot read cookies, the session or the Holdall page.
+Widgets and pages are HTML files from your archive, shown in an iframe with `sandbox="allow-scripts"` and no same origin.
 
-Keep each file self-contained: inline its scripts and styles, because requests made from inside the sandbox carry no session and cannot load other files from Holdall.
+## What the sandbox allows
+
+| Allowed | Not allowed |
+|---|---|
+| Running your inline scripts and styles | Reading the Holdall session, cookies or page |
+| Calling Holdall through `postMessage` | Loading other files from Holdall (requests carry no session) |
+| Drawing anything inside your frame | Opening pop-ups, submitting forms to other sites, top navigation |
+
+So: **keep each HTML file self-contained.** Inline your scripts and styles, or bundle them into the file (see [Tooling](/holdall/plugins/tooling/#bundle-your-interface)). Images can be inline SVG or `data:` URLs.
+
+To reach the internet, ask Holdall: call `network.fetch` (with the `network` permission) instead of `fetch()`.
 
 ## Talk to Holdall
 
-Use `postMessage`. The [SDK](/holdall/plugins/sdk/) wraps this for you; without it:
+Send a request with `parent.postMessage` and wait for the answer with the same `id`:
+
+| Direction | Message |
+|---|---|
+| Plugin to Holdall | `{ type: "holdall:request", id, method, params }` |
+| Holdall to plugin, success | `{ type: "holdall:response", id, result }` |
+| Holdall to plugin, failure | `{ type: "holdall:response", id, error }` (a sentence you can show) |
+
+A minimal client:
 
 ```js
 let next = 0;
 const waiting = new Map();
 addEventListener("message", (event) => {
   const data = event.data;
-  if (data?.type !== "holdall:response") return;
+  if (event.source !== parent || !data || data.type !== "holdall:response") return;
   const call = waiting.get(data.id);
+  if (!call) return;
   waiting.delete(data.id);
   data.error ? call.reject(new Error(data.error)) : call.resolve(data.result);
 });
@@ -30,28 +49,45 @@ function holdall(method, params) {
 }
 ```
 
-## Methods
+Always check `event.source === parent`: other frames could send you messages too. The [SDK's `createClient()`](/holdall/plugins/tooling/#the-sdk) does all of this, with types and a 15 second timeout.
 
-| Method | Permission | Parameters | Returns |
-|---|---|---|---|
-| `theme.tokens` | none | none | The current theme colors and sizes, as CSS variables |
-| `storage.get` | `storage` | `{ key }` | The stored value or `null` |
-| `storage.set` | `storage` | `{ key, value }` | `true` (256 KB per value) |
-| `storage.delete` | `storage` | `{ key }` | `true` |
-| `network.fetch` | `network` | `{ url, method, headers, body }` | `{ status, headers, body }` (2 MB, https, listed hosts, no private addresses) |
-| `notes.list` | `notes:read` | `{ query? }` | Note summaries |
-| `notes.get` | `notes:read` | `{ id }` | A note with its Markdown |
-| `notes.create` | `notes:write` | `{ title, folder?, content? }` | The new note summary |
-| `notes.update` | `notes:write` | `{ id, title?, content? }` | The note summary |
-| `tasks.list` | `tasks:read` | `{ view, today }` | Tasks |
-| `tasks.create` | `tasks:write` | task fields | The new task |
-| `tasks.complete` | `tasks:write` | `{ id, done }` | The task |
-| `downloads.list` | `downloads:read` | none | Downloads and their status |
-| `calendar.list` | `calendar:read` | `{ from, to }` (ISO dates) | Events in that period |
-| `calendar.create` | `calendar:write` | `{ title, start, end, allDay?, location?, description? }` | `{ id }` of the event, added to the Holdall calendar |
-
-Calls run as the person looking at the page and only reach that person's data.
+Every method of the [API reference](/holdall/plugins/api/) is available, with the person looking at the page as the user.
 
 ## Match the theme
 
-Call `theme.tokens` and set the returned CSS variables on your document, so your page follows the person's light, dark or custom theme. The SDK's `applyTheme` does it in one line.
+`theme.tokens` returns the person's current theme as CSS variables. Apply them, then use them in your CSS:
+
+```js
+const tokens = await holdall("theme.tokens");
+for (const [name, value] of Object.entries(tokens)) document.documentElement.style.setProperty(name, value);
+```
+
+```css
+body { background: var(--color-surface); color: var(--color-text); }
+```
+
+Tokens you receive:
+
+| Group | Tokens |
+|---|---|
+| Backgrounds | `--color-ground`, `--color-surface`, `--color-raised` |
+| Text | `--color-ink` (headings), `--color-text`, `--color-muted` |
+| Lines | `--color-line`, `--color-line-strong` |
+| Accent | `--color-accent`, `--color-accent-fill`, `--color-accent-soft`, `--color-accent-text`, `--color-on-accent` |
+| Status | `--color-done`, `--color-late`, `--color-warn` |
+| Shapes | `--radius-control`, `--radius-panel` |
+| Spacing | `--space-2`, `--space-3`, `--space-4` |
+| Text sizes | `--text-ui`, `--text-sm` |
+
+The theme is read when your frame loads. Holdall's font is IBM Plex Sans; use `font-family: "IBM Plex Sans", sans-serif` and it falls back cleanly when the font is not available.
+
+## Sizes
+
+- **Widgets** are at least 220 px tall and 1, 2 or 3 grid columns wide (`width` in the manifest). On a phone they take the full width.
+- **Pages** fill the content area, below Holdall's own title and your plugin description.
+
+Design for 375 px wide first: many people open Holdall on a phone.
+
+## Show errors
+
+Calls can fail: a permission was refused, the network is down, the person turned the plugin off. Catch every call and show the error message in your frame; Holdall's messages are written to be shown as they are.

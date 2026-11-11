@@ -1,45 +1,136 @@
 ---
 title: Server code and hooks
-description: Server code in its own Node process, and the hooks it can listen to.
+description: Server code in its own Node process, the holdall object, and every hook with its payload.
 ---
 
-`entry.server` is an ES module whose default export receives a `holdall` object:
+Server code reacts to what happens in Holdall: a note saved, a task completed, an export asked for. It is an ES module named in `entry.server`, whose default export receives a `holdall` object:
 
 ```js
-export default function (holdall) {
-  holdall.on("notes.saved", async (payload, context) => {
-    const count = ((await holdall.storage.get("saves", context)) ?? 0) + 1;
-    await holdall.storage.set("saves", count, context);
+export default function setup(holdall) {
+  holdall.on("tasks.completed", async ({ title }, context) => {
+    await holdall.storage.set("last-done", title, context);
   });
 }
 ```
 
-## Sandbox
+## The `holdall` object
 
-Server code runs in its own Node process, started with the Node permission model:
+| Member | Use |
+|---|---|
+| `holdall.on(hook, handler)` | Listen to a hook. `handler(payload, context)` may be `async`. |
+| `holdall.api(method, params, context)` | Call any method of the [API reference](/holdall/plugins/api/). |
+| `holdall.storage.get(key, context)` | Shortcut for `storage.get`. |
+| `holdall.storage.set(key, value, context)` | Shortcut for `storage.set`. |
+| `holdall.storage.delete(key, context)` | Shortcut for `storage.delete`. |
+| `holdall.fetch(url, init, context)` | Shortcut for `network.fetch`. `init` is `{ method, headers, body }` or `undefined`. |
+| `holdall.log(message)` | Write a line to the Holdall log, prefixed with your plugin id. |
 
-- it can read its own folder only;
-- it cannot write files, start programs, open network connections or load native addons;
-- it is limited to 128 MB of memory.
+`context` is `{ userId, callId }`. Pass it, unchanged, as the last argument of every call: it tells Holdall which person the call is for.
 
-Everything goes through `holdall` calls, checked against the granted permissions. API calls are only accepted while Holdall is calling one of your hooks, and always act for the person of that call: pass `context` as the last argument.
+## When your code runs
+
+- Holdall starts your process the first time one of your hooks is needed, and keeps it running.
+- Your default export runs once at start. Register your hooks there with `holdall.on`.
+- **API calls are only accepted while Holdall is calling one of your handlers.** A call made at start, in a timer or after your handler returned fails with *API calls are only allowed while Holdall is calling the plugin.* This guarantees a plugin only acts when something happens for a real person.
+- Each handler has **5 seconds** to answer (15 seconds for `notes.export.render`). After that, Holdall stops waiting and logs it.
+- If your process crashes, Holdall starts it again at the next hook.
+- Installing a new version stops the old process; the next hook starts the new one.
+
+## The sandbox
+
+The process is started with the Node permission model:
+
+- it can read the files of your plugin folder, and nothing else;
+- it cannot write files, start programs, open network connections, load native addons, or use `eval`;
+- it has 128 MB of memory.
+
+Everything else goes through `holdall` calls, checked against your permissions. Use `holdall.fetch` instead of `fetch`, and storage or `files.write` instead of the file system.
 
 :::note
-The Node permission model limits what ordinary code can do. It is not a full security boundary against a determined attacker who finds a bug in Node itself. Admins should only install plugins they trust.
+The Node permission model blocks what ordinary code can do. It is not a full security boundary against someone who finds a bug in Node itself, which is why admins review every plugin before installing it.
 :::
 
 ## Hooks
 
-| Hook | Kind | Payload | Permission |
+List every hook you use in `contributes.hooks`, and add its `hooks:<name>` permission and the permission of its data.
+
+| Hook | Kind | Needs | When |
 |---|---|---|---|
-| `notes.saved` | action | `{ id, title }` | `notes:read` |
-| `notes.deleted` | action | `{ id }` | `notes:read` |
-| `notes.export.formats` | filter | list of formats | `notes:read` |
-| `tasks.completed` | action | `{ id, title }` | `tasks:read` |
-| `download.finished` | action | `{ id, file, title }` | `downloads:read` |
-| `calendar.event.render` | filter | event | `calendar:read` |
-| `dashboard.widgets` | filter | widget list | `ui:slots` |
+| `notes.saved` | action | `notes:read` | A note was saved |
+| `notes.deleted` | action | `notes:read` | A note was moved to the trash |
+| `tasks.completed` | action | `tasks:read` | A task was marked as done |
+| `download.finished` | action | `downloads:read` | A download finished |
+| `notes.export.formats` | filter | `notes:read` | Holdall shows the export buttons of a note |
+| `notes.export.render` | filter | `notes:read` | Someone exports a note in one of your formats |
+| `calendar.event.render` | filter | `calendar:read` | The calendar loads events to show |
+| `dashboard.widgets` | filter | `ui:slots` | Holdall builds the Today page |
 
-An **action** is a notification; its return value is ignored. A **filter** receives a value and returns the changed value; an invalid answer is ignored. Each call times out after 5 seconds.
+## Actions
 
-List each hook in `contributes.hooks` and add the matching `hooks:<name>` permission.
+An action tells you something happened. Your return value is ignored; errors are logged and never shown to the person.
+
+| Hook | Payload |
+|---|---|
+| `notes.saved` | `{ id, title }` |
+| `notes.deleted` | `{ id }` |
+| `tasks.completed` | `{ id, title }` |
+| `download.finished` | `{ id, file, title }`, with `file` the path in the **Downloads** folder |
+
+Example: save every finished download's title in a list.
+
+```js
+holdall.on("download.finished", async ({ title }, context) => {
+  const list = (await holdall.storage.get("titles", context)) ?? [];
+  await holdall.storage.set("titles", [title, ...list].slice(0, 50), context);
+});
+```
+
+## Filters
+
+A filter receives a value and returns it, changed. Holdall checks your answer: if it is not valid, it is ignored and Holdall keeps the value it had, so a broken plugin never breaks a page. When several plugins use the same filter, they run one after the other.
+
+### `notes.export.formats` and `notes.export.render`
+
+Add your own export formats to notes. They appear as buttons next to **Export** on each note.
+
+`notes.export.formats` receives a list and returns it with your formats added. Each format is `{ id, label, extension }`: `id` in lower case letters, digits and dashes, `label` up to 40 characters, `extension` without the dot. Up to 5 formats per plugin.
+
+`notes.export.render` receives `{ format, note: { id, title, content } }` and returns `{ content }`: the text of the file, up to 5 MB. Holdall sends it as `<note title>.<extension>`.
+
+```js
+holdall.on("notes.export.formats", (formats) => [...formats, { id: "plain", label: "Plain text", extension: "txt" }]);
+
+holdall.on("notes.export.render", ({ format, note }) => {
+  if (format !== "plain") return { content: note.content };
+  return { content: note.content.replace(/[#*_`>]/g, "") };
+});
+```
+
+Needs `notes:read`, `hooks:notes.export.formats` and `hooks:notes.export.render`.
+
+### `calendar.event.render`
+
+Change how events look in the calendar. Receives the list of events being shown, `[{ id, title, color }]`, and returns the same list, in the same order, with titles (up to 200 characters) or colors (`#rrggbb`) changed.
+
+```js
+holdall.on("calendar.event.render", (events) =>
+  events.map((event) => (/standup/i.test(event.title) ? { ...event, color: "#2f6b3f" } : event)),
+);
+```
+
+The change is for display only: when the person opens the event, they see and edit its real title.
+
+### `dashboard.widgets`
+
+Choose which widgets appear on **Today**. Receives `[{ id, label }]` for every widget, and returns the ones to keep. You can hide widgets, but not add new ones: declare your own widgets in the manifest instead.
+
+```js
+holdall.on("dashboard.widgets", (widgets) => {
+  const weekend = [0, 6].includes(new Date().getDay());
+  return weekend ? widgets.filter((widget) => widget.id !== "tasks.today") : widgets;
+});
+```
+
+## Logs
+
+`holdall.log("message")`, `console.log` and errors your code throws all end up in the Holdall log, prefixed with your plugin id. See [Read the logs](/holdall/plugins/tooling/#read-the-logs).
