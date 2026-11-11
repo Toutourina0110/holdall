@@ -259,6 +259,10 @@
   grid-template-rows: var(--size-topbar) 1fr;
 }
 
+.page:has(> .demoBanner) {
+  grid-template-rows: auto var(--size-topbar) 1fr;
+}
+
 .top {
   position: sticky;
   top: 0;
@@ -427,6 +431,17 @@
 
 .bottomBar {
   display: none;
+}
+
+.demoBanner {
+  margin: 0;
+  padding: var(--space-1) var(--space-4);
+  border-bottom: var(--border-thin) solid var(--color-warn);
+  background: repeating-linear-gradient(135deg, var(--color-raised) 0 var(--space-2), var(--color-hatch) var(--space-2) calc(var(--space-2) + var(--border-thin)));
+  color: var(--color-ink);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  text-align: center;
 }
 
 @media (max-width: 860px) {

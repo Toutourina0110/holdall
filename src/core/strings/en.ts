@@ -30,6 +30,18 @@ export const en = {
       { name: "Public demo", detail: "A demo instance with sample data, reset regularly" },
     ],
   },
+  demo: {
+    title: "Try Holdall",
+    intro: "Open your own demo account, filled with made-up notes, tasks and events. Nobody else sees it, and it is deleted after {minutes} minutes.",
+    start: "Start the demo",
+    banner: "Demo instance, data is reset regularly.",
+    off: "Some features are turned off in the demo: video downloads, calendar sync, plugin installs and large uploads.",
+    errors: {
+      limit: "Too many demo accounts from your address. Wait a few minutes and try again.",
+      full: "The demo is full right now. Try again in a few minutes.",
+      failed: "The demo account could not be created. Try again in a moment.",
+    },
+  },
   auth: {
     loginTitle: "Sign in",
     loginIntro: "Sign in to open your Holdall.",

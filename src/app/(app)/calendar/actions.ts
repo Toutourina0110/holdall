@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireSession } from "@/core/auth/session";
+import { getEnv } from "@/core/env";
 import { UserFacingError } from "@/core/errors";
 import { caldav } from "@/modules/calendar/providers";
 import {
@@ -113,6 +114,7 @@ const caldavInput = z.object({
 export async function addCaldavAction(input: unknown): Promise<Result> {
   const session = await requireSession();
   try {
+    if (getEnv().demoMode) throw new UserFacingError("Connecting calendars is turned off on the demo instance.");
     const data = caldavInput.parse(input);
     const serverUrl = data.kind === "icloud" ? "https://caldav.icloud.com" : data.serverUrl;
     if (!serverUrl || !/^https?:\/\//.test(serverUrl)) throw new UserFacingError("Enter the full server address, starting with https://.");

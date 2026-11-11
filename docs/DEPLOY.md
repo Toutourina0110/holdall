@@ -173,14 +173,31 @@ When a provider is not set up, the Accounts page says so and hides its button.
 
 Google and Microsoft do not allow signing in from inside an embedded app window, so the desktop app offers iCloud and CalDAV only. To sync Google or Outlook on your computer, use a server instance.
 
-## 7. Releases
+## 7. Public demo
+
+A demo instance lets people try Holdall without an account. Run a separate Holdall (its own data folder) with:
+
+```
+DEMO_MODE=true
+DEMO_RESET_MINUTES=60
+```
+
+- Visitors land on `/demo` and get their own account, filled with made-up notes, tasks and events. Nobody sees another visitor's data.
+- Each demo account and its files are deleted `DEMO_RESET_MINUTES` after it was created (at least 5).
+- Turned off on the server: video downloads, calendar connections and sync, plugin installs. Uploads are limited to 5 MB.
+- There is no setup page and no admin account on a demo instance.
+- At most 300 demo accounts exist at once, and one address can open 5 every 10 minutes. Behind a proxy, set `TRUST_PROXY=true` so this limit applies per visitor.
+
+Never turn on `DEMO_MODE` on an instance that holds real data: the sign-in page is replaced by the demo page.
+
+## 8. Releases
 
 Pushing a tag like `v0.2.0` runs the release workflow:
 
 - builds and publishes the Docker image to `ghcr.io/toutourina0110/holdall` (amd64 and arm64);
 - builds the desktop installers for Windows, macOS (Apple Silicon and Intel) and Linux, and attaches them to a draft GitHub release.
 
-## 8. Troubleshooting
+## 9. Troubleshooting
 
 | Symptom | What to do |
 |---|---|

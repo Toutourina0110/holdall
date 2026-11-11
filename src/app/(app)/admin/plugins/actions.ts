@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireAdmin } from "@/core/auth/session";
+import { getEnv } from "@/core/env";
 import { UserFacingError } from "@/core/errors";
 import { stopPluginProcess } from "@/core/plugins/host";
 import { confirmInstall, discardStaged, stagePlugin, stagePluginFromUrl, uninstallPlugin } from "@/core/plugins/install";
@@ -15,8 +16,11 @@ function message(error: unknown): string {
   return error instanceof UserFacingError ? error.message : "The plugin could not be read. Check the file and try again.";
 }
 
+const demoOff = "Installing plugins is turned off on the demo instance.";
+
 export async function stageUploadAction(_state: StageState, formData: FormData): Promise<StageState> {
   await requireAdmin();
+  if (getEnv().demoMode) return { error: demoOff };
   const file = formData.get("archive");
   const url = String(formData.get("url") ?? "").trim();
   const checksum = String(formData.get("sha256") ?? "").trim() || undefined;
@@ -38,6 +42,7 @@ export async function stageUploadAction(_state: StageState, formData: FormData):
 
 export async function confirmInstallAction(formData: FormData): Promise<void> {
   const session = await requireAdmin();
+  if (getEnv().demoMode) throw new UserFacingError(demoOff);
   const stageId = String(formData.get("stageId") ?? "");
   const optional = formData.getAll("optional").map(String);
   const manifest = confirmInstall(stageId, optional, session.user.id);
@@ -73,6 +78,7 @@ export async function togglePermissionAction(pluginId: string, permission: strin
 
 export async function stageFromStoreAction(id: string): Promise<StageState> {
   await requireAdmin();
+  if (getEnv().demoMode) return { error: demoOff };
   let stageId: string;
   try {
     stageId = (await stageFromRegistry(String(id))).stageId;

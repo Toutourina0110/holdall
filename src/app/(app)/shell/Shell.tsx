@@ -151,12 +151,17 @@ function BottomBar() {
   );
 }
 
-export function Shell({ user, items, layout, children }: { user: ShellUser; items: SlotItem[]; layout: UserLayout; children: ReactNode }) {
+export function Shell({ user, items, layout, demo, children }: { user: ShellUser; items: SlotItem[]; layout: UserLayout; demo?: boolean; children: ReactNode }) {
   return (
     <CustomizeProvider items={items} layout={layout}>
       <div className={styles.shell}>
         <Rail user={user} />
         <div className={styles.page}>
+          {demo && (
+            <p className={styles.demoBanner} role="status">
+              {strings.demo.banner}
+            </p>
+          )}
           <TopBar />
           <main className={styles.main} id="main">
             {children}

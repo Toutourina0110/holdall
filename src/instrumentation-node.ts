@@ -4,6 +4,7 @@ import { getEnv } from "@/core/env";
 import { startJobWorker } from "@/core/jobs/queue";
 import { autoUpdateTools } from "@/modules/downloader/jobs";
 import { startCalendarScheduler } from "@/modules/calendar/sync";
+import { startDemoReset } from "@/modules/demo/demo";
 import "@/modules/register";
 
 export function boot(): void {
@@ -15,4 +16,5 @@ export function boot(): void {
   startJobWorker({ concurrency: getEnv().maxConcurrentJobs });
   void autoUpdateTools();
   startCalendarScheduler();
+  startDemoReset();
 }

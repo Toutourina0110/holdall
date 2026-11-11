@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { requireSession } from "@/core/auth/session";
+import { getEnv } from "@/core/env";
 import { slotItemsFor } from "@/core/layout/registry";
 import { getUserLayout } from "@/core/layout/store";
 import "@/core/plugins/contributions";
@@ -12,7 +13,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   const items = slotItemsFor({ userId: session.user.id, isAdmin });
   const layout = getUserLayout(session.user.id);
   return (
-    <Shell user={{ name: session.user.name, email: session.user.email, role: session.user.role ?? "user" }} items={items} layout={layout}>
+    <Shell user={{ name: session.user.name, email: session.user.email, role: session.user.role ?? "user" }} items={items} layout={layout} demo={getEnv().demoMode}>
       {children}
     </Shell>
   );

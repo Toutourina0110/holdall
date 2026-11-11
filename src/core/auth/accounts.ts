@@ -1,10 +1,12 @@
 import { createHash, randomBytes, randomUUID } from "node:crypto";
+import fs from "node:fs";
 import { and, eq, gt, isNull, sql } from "drizzle-orm";
 import { z } from "zod";
 import { getDb } from "@/core/db/client";
 import { appSetting, invitation, user } from "@/core/db/schema";
 import { getEnv } from "@/core/env";
 import { UserFacingError } from "@/core/errors";
+import { userPath, type UserArea } from "@/core/paths";
 import { getAuth } from "./server";
 import { withSignupGrant } from "./signup-grant";
 
@@ -34,6 +36,7 @@ async function signUp(role: "admin" | "user", input: AccountInput) {
 }
 
 export async function createFirstAdmin(input: AccountInput) {
+  if (getEnv().demoMode) throw new UserFacingError("The demo instance has no setup. Start the demo instead.");
   const db = getDb();
   const claimed = db
     .insert(appSetting)
@@ -132,4 +135,11 @@ export function setUserRole(userId: string, role: "admin" | "user") {
     if (admins <= 1) throw new UserFacingError("Holdall needs at least one admin. Make someone else admin first.");
   }
   db.update(user).set({ role }).where(eq(user.id, userId)).run();
+}
+
+const userAreas: UserArea[] = ["notes", "files", "downloads"];
+
+export function deleteAccount(userId: string): void {
+  getDb().delete(user).where(eq(user.id, userId)).run();
+  for (const area of userAreas) fs.rmSync(userPath(getEnv().dataDir, area, userId), { recursive: true, force: true });
 }

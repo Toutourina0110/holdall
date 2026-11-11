@@ -312,7 +312,7 @@ export type OAuthProvider = "google" | "microsoft";
 
 export function oauthConfig(provider: OAuthProvider) {
   const env = getEnv();
-  if (isDesktop()) return undefined;
+  if (isDesktop() || env.demoMode) return undefined;
   if (provider === "google") {
     if (!env.googleClientId || !env.googleClientSecret) return undefined;
     return {
