@@ -24,6 +24,16 @@ if (import.meta.main || bundled) {
   process.env.DATA_DIR = dataDir;
   runMigrations(dataDir, path.join(root, "drizzle"));
   log.info("Database ready", { dataDir });
+  const parent = Number(process.env.HOLDALL_PARENT_PID);
+  if (parent > 0) {
+    setInterval(() => {
+      try {
+        process.kill(parent, 0);
+      } catch {
+        process.exit(0);
+      }
+    }, 2000).unref();
+  }
   installClientIpHeader(http);
   await import(pathToFileURL(server).href);
 }

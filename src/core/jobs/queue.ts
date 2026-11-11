@@ -198,3 +198,10 @@ export function stopJobWorker(): void {
   state.timer = undefined;
   for (const controller of state.running.values()) controller.abort();
 }
+
+export function deleteJob(userId: string, id: string): boolean {
+  const row = getJob(userId, id);
+  if (!row || row.status === "running") return false;
+  getDb().delete(job).where(and(eq(job.id, id), eq(job.userId, userId))).run();
+  return true;
+}

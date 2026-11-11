@@ -5,6 +5,7 @@ import { useEffect, useState, useTransition } from "react";
 import { strings } from "@/core/strings";
 import { localDay, shortDay } from "@/ui/dates";
 import { SurveyMark } from "@/ui/SurveyMark";
+import { useJobs } from "@/ui/useJobs";
 import { setDoneAction } from "../tasks/actions";
 import { recentNotesAction, todayTasksAction } from "./actions";
 import styles from "./widgets.module.css";
@@ -98,8 +99,36 @@ function RecentNotes() {
   );
 }
 
+function DownloadsQueue() {
+  const t = strings.downloads;
+  const { jobs, error } = useJobs("downloader.download");
+  const active = (jobs ?? []).filter((job) => job.status === "running" || job.status === "queued").slice(0, 5);
+  if (error) return <p className={styles.empty}>{error}</p>;
+  if (!jobs) return <p className={styles.empty}>{strings.settings.loading}</p>;
+  return (
+    <>
+      {active.length === 0 && <p className={styles.empty}>{t.widgetEmpty}</p>}
+      <ul className={styles.rows}>
+        {active.map((job) => {
+          const payload = JSON.parse(job.payload) as { url: string; title?: string };
+          return (
+            <li key={job.id}>
+              <span className={`${styles.title} ${styles.padded}`}>{payload.title ?? payload.url}</span>
+              <span className={styles.meta}>{job.status === "queued" ? t.queued : `${Math.round(job.progress * 100)}%`}</span>
+            </li>
+          );
+        })}
+      </ul>
+      <Link className={styles.more} href="/downloads">
+        {t.widgetMore}
+      </Link>
+    </>
+  );
+}
+
 export function BuiltinWidget({ component }: { component: string }) {
   if (component === "tasks.today") return <TasksToday />;
+  if (component === "downloads.queue") return <DownloadsQueue />;
   if (component === "notes.recent") return <RecentNotes />;
   return null;
 }

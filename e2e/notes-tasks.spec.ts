@@ -40,3 +40,11 @@ test("add a task for today and complete it", async ({ page }) => {
   await page.goto("/tasks?view=done");
   await expect(page.getByText("Call the bank")).toBeVisible();
 });
+
+test("the downloader refuses a link that is not a web address", async ({ page }) => {
+  await signIn(page);
+  await page.goto("/downloads");
+  await page.getByLabel("Links", { exact: true }).fill("--exec=calc.exe");
+  await page.getByRole("button", { name: "Check links" }).click();
+  await expect(page.getByText(/is not a link/)).toBeVisible();
+});

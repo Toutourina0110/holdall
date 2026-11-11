@@ -11,4 +11,6 @@ export async function register(): Promise<void> {
   const { startJobWorker } = await import("@/core/jobs/queue");
   await import("@/modules/register");
   startJobWorker({ concurrency: getEnv().maxConcurrentJobs });
+  const { autoUpdateTools } = await import("@/modules/downloader/jobs");
+  void autoUpdateTools();
 }

@@ -9,20 +9,28 @@ import { UserFacingError } from "@/core/errors";
 export function isBlockedAddress(address: string): boolean {
   if (!ipaddr.isValid(address)) return true;
   const parsed = ipaddr.process(address);
-  if (parsed.kind() === "ipv6" && (parsed as ipaddr.IPv6).parts.slice(0, 6).every((part) => part === 0)) return true;
+  if (parsed.kind() === "ipv6") {
+    const v6 = parsed as ipaddr.IPv6;
+    if (v6.parts.slice(0, 6).every((part) => part === 0)) return true;
+    const range = v6.range();
+    if (range === "rfc6052" || range === "6to4") {
+      const parts = range === "6to4" ? v6.parts.slice(1, 3) : v6.parts.slice(6, 8);
+      const embedded = [parts[0]! >> 8, parts[0]! & 255, parts[1]! >> 8, parts[1]! & 255].join(".");
+      return isBlockedAddress(embedded);
+    }
+  }
   return parsed.range() !== "unicast";
 }
 
 const guardedLookup: LookupFunction = (hostname, options, callback) => {
   dns.lookup(hostname, { ...options, all: true }, (error, addresses) => {
     if (error) return callback(error, "", 4);
-    const list = addresses as dns.LookupAddress[];
-    const blocked = list.find((entry) => isBlockedAddress(entry.address));
-    if (blocked || list.length === 0) {
+    const allowed = (addresses as dns.LookupAddress[]).filter((entry) => !isBlockedAddress(entry.address));
+    if (allowed.length === 0) {
       return callback(Object.assign(new Error(`${hostname} resolves to a private or internal address.`), { code: "EBLOCKED" }), "", 4);
     }
-    if ((options as { all?: boolean }).all) return (callback as unknown as (e: null, a: dns.LookupAddress[]) => void)(null, list);
-    callback(null, list[0]!.address, list[0]!.family);
+    if ((options as { all?: boolean }).all) return (callback as unknown as (e: null, a: dns.LookupAddress[]) => void)(null, allowed);
+    callback(null, allowed[0]!.address, allowed[0]!.family);
   });
 };
 

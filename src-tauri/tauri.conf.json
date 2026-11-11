@@ -6,19 +6,11 @@
   "build": {
     "frontendDist": "placeholder",
     "devUrl": "http://localhost:3000",
-    "beforeDevCommand": "pnpm dev"
+    "beforeDevCommand": "pnpm dev",
+    "beforeBuildCommand": "pnpm build && node scripts/fetch-node.mjs"
   },
   "app": {
-    "windows": [
-      {
-        "title": "Holdall",
-        "width": 1280,
-        "height": 800,
-        "minWidth": 375,
-        "minHeight": 600,
-        "resizable": true
-      }
-    ],
+    "windows": [],
     "security": {
       "csp": "default-src 'self'; style-src 'self' 'unsafe-inline'"
     }
@@ -32,6 +24,12 @@
       "icons/128x128@2x.png",
       "icons/icon.icns",
       "icons/icon.ico"
-    ]
+    ],
+    "externalBin": [
+      "binaries/node"
+    ],
+    "resources": {
+      "../.next/standalone/": "app/"
+    }
   }
 }

@@ -14,6 +14,21 @@ for (const entry of fs.readdirSync(standalone)) {
   if (!keep.has(entry)) fs.rmSync(path.join(standalone, entry), { recursive: true, force: true });
 }
 
+function replaceLinks(dir) {
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const full = path.join(dir, entry.name);
+    if (entry.isSymbolicLink()) {
+      const real = fs.realpathSync(full);
+      fs.rmSync(full, { recursive: true, force: true });
+      fs.cpSync(real, full, { recursive: true, dereference: true });
+    } else if (entry.isDirectory()) {
+      replaceLinks(full);
+    }
+  }
+}
+
+replaceLinks(standalone);
+
 copy(path.join(root, ".next", "static"), path.join(standalone, ".next", "static"));
 copy(path.join(root, "public"), path.join(standalone, "public"));
 copy(path.join(root, "drizzle"), path.join(standalone, "drizzle"));
