@@ -1,6 +1,6 @@
 # @holdall/plugin-sdk
 
-Types and small helpers for writing Holdall plugins. The full guide is in `docs/PLUGINS.md` of the Holdall repository.
+Types and small helpers for writing Holdall plugins. The full guide is at https://toutourina0110.github.io/holdall/plugins/overview/
 
 ## Server code
 

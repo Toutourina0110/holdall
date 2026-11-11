@@ -1,0 +1,25 @@
+@import "../../../src/app/tokens.css";
+
+:root,
+:root[data-theme="light"] {
+  --font-plex: "IBM Plex Sans";
+  --sl-font: var(--font-sans);
+  --sl-color-white: var(--color-ink);
+  --sl-color-gray-1: var(--color-text);
+  --sl-color-gray-2: var(--color-text);
+  --sl-color-gray-3: var(--color-muted);
+  --sl-color-gray-4: var(--color-line-strong);
+  --sl-color-gray-5: var(--color-line);
+  --sl-color-gray-6: var(--color-raised);
+  --sl-color-gray-7: var(--color-surface);
+  --sl-color-black: var(--color-ground);
+  --sl-color-accent-low: var(--color-accent-soft);
+  --sl-color-accent: var(--color-accent-fill);
+  --sl-color-accent-high: var(--color-accent-text);
+  --sl-color-text-accent: var(--color-accent-text);
+  --sl-color-bg-nav: var(--color-surface);
+  --sl-color-bg-sidebar: var(--color-surface);
+  --sl-color-hairline: var(--color-line);
+  --sl-color-hairline-light: var(--color-line);
+  --sl-color-hairline-shade: var(--color-line);
+}

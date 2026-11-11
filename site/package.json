@@ -1,0 +1,17 @@
+{
+  "name": "holdall-docs",
+  "version": "0.0.1",
+  "private": true,
+  "license": "AGPL-3.0-or-later",
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview"
+  },
+  "dependencies": {
+    "@astrojs/starlight": "0.42.10",
+    "@fontsource/ibm-plex-sans": "5.3.0",
+    "astro": "7.4.9"
+  }
+}

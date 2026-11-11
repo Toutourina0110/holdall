@@ -4,14 +4,16 @@ Holdall is a self-hosted personal toolbox: notes and tasks, a synced calendar, a
 
 **Status:** early development. Notes, tasks, calendar sync (Google, Outlook, iCloud, CalDAV), video downloads, file manager, converter, customizable layout, themes, plugins and the plugin store all work. Expect rough edges.
 
-## Install
+## Documentation
 
-- **Server (Docker, Ubuntu, Coolify):** see [docs/DEPLOY.md](docs/DEPLOY.md).
-- **Desktop:** download the installer from the releases page, or build it yourself (see docs/DEPLOY.md).
+Everything is on the documentation site: **https://toutourina0110.github.io/holdall/**
 
-## Demo
+- [Install on a server](https://toutourina0110.github.io/holdall/install/configuration/) (Docker, Ubuntu, Coolify)
+- [Desktop app](https://toutourina0110.github.io/holdall/desktop/install/)
+- [User guide](https://toutourina0110.github.io/holdall/guide/first-steps/)
+- [Write plugins and themes](https://toutourina0110.github.io/holdall/plugins/overview/)
 
-A public demo instance is coming soon. To run your own, see the "Public demo" section of [docs/DEPLOY.md](docs/DEPLOY.md).
+The site source is in `site/`.
 
 ## Video downloads
 
@@ -23,30 +25,10 @@ Requirements: Node 26, pnpm 12, and Rust with the Tauri prerequisites for the de
 
 ```powershell
 pnpm install
-pnpm db:migrate
 pnpm dev
 ```
 
-Then open http://localhost:3000. The first visit creates the admin account.
-
-| Command | Purpose |
-|---|---|
-| `pnpm dev` | Run the app in development |
-| `pnpm build` | Production build (standalone server bundle) |
-| `pnpm start` | Run the production build |
-| `pnpm lint` | ESLint |
-| `pnpm typecheck` | TypeScript check |
-| `pnpm test` | Unit tests (Vitest) |
-| `pnpm e2e` | End to end tests (Playwright) |
-| `pnpm db:migrate` | Apply database migrations |
-| `pnpm desktop:dev` | Run the desktop app in development |
-| `pnpm desktop:build` | Build the desktop installer for the current OS |
-
-Configuration goes in a `.env` file, see `.env.example`.
-
-## Plugins
-
-Plugins can add pages, Today widgets and reactions to events, with permissions you approve one by one. Admins install them from the store or from an archive. See [docs/PLUGINS.md](docs/PLUGINS.md), the SDK in `packages/plugin-sdk` and the examples in `examples/plugins`.
+Then open http://localhost:3000. The first visit creates the admin account. Configuration goes in a `.env` file, see `.env.example`. All commands are listed in [Development](https://toutourina0110.github.io/holdall/contributing/development/).
 
 ## License
 

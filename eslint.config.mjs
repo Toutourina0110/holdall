@@ -27,5 +27,6 @@ export default defineConfig([
     "src-tauri/gen/**",
     "playwright-report/**",
     "test-results/**",
+    "site/**",
   ]),
 ]);

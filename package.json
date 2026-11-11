@@ -19,7 +19,9 @@
     "db:migrate": "node --env-file-if-exists=.env scripts/db-migrate-cli.ts",
     "e2e": "playwright test",
     "desktop:dev": "tauri dev",
-    "desktop:build": "tauri build"
+    "desktop:build": "tauri build",
+    "docs:dev": "pnpm --filter holdall-docs dev",
+    "docs:build": "pnpm --filter holdall-docs build"
   },
   "dependencies": {
     "@better-auth/drizzle-adapter": "1.7.20",
