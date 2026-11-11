@@ -4,7 +4,7 @@ import { useActionState, useState, useTransition } from "react";
 import { strings } from "@/core/strings";
 import { Button, Chip, Field, Notice } from "@/ui/controls";
 import { Panel, PanelEmpty, PanelForm, PanelRow } from "@/ui/Panel";
-import { stageUploadAction, togglePermissionAction, uninstallAction, type StageState } from "./actions";
+import { stageFromStoreAction, stageUploadAction, togglePermissionAction, uninstallAction, type StageState } from "./actions";
 import styles from "../admin.module.css";
 
 export type AdminPluginRow = {
@@ -93,6 +93,64 @@ export function InstalledPanel({ plugins }: { plugins: AdminPluginRow[] }) {
             </PanelRow>
           ))}
         </div>
+      ))}
+    </Panel>
+  );
+}
+
+export type StoreRow = {
+  id: string;
+  name: string;
+  version: string;
+  type: keyof typeof strings.plugins.types;
+  author: string;
+  description: string;
+  source: "official" | "third-party";
+  state: "new" | "update" | "installed";
+};
+
+export function StorePanel({ entries, error, loading }: { entries: StoreRow[]; error?: string; loading?: boolean }) {
+  const t = strings.plugins;
+  const [problem, setProblem] = useState<string>();
+  const [pending, start] = useTransition();
+  return (
+    <Panel title={t.storeTitle} count={error || loading ? undefined : `${entries.length}`}>
+      <PanelForm>
+        <p className={styles.help}>{t.storeIntro}</p>
+        {error && <Notice tone="error">{error}</Notice>}
+        {problem && <Notice tone="error">{problem}</Notice>}
+      </PanelForm>
+      {loading && <PanelEmpty>{strings.settings.loading}</PanelEmpty>}
+      {!error && !loading && entries.length === 0 && <PanelEmpty>{t.storeEmpty}</PanelEmpty>}
+      {entries.map((entry) => (
+        <PanelRow key={entry.id}>
+          <span className={styles.grow}>
+            <span className={styles.strong}>{entry.name}</span>
+            <span className={styles.meta}>
+              {" "}
+              {entry.version} · {t.types[entry.type]} · {entry.author}
+            </span>
+            {entry.description && <span className={styles.block}>{entry.description}</span>}
+          </span>
+          <Chip>{entry.source === "official" ? t.official : t.thirdParty}</Chip>
+          {entry.state === "installed" ? (
+            <span className={styles.meta}>{t.installedLabel}</span>
+          ) : (
+            <Button
+              variant={entry.state === "update" ? "primary" : "quiet"}
+              icon="download"
+              disabled={pending}
+              onClick={() =>
+                start(async () => {
+                  const result = await stageFromStoreAction(entry.id);
+                  if (result?.error) setProblem(result.error);
+                })
+              }
+            >
+              {entry.state === "update" ? t.updateTo.replace("{version}", entry.version) : t.get}
+            </Button>
+          )}
+        </PanelRow>
       ))}
     </Panel>
   );

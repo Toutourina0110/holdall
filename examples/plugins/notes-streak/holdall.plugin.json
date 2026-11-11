@@ -1,0 +1,16 @@
+{
+  "id": "io.github.toutourina0110.notes-streak",
+  "name": "Notes streak",
+  "version": "1.0.0",
+  "type": "extension",
+  "description": "Example plugin with server code: counts the notes you save each day and shows it on Today.",
+  "author": { "name": "Holdall", "url": "https://github.com/Toutourina0110/holdall" },
+  "license": "AGPL-3.0-or-later",
+  "holdall": ">=0.0.1",
+  "permissions": ["ui:slots", "storage", "notes:read", "hooks:notes.saved"],
+  "entry": { "server": "server.mjs", "ui": "ui/widget.html" },
+  "contributes": {
+    "hooks": ["notes.saved"],
+    "widgets": [{ "id": "streak", "title": "Notes saved today", "entry": "ui/widget.html", "width": 1 }]
+  }
+}

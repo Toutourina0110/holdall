@@ -17,6 +17,13 @@
   font-size: var(--text-sm);
 }
 
+.block {
+  display: block;
+  margin-top: var(--space-1);
+  color: var(--color-text);
+  font-size: var(--text-sm);
+}
+
 .help {
   color: var(--color-muted);
   line-height: var(--leading-read);

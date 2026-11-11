@@ -1,0 +1,16 @@
+{
+  "name": "@holdall/plugin-sdk",
+  "version": "0.1.0",
+  "description": "Types and small helpers for writing Holdall plugins.",
+  "license": "AGPL-3.0-or-later",
+  "type": "module",
+  "exports": {
+    ".": { "types": "./dist/index.d.ts", "default": "./dist/index.js" },
+    "./ui": { "types": "./dist/ui.d.ts", "default": "./dist/ui.js" }
+  },
+  "files": ["dist", "README.md"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  },
+  "repository": { "type": "git", "url": "https://github.com/Toutourina0110/holdall", "directory": "packages/plugin-sdk" }
+}

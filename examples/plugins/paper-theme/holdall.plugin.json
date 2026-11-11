@@ -1,0 +1,11 @@
+{
+  "id": "io.github.toutourina0110.paper-theme",
+  "name": "Paper",
+  "version": "1.0.0",
+  "type": "theme",
+  "description": "Example theme: warm paper ground, ink text and square corners.",
+  "author": { "name": "Holdall", "url": "https://github.com/Toutourina0110/holdall" },
+  "license": "AGPL-3.0-or-later",
+  "holdall": ">=0.0.1",
+  "theme": "theme.json"
+}

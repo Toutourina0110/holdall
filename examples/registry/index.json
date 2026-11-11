@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "plugins": [
+    {
+      "id": "io.github.toutourina0110.hello-widget",
+      "name": "Hello widget",
+      "version": "1.0.0",
+      "type": "extension",
+      "description": "Example plugin: a Today widget that counts how many times you opened it.",
+      "author": {
+        "name": "Holdall",
+        "url": "https://github.com/Toutourina0110/holdall"
+      },
+      "archive": "https://github.com/Toutourina0110/holdall-registry/releases/download/hello-widget-1.0.0/io.github.toutourina0110.hello-widget-1.0.0.zip",
+      "sha256": "126ed3476af1f41634dadb644f574279de62c16bd91a5fed7705bc9bb451b327",
+      "official": true
+    },
+    {
+      "id": "io.github.toutourina0110.notes-streak",
+      "name": "Notes streak",
+      "version": "1.0.0",
+      "type": "extension",
+      "description": "Example plugin with server code: counts the notes you save each day and shows it on Today.",
+      "author": {
+        "name": "Holdall",
+        "url": "https://github.com/Toutourina0110/holdall"
+      },
+      "archive": "https://github.com/Toutourina0110/holdall-registry/releases/download/notes-streak-1.0.0/io.github.toutourina0110.notes-streak-1.0.0.zip",
+      "sha256": "1ba75c9f5a5f3b4c4d90b976f9b9f601612b73db85ede84ca575b448f898553c",
+      "official": true
+    },
+    {
+      "id": "io.github.toutourina0110.paper-theme",
+      "name": "Paper",
+      "version": "1.0.0",
+      "type": "theme",
+      "description": "Example theme: warm paper ground, ink text and square corners.",
+      "author": {
+        "name": "Holdall",
+        "url": "https://github.com/Toutourina0110/holdall"
+      },
+      "archive": "https://github.com/Toutourina0110/holdall-registry/releases/download/paper-theme-1.0.0/io.github.toutourina0110.paper-theme-1.0.0.zip",
+      "sha256": "2cbbcdb53f3137190910823f30ea4bd92e55314b785660557af28664bab139ae",
+      "official": true
+    }
+  ]
+}

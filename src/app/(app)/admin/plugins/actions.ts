@@ -6,6 +6,7 @@ import { requireAdmin } from "@/core/auth/session";
 import { UserFacingError } from "@/core/errors";
 import { stopPluginProcess } from "@/core/plugins/host";
 import { confirmInstall, discardStaged, stagePlugin, stagePluginFromUrl, uninstallPlugin } from "@/core/plugins/install";
+import { stageFromRegistry } from "@/core/plugins/registry";
 import { setPluginPermission } from "@/core/plugins/store";
 
 export type StageState = { error?: string };
@@ -68,4 +69,15 @@ export async function togglePermissionAction(pluginId: string, permission: strin
   stopPluginProcess(pluginId);
   revalidatePath("/", "layout");
   return {};
+}
+
+export async function stageFromStoreAction(id: string): Promise<StageState> {
+  await requireAdmin();
+  let stageId: string;
+  try {
+    stageId = (await stageFromRegistry(String(id))).stageId;
+  } catch (error) {
+    return { error: message(error) };
+  }
+  redirect(`/admin/plugins/install/${stageId}`);
 }

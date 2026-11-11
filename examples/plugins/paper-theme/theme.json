@@ -1,0 +1,30 @@
+{
+  "name": "Paper",
+  "base": "light",
+  "tokens": {
+    "--color-ground": "#f4efe4",
+    "--color-surface": "#fbf8f1",
+    "--color-raised": "#efe8da",
+    "--color-ink": "#1d1a14",
+    "--color-text": "#2f2a21",
+    "--color-muted": "#655c4c",
+    "--color-line": "#ddd3c1",
+    "--color-line-strong": "#c4b79f",
+    "--color-accent": "#8a3b12",
+    "--color-accent-fill": "#8a3b12",
+    "--color-accent-fill-hover": "#72300e",
+    "--color-accent-soft": "#f1e0d2",
+    "--color-accent-text": "#7a3410",
+    "--color-on-accent": "#fbf8f1",
+    "--color-rail": "#2b261d",
+    "--color-rail-text": "#f4efe4",
+    "--color-rail-muted": "#bfb39c",
+    "--color-rail-tile": "#3a3327",
+    "--color-rail-line": "#40382b",
+    "--radius-sm": "0px",
+    "--radius-md": "0px",
+    "--radius-control": "2px",
+    "--radius-field": "2px",
+    "--radius-panel": "2px"
+  }
+}

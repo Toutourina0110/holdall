@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<style>
+  body { margin: 0; padding: 16px; font-family: "IBM Plex Sans", sans-serif; font-size: 14px; background: var(--color-surface, #fff); color: var(--color-text, #1b2833); }
+  strong { display: block; font-size: 26px; color: var(--color-ink, #14202a); font-variant-numeric: tabular-nums; }
+  p { margin: 4px 0 0; color: var(--color-muted, #55616b); }
+</style>
+</head>
+<body>
+<strong id="count">...</strong>
+<p>notes saved today</p>
+<script>
+  let next = 0;
+  const waiting = new Map();
+  addEventListener("message", (event) => {
+    const data = event.data;
+    if (event.source !== parent || !data || data.type !== "holdall:response") return;
+    const call = waiting.get(data.id);
+    if (!call) return;
+    waiting.delete(data.id);
+    data.error ? call.reject(new Error(data.error)) : call.resolve(data.result);
+  });
+  function holdall(method, params) {
+    const id = ++next;
+    return new Promise((resolve, reject) => {
+      waiting.set(id, { resolve, reject });
+      parent.postMessage({ type: "holdall:request", id, method, params }, "*");
+    });
+  }
+  (async () => {
+    const tokens = await holdall("theme.tokens");
+    for (const [name, value] of Object.entries(tokens)) document.documentElement.style.setProperty(name, value);
+    const saved = await holdall("storage.get", { key: "saved" });
+    const today = new Date().toISOString().slice(0, 10);
+    document.getElementById("count").textContent = String(saved && saved.day === today ? saved.count : 0);
+  })().catch((error) => {
+    document.getElementById("count").textContent = "!";
+    document.querySelector("p").textContent = error.message;
+  });
+</script>
+</body>
+</html>

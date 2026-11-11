@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { unzipSync } from "fflate";
 import { UserFacingError } from "@/core/errors";
 import { manifestSchema, type PluginManifest } from "./manifest";
+import { themeSchema, type Theme } from "@/core/theme/schema";
 
 export const maxArchiveBytes = 20 * 1024 * 1024;
 const maxUnpackedBytes = 60 * 1024 * 1024;
@@ -67,5 +68,18 @@ export function unpackPlugin(archive: Uint8Array, expectedSha256?: string): Unpa
   for (const file of [manifest.entry.server, manifest.entry.ui, manifest.theme, ...manifest.contributes.widgets.map((widget) => widget.entry), manifest.contributes.page?.entry]) {
     if (file && !files.has(file)) throw new UserFacingError(`The manifest points to ${file}, which is not in the archive.`);
   }
+  if (manifest.theme) readTheme(files.get(manifest.theme)!);
   return { manifest, files, sha256: digest };
+}
+
+export function readTheme(data: Uint8Array): Theme {
+  let json: unknown;
+  try {
+    json = JSON.parse(new TextDecoder().decode(data));
+  } catch {
+    throw new UserFacingError("The theme file is not valid JSON.");
+  }
+  const parsed = themeSchema.safeParse(json);
+  if (!parsed.success) throw new UserFacingError(`The theme file is invalid: ${parsed.error.issues[0]?.message ?? "unknown error"}`);
+  return parsed.data;
 }

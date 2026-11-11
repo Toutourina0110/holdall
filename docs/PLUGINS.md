@@ -109,6 +109,8 @@ Methods:
 | `tasks.create` | `tasks:write` | task fields | The new task |
 | `tasks.complete` | `tasks:write` | `{ id, done }` | The task |
 | `downloads.list` | `downloads:read` | none | Downloads and their status |
+| `calendar.list` | `calendar:read` | `{ from, to }` (ISO dates) | Events in that period |
+| `calendar.create` | `calendar:write` | `{ title, start, end, allDay?, location?, description? }` | `{ id }` of the event, added to the Holdall calendar |
 
 Calls run as the person looking at the page and only reach that person's data.
 
@@ -156,8 +158,57 @@ A theme plugin has `"type": "theme"`, no `entry`, and a `theme` file:
 }
 ```
 
-Only known tokens are accepted, with color or size values. The CSS cannot use `url()`, `@import`, `@font-face`, `expression()`, backslash escapes or `</`, so a theme can never load anything from the internet. Users can also build and export themes in **Settings, Appearance**.
+Only known tokens are accepted, with color or size values. The CSS cannot use `url()`, `@import`, `@font-face`, `expression()`, backslash escapes or `</`, so a theme can never load anything from the internet. Installed theme plugins are listed in **Settings, Appearance**, where each person can pick one. Users can also build and export themes there.
 
-## 7. Publishing
+## 7. SDK and examples
 
-The plugin store reads an `index.json` from the `holdall-registry` repository. Each entry gives the plugin id, version, author, description, the https address of the release archive and its `sha256`. Holdall refuses an archive whose checksum does not match. Propose your plugin with a pull request to that repository.
+`packages/plugin-sdk` (`@holdall/plugin-sdk`) gives TypeScript types for the manifest, the hooks and every method above, plus a small client for interface code:
+
+```ts
+import { applyTheme, createClient } from "@holdall/plugin-sdk/ui";
+
+const holdall = createClient();
+await applyTheme(holdall);
+const notes = await holdall("notes.list", {});
+```
+
+Bundle and inline it into your HTML file, since the sandbox cannot load other files from Holdall.
+
+Working examples live in `examples/plugins`:
+
+| Folder | Shows |
+|---|---|
+| `hello-widget` | A Today widget that keeps a counter in plugin storage |
+| `notes-streak` | Server code that listens to `notes.saved`, and a widget that reads the result |
+| `paper-theme` | A theme plugin |
+
+Make an archive from a plugin folder and print its checksum:
+
+```powershell
+node scripts/pack-plugin.mjs examples/plugins/hello-widget
+```
+
+The archive is written to `dist-plugins`.
+
+## 8. Publishing in the store
+
+The store is the `index.json` file of the `holdall-registry` repository on GitHub. Holdall reads it from `PLUGIN_REGISTRY_URL` (by default the official repository). A template of that repository is in `examples/registry`.
+
+Each entry:
+
+| Field | What to put |
+|---|---|
+| `id`, `name`, `version`, `type`, `description`, `author` | The same values as in `holdall.plugin.json` |
+| `archive` | The https address of the release archive, for example a GitHub release asset |
+| `sha256` | The checksum printed by `pack-plugin.mjs` |
+| `official` | `true` only for plugins made by the Holdall team. Holdall ignores it on any other registry. |
+
+To publish:
+
+1. Create a GitHub release in your own repository and attach the archive.
+2. Open a pull request on `holdall-registry` that adds your entry to `index.json`. The check downloads the archive and compares its checksum.
+3. Once merged, the plugin appears in **Admin, Plugins, Store** on every Holdall within 10 minutes.
+
+When an admin installs from the store, Holdall downloads the archive, refuses it if the checksum or the id and version differ from the listing, and then shows the same consent screen as a manual install. Plugins without `official` show the third-party banner.
+
+To publish an update, release the new archive and change `version`, `archive` and `sha256` in your entry. Admins see **Update to x.y.z**; new permissions are asked again.
