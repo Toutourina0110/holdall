@@ -42,7 +42,7 @@ Every plugin has a `holdall.plugin.json` file at the root of its archive. Holdal
 | `permissions` | no | Known permissions, up to 40 | Required. Refusing one cancels the install. See [Permissions](/holdall/plugins/permissions/). |
 | `optionalPermissions` | no | Known permissions, up to 40 | The admin can uncheck them at install and change them later. |
 | `network` | no | Plain host names, up to 20 | Hosts `network.fetch` may call. Needs the `network` permission. |
-| `dependencies` | no | `{ "plugin.id": "version range" }` | Plugins that must be installed first, in a matching version. |
+| `dependencies` | no | `{ "plugin.id": "version range" }` | Plugins that must be installed first, in a matching version. Your server code can call the [libraries](/holdall/plugins/server-and-hooks/#libraries) listed here. |
 | `entry.server` | no | Relative path to a file in the archive | Server code. See [Server code and hooks](/holdall/plugins/server-and-hooks/). |
 | `entry.ui` | no | Relative path | Main interface file. |
 | `theme` | theme only | Relative path | Theme file. See [Themes](/holdall/plugins/themes/). |

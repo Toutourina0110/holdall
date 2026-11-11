@@ -6,6 +6,7 @@ const entry = process.argv[2];
 const pending = new Map();
 const hooks = new Map();
 const functions = new Map();
+const provided = new Map();
 let sequence = 0;
 
 function send(message) {
@@ -24,6 +25,21 @@ const holdall = {
   on(hook, handler) {
     hooks.set(hook, handler);
     send({ type: "hook.register", hook });
+  },
+  provide(name, handler) {
+    provided.set(name, handler);
+    send({ type: "provide.register", name });
+  },
+  library(libraryId) {
+    return {
+      call(name, args, context) {
+        const id = ++sequence;
+        return new Promise((resolve, reject) => {
+          pending.set(id, { resolve, reject });
+          send({ type: "library.call", id, library: libraryId, name, args, callId: context?.callId, userId: context?.userId });
+        });
+      },
+    };
   },
   handle(name, handler) {
     functions.set(name, handler);
@@ -75,11 +91,11 @@ process.on("message", async (message) => {
     else call.resolve(message.result);
     return;
   }
-  if (message?.type === "hook.call" || message?.type === "fn.call") {
-    const handler = message.type === "hook.call" ? hooks.get(message.hook) : functions.get(message.name);
+  if (message?.type === "hook.call" || message?.type === "fn.call" || message?.type === "provide.call") {
+    const handler = message.type === "hook.call" ? hooks.get(message.hook) : message.type === "fn.call" ? functions.get(message.name) : provided.get(message.name);
     try {
       if (!handler) throw new Error(`No handler for ${message.hook ?? message.name}.`);
-      const result = await handler(message.payload, { userId: message.userId, callId: message.callId });
+      const result = await handler(message.payload, message.userId ? { userId: message.userId, callId: message.callId } : undefined);
       send({ type: "hook.result", id: message.id, result });
     } catch (error) {
       send({ type: "hook.result", id: message.id, error: error instanceof Error ? error.message : String(error) });

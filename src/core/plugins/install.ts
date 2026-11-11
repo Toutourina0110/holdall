@@ -13,7 +13,7 @@ import { safeJoin } from "@/core/paths";
 import { safeFetch } from "@/core/security/safe-fetch";
 import { maxArchiveBytes, unpackPlugin } from "./archive";
 import { satisfies, type PluginManifest } from "./manifest";
-import { getInstalledPlugin } from "./store";
+import { dependentsOf, getInstalledPlugin } from "./store";
 
 export const appVersion = packageJson.version;
 
@@ -127,6 +127,8 @@ export function confirmInstall(stageId: string, grantedOptional: string[], insta
 }
 
 export function uninstallPlugin(pluginId: string): void {
+  const dependents = dependentsOf(pluginId);
+  if (dependents.length > 0) throw new UserFacingError(`Uninstall ${dependents.join(", ")} first: they need this plugin.`);
   getDb().delete(plugin).where(eq(plugin.id, pluginId)).run();
   fs.rmSync(installedDir(pluginId), { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
   fs.rmSync(pluginDataPath(getEnv().dataDir, pluginId), { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });

@@ -279,6 +279,42 @@ export default function (holdall) {
     expect(fs.existsSync(root)).toBe(false);
   }, 30000);
 
+  it("lets a plugin call the functions of a library it depends on, for the same person", async () => {
+    const { confirmInstall, stagePlugin, uninstallPlugin } = await import("./install");
+    const { setPluginEnabledFor } = await import("./store");
+    const { callPluginFunction } = await import("./host");
+    const { callPluginApi } = await import("./api");
+    const library = `
+export default function (holdall) {
+  holdall.provide("double", async ({ n }, context) => {
+    if (context) await holdall.storage.set("last", n, context);
+    return n * 2;
+  });
+}
+`;
+    const app = `
+export default function (holdall) {
+  holdall.handle("compute", (args, context) => holdall.library("com.test.lib").call("double", { n: 21 }, context));
+  holdall.handle("sneak", (args, context) => holdall.library("com.test.other").call("double", { n: 1 }, context));
+}
+`;
+    const lib = stagePlugin(archive({ ...base, id: "com.test.lib", name: "Lib", type: "library", permissions: ["storage"], entry: { server: "server.mjs" } }, { "server.mjs": library }), {
+      source: "third-party",
+    });
+    confirmInstall(lib.stageId, [], "alice");
+    const staged = stagePlugin(
+      archive({ ...base, id: "com.test.app", name: "App", dependencies: { "com.test.lib": ">=1.0.0" }, entry: { server: "server.mjs" } }, { "server.mjs": app }),
+      { source: "third-party" },
+    );
+    confirmInstall(staged.stageId, [], "alice");
+    setPluginEnabledFor("alice", "com.test.app", true);
+    expect(await callPluginFunction("com.test.app", "compute", {}, "alice")).toBe(42);
+    expect(await callPluginApi("storage.get", { key: "last" }, { pluginId: "com.test.lib", userId: "alice" })).toBe(21);
+    await expect(callPluginApi("storage.get", { key: "last" }, { pluginId: "com.test.lib", userId: "bob" })).rejects.toThrow(/turned off/);
+    await expect(callPluginFunction("com.test.app", "sneak", {}, "alice")).rejects.toThrow(/dependencies/);
+    expect(() => uninstallPlugin("com.test.lib")).toThrow(/App/);
+  }, 30000);
+
   it("signs plugin file links for one plugin and one person, for a limited time", async () => {
     const { signAssetToken, verifyAssetToken } = await import("./asset-token");
     const token = signAssetToken("com.test.live", "alice", 1000);

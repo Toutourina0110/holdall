@@ -34,7 +34,7 @@ An admin installs it once for the whole server, after reviewing what it asks for
 | `module` | A full feature with its own page, usually with widgets and server code. |
 | `extension` | Something that adds to existing modules: widgets, hooks, export formats. |
 | `theme` | Colors, sizes and a little CSS. No code. |
-| `library` | Reserved. See [Not available yet](#not-available-yet). |
+| `library` | Server code that other plugins call, for example a client for an outside API. People do not turn it on themselves. See [Libraries](/holdall/plugins/server-and-hooks/#libraries). |
 
 `module` and `extension` work the same way; the type only tells people what to expect.
 
@@ -57,5 +57,4 @@ An admin installs it once for the whole server, after reviewing what it asks for
 These are accepted in a manifest, but do nothing yet. Do not rely on them:
 
 - the `ui:replace` permission, to replace an element of the Holdall interface;
-- `library` plugins, to share code between plugins. `dependencies` is checked at install (the other plugin must be installed, in a matching version), but a plugin cannot call another plugin's code;
 - `contributes.slots`.

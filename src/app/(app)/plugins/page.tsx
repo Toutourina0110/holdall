@@ -41,7 +41,7 @@ export default async function PluginsPage() {
   const session = await requireSession();
   const isAdmin = session.user.role === "admin";
   const installed = listInstalledPlugins();
-  const toggles = installed.map((item) => ({
+  const toggles = installed.filter((item) => item.manifest.type !== "library").map((item) => ({
     id: item.id,
     name: item.manifest.name,
     version: item.version,

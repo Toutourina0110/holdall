@@ -29,6 +29,8 @@ export default function setup(holdall) {
 | `holdall.as(userId)` | With `background`: a `context` to act for that person outside a hook. |
 | `holdall.userDir(context)` | The private data folder of that person. See [Data folder](#data-folder). |
 | `holdall.sharedDir()` | The data folder shared by everyone using the plugin. |
+| `holdall.provide(name, handler)` | In a library: expose a function to plugins that depend on it. |
+| `holdall.library(id).call(name, args, context)` | Call a function of a library listed in your `dependencies`. |
 | `holdall.log(message)` | Write a line to the Holdall log, prefixed with your plugin id. |
 
 `context` is `{ userId, callId }`. Pass it, unchanged, as the last argument of every call: it tells Holdall which person the call is for.
@@ -184,6 +186,40 @@ holdall.handle("save", ({ text }, context) => {
 - A person's folder is deleted with their account. The whole plugin folder is deleted when the plugin is uninstalled, and kept on updates.
 - Your code can technically read every person's folder of your plugin: always use the `context` of the call, and never show one person's data to another.
 - Use storage for small values the interface reads directly, and the data folder for files and bigger data.
+
+## Libraries
+
+A library is a plugin with `"type": "library"` and server code that other plugins can call. Use it to share one API client, one cache or one login between several plugins.
+
+In the library:
+
+```js
+export default function setup(holdall) {
+  holdall.provide("search", async ({ query }, context) => {
+    const settings = await holdall.api("settings.get", undefined, context);
+    const response = await holdall.fetch(`https://api.example.com/search?q=${encodeURIComponent(query)}&key=${settings.apiKey}`, undefined, context);
+    return JSON.parse(response.body);
+  });
+}
+```
+
+In a plugin that uses it, declare it in the manifest:
+
+```json
+"dependencies": { "com.example.search-client": ">=1.0.0" }
+```
+
+Then call it:
+
+```js
+holdall.handle("find", ({ query }, context) => holdall.library("com.example.search-client").call("search", { query }, context));
+```
+
+- Only libraries listed in your `dependencies` can be called. Holdall installs nothing for you: the admin installs the library first, and cannot uninstall it while a plugin needs it.
+- Pass your `context` to call it for the same person. The library then works for that person with **its own** permissions and its own storage. Without `context`, the library runs with no person and cannot use person data.
+- A library is active for everyone who turned on a plugin that depends on it. It does not appear in **On your account**.
+- Each library and each plugin runs in its own process: a library cannot see the plugin's data, and the plugin cannot use the library's permissions.
+- Calls are limited to 30 seconds.
 
 ## Server functions
 

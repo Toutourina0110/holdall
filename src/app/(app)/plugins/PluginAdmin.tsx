@@ -67,7 +67,11 @@ export function InstalledPanel({ plugins }: { plugins: AdminPluginRow[] }) {
               icon="trash"
               disabled={pending}
               onClick={() => {
-                if (window.confirm(t.uninstallConfirm.replace("{name}", item.name))) start(() => uninstallAction(item.id));
+                if (window.confirm(t.uninstallConfirm.replace("{name}", item.name)))
+                  start(async () => {
+                    const result = await uninstallAction(item.id);
+                    setError(result.error);
+                  });
               }}
             >
               {t.uninstall}

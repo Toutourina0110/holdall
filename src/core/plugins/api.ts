@@ -3,7 +3,7 @@ import { UserFacingError } from "@/core/errors";
 import { addNotification } from "@/core/notifications/store";
 import { readSettings } from "./settings";
 import { safeFetch } from "@/core/security/safe-fetch";
-import { deletePluginStorage, getInstalledPlugin, isPluginEnabledFor, readPluginStorage, writePluginStorage } from "./store";
+import { deletePluginStorage, getInstalledPlugin, isPluginActiveFor, readPluginStorage, writePluginStorage } from "./store";
 
 export type PluginCallContext = { pluginId: string; userId: string; from?: "ui" | "server" };
 
@@ -31,7 +31,7 @@ export async function callPluginApi(name: string, rawParams: unknown, context: P
   if (!method) throw new PluginPermissionError(`Unknown plugin API method ${name}.`);
   const installed = getInstalledPlugin(context.pluginId);
   if (!installed) throw new PluginPermissionError("This plugin is not installed.");
-  if (!isPluginEnabledFor(context.userId, context.pluginId)) throw new PluginPermissionError("This plugin is turned off for this user.");
+  if (!isPluginActiveFor(context.userId, context.pluginId)) throw new PluginPermissionError("This plugin is turned off for this user.");
   if (method.permission && !installed.granted.has(method.permission)) {
     throw new PluginPermissionError(`The plugin was not granted the ${method.permission} permission.`);
   }

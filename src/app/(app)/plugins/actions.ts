@@ -57,10 +57,15 @@ export async function cancelInstallAction(formData: FormData): Promise<void> {
   redirect("/plugins");
 }
 
-export async function uninstallAction(pluginId: string): Promise<void> {
+export async function uninstallAction(pluginId: string): Promise<{ error?: string }> {
   await requireAdmin();
-  await withPluginStopped(pluginId, () => uninstallPlugin(pluginId));
+  try {
+    await withPluginStopped(pluginId, () => uninstallPlugin(pluginId));
+  } catch (error) {
+    return { error: error instanceof UserFacingError ? error.message : "The plugin could not be uninstalled. Try again." };
+  }
   revalidatePath("/", "layout");
+  return {};
 }
 
 export async function togglePermissionAction(pluginId: string, permission: string, granted: boolean): Promise<{ error?: string }> {

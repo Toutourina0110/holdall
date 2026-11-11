@@ -18,6 +18,7 @@ type PluginProcess = {
   ready: Promise<void>;
   hooks: Set<string>;
   functions: Set<string>;
+  provides: Set<string>;
   pending: Map<number, Pending>;
   calls: Map<string, string>;
   sequence: number;
@@ -138,7 +139,7 @@ export function startPluginProcess(pluginId: string): PluginProcess | undefined 
     env,
     windowsHide: true,
   });
-  const proc: PluginProcess = { child, hooks: new Set(), functions: new Set(), pending: new Map(), calls: new Map(), sequence: 0, ready: Promise.resolve() };
+  const proc: PluginProcess = { child, hooks: new Set(), functions: new Set(), provides: new Set(), pending: new Map(), calls: new Map(), sequence: 0, ready: Promise.resolve() };
   proc.ready = new Promise<void>((resolve, reject) => {
     const timer = setTimeout(() => reject(new Error(`${pluginId} did not start in time.`)), 10000);
     child.on("message", async (message: Record<string, unknown>) => {
@@ -163,6 +164,31 @@ export function startPluginProcess(pluginId: string): PluginProcess | undefined 
         case "fn.register": {
           const name = String(message.name);
           if (/^[A-Za-z0-9_.:-]{1,80}$/.test(name)) proc.functions.add(name);
+          break;
+        }
+        case "provide.register": {
+          const name = String(message.name);
+          if (/^[A-Za-z0-9_.:-]{1,80}$/.test(name)) proc.provides.add(name);
+          break;
+        }
+        case "library.call": {
+          let reply: { result?: unknown; error?: string };
+          const library = String(message.library);
+          const name = String(message.name);
+          if (!(library in (getInstalledPlugin(pluginId)?.manifest.dependencies ?? {}))) {
+            reply = { error: `Declare ${library} in dependencies to call it.` };
+          } else if (!getInstalledPlugin(library)) {
+            reply = { error: `The library ${library} is not installed.` };
+          } else {
+            try {
+              const userId = message.callId || message.userId ? callerOf(proc, pluginId, message) : "";
+              if (userId === undefined) throw new PluginCallError("Pass a valid context, or none, to call a library.");
+              reply = { result: (await invoke(library, "provide", name, message.args ?? null, userId, 30000)) ?? null };
+            } catch (error) {
+              reply = { error: error instanceof Error ? error.message : String(error) };
+            }
+          }
+          if (child.connected) child.send({ type: "api.result", id: message.id, ...reply });
           break;
         }
         case "push": {
@@ -233,12 +259,13 @@ export function startPluginProcess(pluginId: string): PluginProcess | undefined 
   return proc;
 }
 
-async function invoke(pluginId: string, kind: "hook" | "fn", name: string, payload: unknown, userId: string, timeoutMs: number): Promise<unknown> {
+async function invoke(pluginId: string, kind: "hook" | "fn" | "provide", name: string, payload: unknown, userId: string, timeoutMs: number): Promise<unknown> {
   const proc = startPluginProcess(pluginId);
   if (!proc) throw new Error(`${pluginId} has no server code.`);
   await proc.ready;
   if (kind === "hook" && !proc.hooks.has(name)) return undefined;
   if (kind === "fn" && !proc.functions.has(name)) throw new PluginCallError(`The plugin has no server function named ${name}.`);
+  if (kind === "provide" && !proc.provides.has(name)) throw new PluginCallError(`The library ${pluginId} has no function named ${name}.`);
   const id = ++proc.sequence;
   const callId = randomUUID();
   proc.calls.set(callId, userId);
@@ -249,7 +276,7 @@ async function invoke(pluginId: string, kind: "hook" | "fn", name: string, paylo
         reject(new PluginCallError(`${pluginId} took too long to answer ${name}.`));
       }, timeoutMs);
       proc.pending.set(id, { resolve, reject, timer });
-      proc.child.send({ type: kind === "hook" ? "hook.call" : "fn.call", id, hook: name, name, payload, userId, callId });
+      proc.child.send({ type: kind === "hook" ? "hook.call" : kind === "fn" ? "fn.call" : "provide.call", id, hook: name, name, payload, userId, callId });
     });
   } finally {
     proc.calls.delete(callId);

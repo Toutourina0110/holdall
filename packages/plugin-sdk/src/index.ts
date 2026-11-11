@@ -157,6 +157,8 @@ export type Holdall = {
   on<H extends HookName>(hook: H, handler: (payload: HookPayloads[H]["payload"], context: HookContext) => HookPayloads[H]["result"] | Promise<HookPayloads[H]["result"]>): void;
   handle<A = unknown, R = unknown>(name: string, handler: (args: A, context: HookContext) => R | Promise<R>): void;
   push(userId: string, event: string, data?: unknown): void;
+  provide<A = unknown, R = unknown>(name: string, handler: (args: A, context: HookContext | undefined) => R | Promise<R>): void;
+  library(id: string): { call<R = unknown>(name: string, args?: unknown, context?: HookContext): Promise<R> };
   users(): Promise<string[]>;
   as(userId: string): HookContext;
   sharedDir(): string;

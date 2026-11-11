@@ -56,6 +56,18 @@ export function setPluginEnabledFor(userId: string, pluginId: string, enabled: b
     .run();
 }
 
+export function isPluginActiveFor(userId: string, pluginId: string): boolean {
+  if (isPluginEnabledFor(userId, pluginId)) return true;
+  if (getInstalledPlugin(pluginId)?.manifest.type !== "library") return false;
+  return pluginsEnabledFor(userId).some((item) => pluginId in item.manifest.dependencies);
+}
+
+export function dependentsOf(pluginId: string): string[] {
+  return listInstalledPlugins()
+    .filter((item) => pluginId in item.manifest.dependencies)
+    .map((item) => item.manifest.name);
+}
+
 export function usersWithPlugin(pluginId: string): string[] {
   return getDb()
     .select({ userId: userPlugin.userId })
