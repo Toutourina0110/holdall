@@ -25,12 +25,20 @@ function demoUsers() {
   return like(user.email, `%@${demoDomain}`);
 }
 
+const perMinute = 30;
+let lastMinute: number[] = [];
+
 function allowAddress(address: string): boolean {
   const now = Date.now();
-  if (recent.size > 10000) recent.clear();
+  lastMinute = lastMinute.filter((time) => now - time < 60 * 1000);
+  if (lastMinute.length >= perMinute) return false;
+  if (recent.size > 10000) {
+    for (const [key, times] of recent) if (times.every((time) => now - time >= windowMs)) recent.delete(key);
+  }
   const times = (recent.get(address) ?? []).filter((time) => now - time < windowMs);
   if (times.length >= perAddress) return false;
   recent.set(address, [...times, now]);
+  lastMinute.push(now);
   return true;
 }
 

@@ -19,5 +19,5 @@ export function installClientIpHeader(http: typeof Http): () => void {
 
 export function clientIpOf(headers: Headers, trustProxy: boolean): string {
   if (!trustProxy) return headers.get(clientIpHeader) ?? "";
-  return headers.get("cf-connecting-ip") ?? headers.get("x-real-ip") ?? headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "";
+  return headers.get("cf-connecting-ip") ?? headers.get("x-real-ip") ?? headers.get("x-forwarded-for")?.split(",").at(-1)?.trim() ?? "";
 }
