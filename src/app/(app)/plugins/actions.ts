@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { requireAdmin, requireSession } from "@/core/auth/session";
 import { getEnv } from "@/core/env";
 import { UserFacingError } from "@/core/errors";
-import { ensureBackgroundPlugin, stopPluginProcess } from "@/core/plugins/host";
+import { ensureBackgroundPlugin, stopPluginProcess, withPluginStopped } from "@/core/plugins/host";
 import { confirmInstall, discardStaged, readStaged, stagePlugin, stagePluginFromUrl, uninstallPlugin } from "@/core/plugins/install";
 import { stageFromRegistry } from "@/core/plugins/registry";
 import { setPluginEnabledFor, setPluginPermission, usersWithPlugin } from "@/core/plugins/store";
@@ -45,8 +45,7 @@ export async function confirmInstallAction(formData: FormData): Promise<void> {
   if (getEnv().demoMode) throw new UserFacingError(demoOff);
   const stageId = String(formData.get("stageId") ?? "");
   const optional = formData.getAll("optional").map(String);
-  await stopPluginProcess(readStaged(stageId).manifest.id);
-  const manifest = confirmInstall(stageId, optional, session.user.id);
+  const manifest = await withPluginStopped(readStaged(stageId).manifest.id, () => confirmInstall(stageId, optional, session.user.id));
   ensureBackgroundPlugin(manifest.id);
   revalidatePath("/", "layout");
   redirect("/plugins");
@@ -60,19 +59,17 @@ export async function cancelInstallAction(formData: FormData): Promise<void> {
 
 export async function uninstallAction(pluginId: string): Promise<void> {
   await requireAdmin();
-  await stopPluginProcess(pluginId);
-  uninstallPlugin(pluginId);
+  await withPluginStopped(pluginId, () => uninstallPlugin(pluginId));
   revalidatePath("/", "layout");
 }
 
 export async function togglePermissionAction(pluginId: string, permission: string, granted: boolean): Promise<{ error?: string }> {
   await requireAdmin();
   try {
-    setPluginPermission(pluginId, permission, granted);
+    await withPluginStopped(pluginId, () => setPluginPermission(pluginId, permission, granted));
   } catch (error) {
     return { error: error instanceof Error ? error.message : "The permission could not be changed." };
   }
-  await stopPluginProcess(pluginId);
   ensureBackgroundPlugin(pluginId);
   revalidatePath("/", "layout");
   return {};

@@ -58,7 +58,18 @@ export type Manifest = {
     slots?: string[];
     widgets?: { id: string; title: string; entry: string; width?: 1 | 2 | 3 }[];
     page?: { title: string; entry: string };
-    settings?: string;
+    settings?: {
+      key: string;
+      label: string;
+      description?: string;
+      type: "text" | "textarea" | "number" | "boolean" | "select" | "url" | "secret";
+      scope?: "global" | "personal";
+      default?: string | number | boolean;
+      options?: { value: string; label: string }[];
+      min?: number;
+      max?: number;
+      required?: boolean;
+    }[];
   };
 };
 
@@ -110,6 +121,7 @@ export type Methods = {
   "theme.tokens": { params: undefined; result: Record<string, string> };
   "server.call": { params: { name: string; args?: unknown }; result: unknown };
   "events.subscribe": { params: undefined; result: true };
+  "settings.get": { params: undefined; result: Record<string, string | number | boolean | null> };
   "storage.get": { params: { key: string }; result: unknown };
   "storage.set": { params: { key: string; value: unknown }; result: true };
   "storage.delete": { params: { key: string }; result: true };

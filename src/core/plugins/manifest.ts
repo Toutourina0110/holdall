@@ -8,6 +8,25 @@ const relativeFile = z
   .regex(/^[A-Za-z0-9_./-]+$/, "Use a simple relative path.")
   .refine((value) => !value.startsWith("/") && !value.split("/").includes(".."), "Paths must stay inside the plugin.");
 
+const settingKey = z.string().regex(/^[a-zA-Z][a-zA-Z0-9_]{0,39}$/, "Use a key like apiKey or city.");
+
+export const settingFieldSchema = z
+  .object({
+    key: settingKey,
+    label: z.string().trim().min(1).max(60),
+    description: z.string().max(300).optional(),
+    type: z.enum(["text", "textarea", "number", "boolean", "select", "url", "secret"]),
+    scope: z.enum(["global", "personal"]).default("personal"),
+    default: z.union([z.string().max(2000), z.number(), z.boolean()]).optional(),
+    options: z.array(z.object({ value: z.string().max(100), label: z.string().max(60) }).strict()).max(50).optional(),
+    min: z.number().optional(),
+    max: z.number().optional(),
+    required: z.boolean().default(false),
+  })
+  .strict();
+
+export type SettingField = z.infer<typeof settingFieldSchema>;
+
 export const pluginIdSchema = z
   .string()
   .max(100)
@@ -52,10 +71,10 @@ export const manifestSchema = z
           .max(10)
           .default([]),
         page: z.object({ title: z.string().trim().min(1).max(40), entry: relativeFile }).strict().optional(),
-        settings: relativeFile.optional(),
+        settings: z.array(settingFieldSchema).max(40).default([]),
       })
       .strict()
-      .default({ hooks: [], slots: [], widgets: [] }),
+      .default({ hooks: [], slots: [], widgets: [], settings: [] }),
   })
   .strict()
   .superRefine((manifest, ctx) => {
@@ -67,6 +86,14 @@ export const manifestSchema = z
       const permission = `hooks:${hook}`;
       if (!manifest.permissions.includes(permission) && !manifest.optionalPermissions.includes(permission)) {
         ctx.addIssue({ code: "custom", message: `Declare the ${permission} permission to use this hook.`, path: ["contributes", "hooks"] });
+      }
+    }
+    const keys = new Set<string>();
+    for (const field of manifest.contributes.settings) {
+      if (keys.has(field.key)) ctx.addIssue({ code: "custom", message: `The setting ${field.key} is declared twice.`, path: ["contributes", "settings"] });
+      keys.add(field.key);
+      if (field.type === "select" && !field.options?.length) {
+        ctx.addIssue({ code: "custom", message: `The setting ${field.key} needs options.`, path: ["contributes", "settings"] });
       }
     }
     if (manifest.type === "theme" && (manifest.entry.server || manifest.entry.ui)) {

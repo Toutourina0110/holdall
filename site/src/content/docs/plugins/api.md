@@ -40,6 +40,18 @@ Interface code only. No permission; needs `entry.server`.
 
 No params. **Returns** `true`. From then on, events your server code sends with `holdall.push` arrive as `{ type: "holdall:event", event, data }` messages. See [Receive live events](/holdall/plugins/interface/#receive-live-events).
 
+## Settings
+
+### `settings.get`
+
+No permission. No params. **Returns** the values of your [settings](/holdall/plugins/manifest/#settings) for the person: their personal values, the global values, and defaults for anything not saved.
+
+```json
+{ "apiKey": "abc123", "city": "Lisbon", "units": "c", "days": 3, "alerts": false }
+```
+
+From interface code, `secret` values are `true` (set) or `null` (not set). From server code they are the real value. Read settings when you need them: people can change them at any time.
+
 ## Storage
 
 Private data for your plugin, separate for each person, shared between your interface and server code. Deleted when the plugin is uninstalled.

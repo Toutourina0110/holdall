@@ -26,7 +26,7 @@ test("an admin installs the example plugin and its widget appears on Today", asy
   await page.getByLabel("Plugin archive").setInputFiles({ name: "hello-widget.zip", mimeType: "application/zip", buffer: examplePluginZip() });
   await page.getByRole("button", { name: "Review the plugin" }).click();
   await expect(page.getByText("Third-party plugin. Not made, reviewed or endorsed by the Holdall team.")).toBeVisible();
-  await expect(page.getByText("Keep its own private data on this server")).toBeVisible();
+  await expect(page.getByText("Keep its own private data and files on this server")).toBeVisible();
   await page.getByRole("button", { name: "Accept and install" }).click();
   await page.waitForURL("/plugins");
   await expect(page.getByText("Hello widget").first()).toBeVisible();
@@ -72,4 +72,46 @@ test("a plugin frame cannot use the Holdall session", async ({ page }) => {
   await page.waitForTimeout(500);
   await page.goto("/");
   await expect(page.frameLocator("iframe[title='Snoop']").locator("#out")).toHaveText(/get:blocked,post:blocked,cookie:(blocked|0)/);
+});
+
+test("a person fills the settings form of a plugin", async ({ page }) => {
+  await signIn(page);
+  const manifest = {
+    id: "com.test.weather",
+    name: "Weather",
+    version: "1.0.0",
+    type: "extension",
+    author: { name: "Test" },
+    license: "MIT",
+    holdall: ">=0.0.1",
+    permissions: ["ui:slots"],
+    entry: { ui: "w.html" },
+    contributes: {
+      settings: [
+        { key: "apiKey", label: "API key", type: "secret", scope: "global", description: "From your weather provider account." },
+        { key: "city", label: "City", type: "text", scope: "personal", default: "Paris" },
+        { key: "units", label: "Units", type: "select", scope: "personal", options: [{ value: "c", label: "Celsius" }, { value: "f", label: "Fahrenheit" }] },
+        { key: "alerts", label: "Show alerts", type: "boolean", scope: "personal" },
+      ],
+    },
+  };
+  const archive = Buffer.from(zipSync({ "holdall.plugin.json": Buffer.from(JSON.stringify(manifest)), "w.html": Buffer.from("<p>w</p>") }));
+  await page.goto("/plugins");
+  await page.getByLabel("Plugin archive").setInputFiles({ name: "weather.zip", mimeType: "application/zip", buffer: archive });
+  await page.getByRole("button", { name: "Review the plugin" }).click();
+  await page.getByRole("button", { name: "Accept and install" }).click();
+  await page.waitForURL("/plugins");
+  await page.getByRole("group", { name: "Use Weather" }).getByRole("button", { name: "On" }).click();
+  await page.waitForTimeout(500);
+  await page.goto("/plugins/com.test.weather/settings");
+  await page.getByLabel("City").fill("Lisbon");
+  await page.getByLabel("Units").selectOption("c");
+  await page.getByRole("button", { name: "Save settings" }).first().click();
+  await expect(page.getByText("Settings saved.")).toBeVisible();
+  await page.reload();
+  await expect(page.getByLabel("City")).toHaveValue("Lisbon");
+  await page.setViewportSize({ width: 375, height: 812 });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375);
+  const missing = await page.goto("/plugins/com.test.nothing/settings");
+  expect(missing?.status()).toBe(404);
 });

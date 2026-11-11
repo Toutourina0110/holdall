@@ -2,7 +2,7 @@
 
 import { useTransition } from "react";
 import { strings } from "@/core/strings";
-import { Chip, Segmented } from "@/ui/controls";
+import { ButtonLink, Chip, Segmented } from "@/ui/controls";
 import { Panel, PanelEmpty, PanelRow } from "@/ui/Panel";
 import { setPluginEnabledAction } from "./actions";
 import styles from "../admin/admin.module.css";
@@ -16,6 +16,7 @@ export type UserPluginRow = {
   source: string;
   enabled: boolean;
   permissions: string[];
+  settings: boolean;
 };
 
 export function PluginToggles({ plugins, isAdmin }: { plugins: UserPluginRow[]; isAdmin: boolean }) {
@@ -36,6 +37,11 @@ export function PluginToggles({ plugins, isAdmin }: { plugins: UserPluginRow[]; 
             {item.permissions.length > 0 && <span className={`${styles.meta} ${styles.block}`}>{item.permissions.join(", ")}</span>}
           </span>
           {item.source === "third-party" && <Chip icon="alert">{t.thirdParty}</Chip>}
+          {item.settings && (
+            <ButtonLink href={`/plugins/${encodeURIComponent(item.id)}/settings`} icon="settings">
+              {strings.pluginSettings.title}
+            </ButtonLink>
+          )}
           <Segmented
             label={`${t.useFor} ${item.name}`}
             value={item.enabled ? "on" : "off"}

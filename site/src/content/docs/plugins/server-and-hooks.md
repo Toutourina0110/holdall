@@ -46,7 +46,7 @@ export default function setup(holdall) {
 
 By default the process is started with the Node permission model:
 
-- it can read the files of your plugin folder, read and write its [data folder](#data-folder), and nothing else;
+- it can read the files of your plugin folder, read and write its [data folder](#data-folder) (with `storage`), and nothing else;
 - it cannot write files, start programs, open network connections or load native addons;
 - it can run WebAssembly, but not WASI or worker threads;
 - it has 512 MB of memory.
@@ -164,7 +164,7 @@ export default function setup(holdall) {
 
 ## Data folder
 
-Every plugin with server code gets its own folder on disk, where it can read and write anything with `fs`, without any permission: SQLite files, caches, downloads, logs.
+Every plugin with server code and the `storage` permission gets its own folder on disk, where it can read and write anything with `fs`: SQLite files, caches, downloads, logs.
 
 ```js
 import fs from "node:fs";

@@ -50,6 +50,9 @@ export default async function PluginsPage() {
     source: item.source,
     enabled: isPluginEnabledFor(session.user.id, item.id),
     permissions: [...item.granted].map(describePermission),
+    settings: item.manifest.contributes.settings.some(
+      (field) => (field.scope === "personal" && isPluginEnabledFor(session.user.id, item.id)) || (field.scope === "global" && isAdmin),
+    ),
   }));
   const managed = installed.map((item) => ({
     id: item.id,

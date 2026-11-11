@@ -8,6 +8,7 @@ import { appSetting, invitation, passwordReset, user } from "@/core/db/schema";
 import { getEnv } from "@/core/env";
 import { UserFacingError } from "@/core/errors";
 import { pluginDataPath, userPath, type UserArea } from "@/core/paths";
+import { deleteUserSettings } from "@/core/plugins/settings";
 import { getAuth } from "./server";
 import { withSignupGrant } from "./signup-grant";
 
@@ -187,6 +188,7 @@ export function setUserRole(userId: string, role: "admin" | "user") {
 const userAreas: UserArea[] = ["notes", "files", "downloads"];
 
 export function deleteAccount(userId: string): void {
+  deleteUserSettings(userId);
   getDb().delete(user).where(eq(user.id, userId)).run();
   for (const area of userAreas) fs.rmSync(userPath(getEnv().dataDir, area, userId), { recursive: true, force: true });
   const pluginData = path.join(getEnv().dataDir, "plugin-data");

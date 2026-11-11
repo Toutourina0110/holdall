@@ -1,10 +1,11 @@
 import { z } from "zod";
 import { UserFacingError } from "@/core/errors";
 import { addNotification } from "@/core/notifications/store";
+import { readSettings } from "./settings";
 import { safeFetch } from "@/core/security/safe-fetch";
 import { deletePluginStorage, getInstalledPlugin, isPluginEnabledFor, readPluginStorage, writePluginStorage } from "./store";
 
-export type PluginCallContext = { pluginId: string; userId: string };
+export type PluginCallContext = { pluginId: string; userId: string; from?: "ui" | "server" };
 
 type ApiMethod = {
   permission: string | null;
@@ -98,4 +99,8 @@ registerPluginApi(
     addNotification(context.userId, installed.manifest.name, title, body ?? "");
     return true;
   },
+);
+
+registerPluginApi("settings.get", null, z.object({}), (_params, context) =>
+  readSettings(context.pluginId, context.userId, { secrets: context.from === "server" ? "value" : "hidden" }),
 );

@@ -49,6 +49,7 @@ Every plugin has a `holdall.plugin.json` file at the root of its archive. Holdal
 | `contributes.hooks` | no | Known hook names | Hooks your server code listens to. Each needs its `hooks:<name>` permission. |
 | `contributes.widgets` | no | Up to 10 | Widgets for **Today**. See below. |
 | `contributes.page` | no | `title` (up to 40 characters) and `entry` | A page in the side bar. |
+| `contributes.settings` | no | Up to 40 fields | A settings form drawn by Holdall. See [Settings](#settings). |
 
 Unknown fields are refused, so a typo is caught at install instead of being ignored.
 
@@ -72,6 +73,38 @@ Widgets need the `ui:slots` permission. They appear on **Today** for each person
 ```
 
 The page gets an entry in the side bar, named `title`, and opens at `/p/<plugin id>`. It fills the content area. It needs the `ui:slots` permission.
+
+## Settings
+
+Declare your settings and Holdall draws the form, validates the values, encrypts secrets and stores everything. A **Settings** button appears next to your plugin on the **Plugins** page.
+
+```json
+"settings": [
+  { "key": "apiKey", "label": "API key", "type": "secret", "scope": "global", "description": "From your weather provider account.", "required": true },
+  { "key": "city", "label": "City", "type": "text", "scope": "personal", "default": "Paris" },
+  { "key": "units", "label": "Units", "type": "select", "scope": "personal", "options": [{ "value": "c", "label": "Celsius" }, { "value": "f", "label": "Fahrenheit" }] },
+  { "key": "days", "label": "Days to show", "type": "number", "scope": "personal", "min": 1, "max": 7, "default": 3 },
+  { "key": "alerts", "label": "Show alerts", "type": "boolean", "scope": "personal" }
+]
+```
+
+| Field | Meaning |
+|---|---|
+| `key` | Name of the value, a letter then letters, digits or `_`, up to 40 characters. Unique. |
+| `label` | What people read, up to 60 characters. |
+| `description` | Help under the field, up to 300 characters. |
+| `type` | `text`, `textarea`, `number`, `boolean`, `select`, `url` or `secret`. |
+| `scope` | `personal` (default): each person sets their own. `global`: one value for everyone, set by admins. |
+| `default` | Value used until someone saves one. Not used for `secret`. |
+| `options` | For `select`: the list of `{ value, label }`. Required for that type. |
+| `min`, `max` | For `number`. |
+| `required` | The form refuses an empty value. |
+
+- `secret` values (API keys, passwords) are encrypted at rest with `APP_SECRET`. The form never shows them again; leaving the field empty keeps the saved value.
+- Only your **server code** can read a secret. Your interface gets `true` when it is set and `null` when it is not, so a key never reaches the browser.
+- Personal settings are deleted with the person's account; all settings are deleted when the plugin is uninstalled.
+
+Read them with [`settings.get`](/holdall/plugins/api/#settingsget).
 
 ## Rules checked at install
 

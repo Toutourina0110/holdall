@@ -29,7 +29,7 @@ Yes, with the `background` permission: use `setInterval`, then `holdall.users()`
 
 ## Where do I keep settings?
 
-In storage, with a form on your page: `storage.set("settings", {...})`. Each person has their own. Bigger data goes in your [data folder](/holdall/plugins/server-and-hooks/#data-folder).
+Declare them in the manifest and Holdall draws the form for you, with personal and global values and encrypted secrets. See [Settings](/holdall/plugins/manifest/#settings). For anything more complex, use storage and your own form. Bigger data goes in your [data folder](/holdall/plugins/server-and-hooks/#data-folder).
 
 ## Can I use SQLite or keep big files?
 

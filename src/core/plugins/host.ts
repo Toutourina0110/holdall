@@ -96,22 +96,41 @@ function hostEnv(): NodeJS.ProcessEnv {
   return env;
 }
 
+const locked = new Set<string>();
+
+export async function withPluginStopped<T>(pluginId: string, work: () => T | Promise<T>): Promise<T> {
+  locked.add(pluginId);
+  try {
+    await stopPluginProcess(pluginId);
+    return await work();
+  } finally {
+    locked.delete(pluginId);
+  }
+}
+
 export function startPluginProcess(pluginId: string): PluginProcess | undefined {
-  const existing = processes.get(pluginId);
-  if (existing && existing.child.exitCode === null) return existing;
+  if (locked.has(pluginId)) return undefined;
   const installed = getInstalledPlugin(pluginId);
+  const existing = processes.get(pluginId);
+  if (existing && !installed) {
+    void stopPluginProcess(pluginId);
+    return undefined;
+  }
+  if (existing && existing.child.exitCode === null) return existing;
   const serverEntry = installed?.manifest.entry.server;
   if (!installed || !serverEntry) return undefined;
   const dir = installedDir(pluginId);
   const entry = safeJoin(dir, serverEntry);
   const runner = runnerPath();
   const has = (permission: string) => installed.granted.has(permission) && (getEnv().allowUnsafePlugins || !isUnsafePermission(permission));
-  const dataDir = pluginDataPath(getEnv().dataDir, pluginId);
-  fs.mkdirSync(path.join(dataDir, "shared"), { recursive: true });
-  fs.mkdirSync(path.join(dataDir, "users"), { recursive: true });
+  const dataDir = has("storage") ? pluginDataPath(getEnv().dataDir, pluginId) : undefined;
+  if (dataDir) {
+    fs.mkdirSync(path.join(dataDir, "shared"), { recursive: true });
+    fs.mkdirSync(path.join(dataDir, "users"), { recursive: true });
+  }
   const env: NodeJS.ProcessEnv = {
     ...(has("system") || has("process:spawn") ? hostEnv() : { NODE_ENV: process.env.NODE_ENV ?? "production" }),
-    HOLDALL_PLUGIN_DATA: dataDir,
+    ...(dataDir ? { HOLDALL_PLUGIN_DATA: dataDir } : {}),
   };
   const child: ChildProcess = spawn(process.execPath, [...nodeFlags(dir, runner, has, dataDir), runner, entry], {
     cwd: dir,
@@ -185,7 +204,7 @@ export function startPluginProcess(pluginId: string): PluginProcess | undefined 
           if (!userId) reply = { error: "API calls are only allowed while Holdall is calling the plugin, or with the background permission for a person who turned it on." };
           else {
             try {
-              reply = { result: await callPluginApi(String(message.method), message.params, { pluginId, userId }) };
+              reply = { result: await callPluginApi(String(message.method), message.params, { pluginId, userId, from: "server" }) };
             } catch (error) {
               reply = { error: error instanceof Error ? error.message : String(error) };
             }

@@ -40,9 +40,11 @@ const holdall = {
     return { userId };
   },
   sharedDir() {
+    if (!process.env.HOLDALL_PLUGIN_DATA) throw new Error("The plugin was not granted the storage permission.");
     return path.join(process.env.HOLDALL_PLUGIN_DATA, "shared");
   },
   userDir(context) {
+    if (!process.env.HOLDALL_PLUGIN_DATA) throw new Error("The plugin was not granted the storage permission.");
     const userId = String(context?.userId ?? "");
     if (!/^[A-Za-z0-9_-]{1,64}$/.test(userId)) throw new Error("Pass the context of a person to get their folder.");
     const dir = path.join(process.env.HOLDALL_PLUGIN_DATA, "users", userId);

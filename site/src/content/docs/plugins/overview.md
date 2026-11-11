@@ -57,4 +57,4 @@ These are accepted in a manifest, but do nothing yet. Do not rely on them:
 
 - the `ui:replace` permission, to replace an element of the Holdall interface;
 - `library` plugins, to share code between plugins. `dependencies` is checked at install (the other plugin must be installed, in a matching version), but a plugin cannot call another plugin's code;
-- `contributes.slots` and `contributes.settings`.
+- `contributes.slots`.

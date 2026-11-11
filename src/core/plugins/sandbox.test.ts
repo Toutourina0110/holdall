@@ -258,7 +258,7 @@ export default function (holdall) {
   });
 }
 `;
-    const staged = stagePlugin(archive({ ...base, id: "com.test.data", name: "Data", entry: { server: "server.mjs" } }, { "server.mjs": server }), {
+    const staged = stagePlugin(archive({ ...base, id: "com.test.data", name: "Data", permissions: ["storage"], entry: { server: "server.mjs" } }, { "server.mjs": server }), {
       source: "third-party",
     });
     confirmInstall(staged.stageId, [], "alice");

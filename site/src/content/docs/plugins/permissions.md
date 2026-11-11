@@ -21,7 +21,7 @@ The **Shown as** column is the sentence people read on the consent screen.
 | `downloads:create` | Start downloads for you | `downloads.create` |
 | `network` | Connect to the internet addresses listed below | `network.fetch`, to the hosts in `network` |
 | `notifications` | Show you notifications | `notifications.show` |
-| `storage` | Keep its own private data on this server | `storage.get`, `storage.set`, `storage.delete` |
+| `storage` | Keep its own private data and files on this server | `storage.get`, `storage.set`, `storage.delete`, and the [data folder](/holdall/plugins/server-and-hooks/#data-folder) |
 | `background` | Keep running in the background and act for you at any time | Starting with Holdall, `holdall.users()`, `holdall.as(userId)` |
 | `ui:slots` | Add elements to the interface | Widgets, a page, the `dashboard.widgets` hook |
 | `network:any` | Connect to any address on the internet | `network.fetch` to any public `http` or `https` address, without listing hosts |
