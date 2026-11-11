@@ -13,4 +13,6 @@ export async function register(): Promise<void> {
   startJobWorker({ concurrency: getEnv().maxConcurrentJobs });
   const { autoUpdateTools } = await import("@/modules/downloader/jobs");
   void autoUpdateTools();
+  const { startCalendarScheduler } = await import("@/modules/calendar/sync");
+  startCalendarScheduler();
 }
