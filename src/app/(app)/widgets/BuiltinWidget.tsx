@@ -6,6 +6,7 @@ import { strings } from "@/core/strings";
 import { localDay, shortDay } from "@/ui/dates";
 import { SurveyMark } from "@/ui/SurveyMark";
 import { useJobs } from "@/ui/useJobs";
+import { loadRangeAction, type CalendarItem } from "../calendar/actions";
 import { setDoneAction } from "../tasks/actions";
 import { recentNotesAction, todayTasksAction } from "./actions";
 import styles from "./widgets.module.css";
@@ -126,9 +127,51 @@ function DownloadsQueue() {
   );
 }
 
+function CalendarToday() {
+  const t = strings.calendar;
+  const [events, setEvents] = useState<CalendarItem[]>();
+  const [error, setError] = useState<string>();
+  useEffect(() => {
+    let active = true;
+    const from = new Date();
+    from.setHours(0, 0, 0, 0);
+    const to = new Date(from);
+    to.setDate(to.getDate() + 1);
+    loadRangeAction(from.toISOString(), to.toISOString())
+      .then((result) => {
+        if (!active) return;
+        if ("error" in result) setError(result.error);
+        else setEvents(result.items.filter((item) => item.kind === "event").sort((a, b) => a.start.localeCompare(b.start)));
+      })
+      .catch(() => active && setError(strings.tasks.loadFailed));
+    return () => {
+      active = false;
+    };
+  }, []);
+  if (error) return <p className={styles.empty}>{error}</p>;
+  if (!events) return <p className={styles.empty}>{strings.settings.loading}</p>;
+  return (
+    <>
+      {events.length === 0 && <p className={styles.empty}>{t.widgetEmpty}</p>}
+      <ul className={styles.rows}>
+        {events.map((event) => (
+          <li key={event.id}>
+            <span className={`${styles.title} ${styles.padded}`}>{event.title}</span>
+            <span className={styles.meta}>{event.allDay ? t.allDay : new Date(event.start).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}</span>
+          </li>
+        ))}
+      </ul>
+      <Link className={styles.more} href="/calendar">
+        {t.widgetMore}
+      </Link>
+    </>
+  );
+}
+
 export function BuiltinWidget({ component }: { component: string }) {
   if (component === "tasks.today") return <TasksToday />;
   if (component === "downloads.queue") return <DownloadsQueue />;
   if (component === "notes.recent") return <RecentNotes />;
+  if (component === "calendar.today") return <CalendarToday />;
   return null;
 }

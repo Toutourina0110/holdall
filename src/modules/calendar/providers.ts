@@ -3,6 +3,7 @@ import net from "node:net";
 import { createDAVClient, type DAVCalendar } from "tsdav";
 import { getEnv } from "@/core/env";
 import { UserFacingError } from "@/core/errors";
+import { isDesktop } from "@/core/target";
 import { safeFetch } from "@/core/security/safe-fetch";
 import { buildEvent, parseEvents } from "./ical";
 import type { CalendarProvider, Credentials, EventFields, Provider, RemoteCalendar, RemoteEvent } from "./types";
@@ -311,6 +312,7 @@ export type OAuthProvider = "google" | "microsoft";
 
 export function oauthConfig(provider: OAuthProvider) {
   const env = getEnv();
+  if (isDesktop()) return undefined;
   if (provider === "google") {
     if (!env.googleClientId || !env.googleClientSecret) return undefined;
     return {

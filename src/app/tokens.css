@@ -87,6 +87,11 @@
   --size-trail: 140px;
   --size-preview: 420px;
   --size-preview-media: 480px;
+  --size-hour: 48px;
+  --size-hour-label: 52px;
+  --size-event-min: 22px;
+  --size-day-column: 120px;
+  --size-month-cell: 104px;
   --size-control: 30px;
   --size-row: 40px;
   --size-header: 44px;
