@@ -109,7 +109,7 @@ export const en = {
   },
   settings: {
     title: "Settings",
-    intro: "Your account, how Holdall looks, and the plugins you use.",
+    intro: "Your account, how Holdall looks, and how it is laid out.",
     tabAccount: "Account",
     tabAppearance: "Appearance",
     tabLayout: "Layout",
