@@ -1,14 +1,7 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
+import { password, signIn } from "./helpers";
 
-const password = "correct-horse-battery";
 
-async function signIn(page: Page, email: string) {
-  await page.goto("/login");
-  await page.getByLabel("Email").fill(email);
-  await page.getByLabel("Password").fill(password);
-  await page.getByRole("button", { name: "Sign in" }).click();
-  await page.waitForURL("/");
-}
 
 test.describe.configure({ mode: "serial" });
 
@@ -36,7 +29,7 @@ test("pages and API need a session", async ({ page, request }) => {
 });
 
 test("an invited member cannot open the admin page", async ({ page, browser }) => {
-  await signIn(page, "ada@example.com");
+  await signIn(page);
   await page.goto("/admin");
   await page.getByRole("button", { name: "Create invitation link" }).click();
   const link = await page.getByLabel("Invitation link").inputValue();
@@ -53,7 +46,7 @@ test("an invited member cannot open the admin page", async ({ page, browser }) =
 });
 
 test("unknown route shows the custom 404", async ({ page }) => {
-  await signIn(page, "ada@example.com");
+  await signIn(page);
   const response = await page.goto("/does-not-exist");
   expect(response?.status()).toBe(404);
   await expect(page.getByRole("heading", { level: 1, name: "This page does not exist" })).toBeVisible();
@@ -61,8 +54,8 @@ test("unknown route shows the custom 404", async ({ page }) => {
 
 test("no horizontal scroll at 375 px", async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 812 });
-  await signIn(page, "ada@example.com");
-  for (const path of ["/", "/settings", "/settings/appearance", "/admin", "/login"]) {
+  await signIn(page);
+  for (const path of ["/", "/notes", "/tasks", "/settings", "/settings/appearance", "/admin", "/login"]) {
     await page.goto(path);
     const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
     expect(scrollWidth, path).toBeLessThanOrEqual(375);

@@ -10,14 +10,19 @@ export type SlotItem = {
   order: number;
   source: string;
   widget?: { pluginId: string; entry: string; title: string; width?: 1 | 2 | 3 };
+  builtin?: { component: string; width?: 1 | 2 | 3 };
 };
 
 export type ResolvedItem = SlotItem & { hidden: boolean; style: ElementStyle };
 
-const contributors: ((context: { userId: string; isAdmin: boolean }) => SlotItem[])[] = [];
+type Contributor = (context: { userId: string; isAdmin: boolean }) => SlotItem[];
 
-export function registerSlotContributor(contributor: (context: { userId: string; isAdmin: boolean }) => SlotItem[]): void {
-  contributors.push(contributor);
+const globalKey = Symbol.for("holdall.slotContributors");
+const store = globalThis as unknown as Record<symbol, Map<string, Contributor> | undefined>;
+const contributors: Map<string, Contributor> = (store[globalKey] ??= new Map());
+
+export function registerSlotContributor(key: string, contributor: Contributor): void {
+  contributors.set(key, contributor);
 }
 
 function coreItems(isAdmin: boolean): SlotItem[] {
@@ -31,7 +36,7 @@ function coreItems(isAdmin: boolean): SlotItem[] {
 }
 
 export function slotItemsFor(context: { userId: string; isAdmin: boolean }): SlotItem[] {
-  return [...coreItems(context.isAdmin), ...contributors.flatMap((contribute) => contribute(context))];
+  return [...coreItems(context.isAdmin), ...[...contributors.values()].flatMap((contribute) => contribute(context))];
 }
 
 export function resolveSlot(slot: SlotId, items: SlotItem[], layout: UserLayout): ResolvedItem[] {

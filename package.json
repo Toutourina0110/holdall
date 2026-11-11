@@ -26,6 +26,7 @@
     "@dnd-kit/helpers": "0.5.3",
     "@dnd-kit/react": "0.5.3",
     "@tiptap/extension-image": "3.33.1",
+    "@tiptap/extension-list": "3.33.1",
     "@tiptap/extension-table": "3.33.1",
     "@tiptap/extension-task-item": "3.33.1",
     "@tiptap/extension-task-list": "3.33.1",

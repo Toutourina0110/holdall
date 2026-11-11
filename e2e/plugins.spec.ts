@@ -1,9 +1,9 @@
 import fs from "node:fs";
 import path from "node:path";
 import { expect, test } from "@playwright/test";
+import { signIn } from "./helpers";
 import { zipSync } from "fflate";
 
-const password = "correct-horse-battery";
 
 function examplePluginZip(): Buffer {
   const root = path.resolve("examples/plugins/hello-widget");
@@ -20,11 +20,7 @@ function examplePluginZip(): Buffer {
 }
 
 test("an admin installs the example plugin and its widget appears on Today", async ({ page }) => {
-  await page.goto("/login");
-  await page.getByLabel("Email").fill("ada@example.com");
-  await page.getByLabel("Password").fill(password);
-  await page.getByRole("button", { name: "Sign in" }).click();
-  await page.waitForURL("/");
+  await signIn(page);
 
   await page.goto("/admin/plugins");
   await page.getByLabel("Plugin archive").setInputFiles({ name: "hello-widget.zip", mimeType: "application/zip", buffer: examplePluginZip() });

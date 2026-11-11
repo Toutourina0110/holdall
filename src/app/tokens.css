@@ -80,6 +80,10 @@
   --size-widget: 220px;
   --size-token-column: 260px;
   --size-token-input: 9ch;
+  --size-notes-nav: 220px;
+  --size-notes-list: 300px;
+  --size-notes-details: 280px;
+  --size-editor: 420px;
   --size-control: 30px;
   --size-row: 40px;
   --size-header: 44px;

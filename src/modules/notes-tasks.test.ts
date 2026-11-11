@@ -130,3 +130,16 @@ describe("tasks", () => {
     expect(notes.getNote("bob", source.id).content).toBe("- [x] Book train\n- [ ] Pack\n");
   });
 });
+
+describe("account deletion", () => {
+  it("removes search index rows when a user's notes are deleted", async () => {
+    await insertUser("carol");
+    notes.createNote("carol", { title: "Private diary", content: "unique-carol-word" });
+    const { getDb } = await import("@/core/db/client");
+    const { user } = await import("@/core/db/schema");
+    const { eq, sql } = await import("drizzle-orm");
+    getDb().delete(user).where(eq(user.id, "carol")).run();
+    const left = getDb().all<{ n: number }>(sql`select count(*) as n from note_fts where user_id = 'carol'`);
+    expect(left[0]!.n).toBe(0);
+  });
+});
