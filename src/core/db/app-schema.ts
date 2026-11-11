@@ -38,6 +38,22 @@ export const passwordReset = sqliteTable(
   (table) => [index("password_reset_user_idx").on(table.userId)],
 );
 
+export const notification = sqliteTable(
+  "notification",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    source: text("source").notNull(),
+    title: text("title").notNull(),
+    body: text("body").notNull().default(""),
+    readAt: integer("read_at", { mode: "timestamp_ms" }),
+    createdAt: createdAt(),
+  },
+  (table) => [index("notification_user_idx").on(table.userId, table.createdAt)],
+);
+
 export const appSetting = sqliteTable("app_setting", {
   key: text("key").primaryKey(),
   value: text("value").notNull(),

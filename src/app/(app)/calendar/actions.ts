@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireSession } from "@/core/auth/session";
+import { filterCalendarEvents } from "@/core/plugins/filters";
 import { getEnv } from "@/core/env";
 import { UserFacingError } from "@/core/errors";
 import { caldav } from "@/modules/calendar/providers";
@@ -31,6 +32,7 @@ export type CalendarItem = {
   id: string;
   kind: "event" | "task";
   title: string;
+  label?: string;
   start: string;
   end: string;
   allDay: boolean;
@@ -48,14 +50,20 @@ export async function loadRangeAction(from: string, to: string): Promise<Result<
     const start = z.coerce.date().parse(from);
     const end = z.coerce.date().parse(to);
     if (end.getTime() - start.getTime() > 62 * 86400000) throw new UserFacingError("Choose a shorter period.");
-    const events: CalendarItem[] = listEvents(session.user.id, start, end).map((event) => ({
+    const rows = listEvents(session.user.id, start, end);
+    const rendered = await filterCalendarEvents(
+      rows.map((event) => ({ id: event.id, title: event.title, color: event.color })),
+      session.user.id,
+    );
+    const events: CalendarItem[] = rows.map((event, index) => ({
       id: event.id,
       kind: "event",
       title: event.title,
+      label: rendered[index]!.title === event.title ? undefined : rendered[index]!.title,
       start: event.start.toISOString(),
       end: event.end.toISOString(),
       allDay: event.allDay,
-      color: event.color,
+      color: rendered[index]!.color,
       calendarId: event.calendarId,
       calendarName: event.calendarName,
       location: event.location,

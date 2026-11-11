@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { UserFacingError } from "@/core/errors";
+import { addNotification } from "@/core/notifications/store";
 import { safeFetch } from "@/core/security/safe-fetch";
 import { deletePluginStorage, getInstalledPlugin, isPluginEnabledFor, readPluginStorage, writePluginStorage } from "./store";
 
@@ -73,5 +74,16 @@ registerPluginApi(
     const forwarded = Object.fromEntries(Object.entries(headers ?? {}).filter(([name]) => !/^(cookie|host|authorization-holdall)$/i.test(name)));
     const response = await safeFetch(target.toString(), { method, headers: forwarded, body, maxBytes: 2 * 1024 * 1024, timeoutMs: 15000 });
     return { status: response.status, headers: response.headers, body: response.body.toString("utf8") };
+  },
+);
+
+registerPluginApi(
+  "notifications.show",
+  "notifications",
+  z.object({ title: z.string().trim().min(1).max(120), body: z.string().max(500).optional() }),
+  ({ title, body }, context) => {
+    const installed = getInstalledPlugin(context.pluginId)!;
+    addNotification(context.userId, installed.manifest.name, title, body ?? "");
+    return true;
   },
 );

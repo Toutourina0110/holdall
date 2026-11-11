@@ -83,4 +83,86 @@ describe("plugin sandbox", () => {
     expect(await callPluginApi("storage.get", { key: "draft" }, { pluginId: "com.test.notes", userId: "alice" })).toBe("alice secret");
     await expect(callPluginApi("network.fetch", { url: "https://example.com" }, { pluginId: "com.test.notes", userId: "alice" })).rejects.toThrow(/network/);
   });
+
+  it("keeps plugin file access and notifications inside the calling user's own data", async () => {
+    await import("@/modules/files/register");
+    const { confirmInstall, stagePlugin } = await import("./install");
+    const { setPluginEnabledFor } = await import("./store");
+    const { callPluginApi } = await import("./api");
+    const { listNotifications } = await import("@/core/notifications/store");
+    const staged = stagePlugin(
+      archive(
+        { ...base, id: "com.test.files", name: "Files test", permissions: ["files:read", "files:write", "notifications"], entry: { ui: "ui.html" } },
+        { "ui.html": "<p>x</p>" },
+      ),
+      { source: "third-party" },
+    );
+    confirmInstall(staged.stageId, [], "alice");
+    for (const user of ["alice", "bob"]) setPluginEnabledFor(user, "com.test.files", true);
+    const alice = { pluginId: "com.test.files", userId: "alice" };
+    const bob = { pluginId: "com.test.files", userId: "bob" };
+
+    const written = (await callPluginApi("files.write", { path: "Reports/today.txt", content: "alice only" }, alice)) as { path: string };
+    expect(written.path).toBe("Reports/today.txt");
+    expect(fs.existsSync(path.join(db.dataDir, "files", "alice", "Reports", "today.txt"))).toBe(true);
+    expect(((await callPluginApi("files.read", { path: "Reports/today.txt" }, alice)) as { content: string }).content).toBe("alice only");
+    await expect(callPluginApi("files.read", { path: "Reports/today.txt" }, bob)).rejects.toThrow();
+    await expect(callPluginApi("files.read", { path: "../alice/Reports/today.txt" }, bob)).rejects.toThrow();
+    await expect(callPluginApi("files.write", { path: "../alice/evil.txt", content: "x" }, bob)).rejects.toThrow();
+    await expect(callPluginApi("files.read", { path: "../../holdall.db", encoding: "base64" }, alice)).rejects.toThrow();
+    expect(fs.existsSync(path.join(db.dataDir, "files", "alice", "evil.txt"))).toBe(false);
+
+    await expect(callPluginApi("files.list", { path: "" }, { pluginId: "com.test.notes", userId: "alice" })).rejects.toThrow(/files:read/);
+
+    await expect(callPluginApi("notifications.show", { title: "" }, alice)).rejects.toThrow();
+    await callPluginApi("notifications.show", { title: "For Alice" }, alice);
+    expect(listNotifications("alice").map((row) => row.title)).toEqual(["For Alice"]);
+    expect(listNotifications("bob")).toHaveLength(0);
+  });
+
+  it("only accepts filter answers that keep to what Holdall offered", async () => {
+    const { confirmInstall, stagePlugin } = await import("./install");
+    const { setPluginEnabledFor } = await import("./store");
+    const { filterCalendarEvents, filterDashboardWidgets, noteExportFormats, renderNoteExport } = await import("./filters");
+    const server = `
+export default function (holdall) {
+  holdall.on("dashboard.widgets", (widgets) => [...widgets.filter((w) => w.id !== "tasks.today"), { id: "fake.widget", label: "Fake" }]);
+  holdall.on("calendar.event.render", (events) => events.map((e) => ({ ...e, title: "[x] " + e.title })));
+  holdall.on("notes.export.formats", (formats) => [...formats, { id: "upper", label: "Upper case", extension: "txt" }]);
+  holdall.on("notes.export.render", ({ note }) => ({ content: note.content.toUpperCase() }));
+}
+`;
+    const hooksList = ["dashboard.widgets", "calendar.event.render", "notes.export.formats", "notes.export.render"];
+    const staged = stagePlugin(
+      archive(
+        {
+          ...base,
+          id: "com.test.filters",
+          name: "Filters",
+          permissions: ["ui:slots", "calendar:read", "notes:read", ...hooksList.map((hook) => `hooks:${hook}`)],
+          entry: { server: "server.mjs" },
+          contributes: { hooks: hooksList },
+        },
+        { "server.mjs": server },
+      ),
+      { source: "third-party" },
+    );
+    confirmInstall(staged.stageId, [], "alice");
+    setPluginEnabledFor("alice", "com.test.filters", true);
+
+    const widgets = [
+      { id: "tasks.today", slot: "dashboard.widgets" as const, label: "Due today", icon: "tasks" as const, order: 1, source: "tasks" },
+      { id: "notes.recent", slot: "dashboard.widgets" as const, label: "Recent notes", icon: "notes" as const, order: 2, source: "notes" },
+    ];
+    expect((await filterDashboardWidgets(widgets, "alice")).map((item) => item.id)).toEqual(["tasks.today", "notes.recent"]);
+
+    const events = await filterCalendarEvents([{ id: "e1", title: "Dentist", color: "#1f4a7a" }], "alice");
+    expect(events[0]!.title).toBe("[x] Dentist");
+    expect(await filterCalendarEvents([{ id: "e1", title: "Dentist", color: "#1f4a7a" }], "bob")).toEqual([{ id: "e1", title: "Dentist", color: "#1f4a7a" }]);
+
+    expect((await noteExportFormats("alice")).map((format) => format.id)).toEqual(["upper"]);
+    expect(await renderNoteExport("alice", "com.test.filters", "upper", { id: "n1", title: "Hi", content: "hello" })).toEqual({ content: "HELLO", extension: "txt" });
+    expect(await renderNoteExport("alice", "com.test.filters", "missing", { id: "n1", title: "Hi", content: "hello" })).toBeUndefined();
+    expect(await renderNoteExport("bob", "com.test.filters", "upper", { id: "n1", title: "Hi", content: "hello" })).toBeUndefined();
+  }, 30000);
 });

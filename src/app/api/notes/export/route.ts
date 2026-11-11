@@ -1,6 +1,7 @@
 import { strToU8, zipSync } from "fflate";
 import { apiSession, unauthorized } from "@/core/auth/session";
 import { UserFacingError } from "@/core/errors";
+import { renderNoteExport } from "@/core/plugins/filters";
 import { exportFiles, getNote } from "@/modules/notes/store";
 
 function attachment(name: string): string {
@@ -16,6 +17,15 @@ export async function GET(request: Request) {
     const id = params.get("id");
     if (id) {
       const note = getNote(session.user.id, id);
+      const plugin = params.get("plugin");
+      if (plugin) {
+        if (note.trashedAt) throw new UserFacingError("Restore this note before exporting it.");
+        const rendered = await renderNoteExport(session.user.id, plugin, params.get("format") ?? "", { id: note.id, title: note.title, content: note.content });
+        if (!rendered) return Response.json({ error: "This export format is not available anymore." }, { status: 404 });
+        return new Response(rendered.content, {
+          headers: { "Content-Type": "application/octet-stream", "Content-Disposition": attachment(`${note.fileName}.${rendered.extension}`), "X-Content-Type-Options": "nosniff" },
+        });
+      }
       return new Response(note.content, {
         headers: { "Content-Type": "text/markdown; charset=utf-8", "Content-Disposition": attachment(`${note.fileName}.md`) },
       });

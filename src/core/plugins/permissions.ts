@@ -22,10 +22,11 @@ export const hookCatalog = {
   "notes.saved": { kind: "action", permission: "notes:read", description: "Called after a note is saved" },
   "notes.deleted": { kind: "action", permission: "notes:read", description: "Called after a note is moved to the trash" },
   "notes.export.formats": { kind: "filter", permission: "notes:read", description: "Adds export formats to notes" },
+  "notes.export.render": { kind: "filter", permission: "notes:read", description: "Turns a note into one of its export formats" },
   "tasks.completed": { kind: "action", permission: "tasks:read", description: "Called after a task is completed" },
   "download.finished": { kind: "action", permission: "downloads:read", description: "Called after a download finishes" },
   "calendar.event.render": { kind: "filter", permission: "calendar:read", description: "Changes how an event is shown" },
-  "dashboard.widgets": { kind: "filter", permission: "ui:slots", description: "Adds widgets to the Today page" },
+  "dashboard.widgets": { kind: "filter", permission: "ui:slots", description: "Chooses which widgets appear on the Today page" },
 } as const;
 
 export type HookName = keyof typeof hookCatalog;

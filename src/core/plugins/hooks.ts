@@ -20,7 +20,7 @@ export function addFilter(hook: HookName, handler: CoreFilter): void {
   registry.filters.set(hook, [...(registry.filters.get(hook) ?? []), handler]);
 }
 
-async function listeningPlugins(hook: HookName, userId: string): Promise<string[]> {
+export async function listeningPlugins(hook: HookName, userId: string): Promise<string[]> {
   const required = hookCatalog[hook].permission;
   const plugins = pluginsEnabledFor(userId).filter(
     (item) => item.manifest.entry.server && item.granted.has(`hooks:${hook}`) && item.granted.has(required),

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { requireSession } from "@/core/auth/session";
+import { noteExportFormats } from "@/core/plugins/filters";
 import { UserFacingError } from "@/core/errors";
 import { strings } from "@/core/strings";
 import { Button, ButtonLink } from "@/ui/controls";
@@ -190,6 +191,7 @@ export default async function NotesPage({ searchParams }: { searchParams: Promis
                 backlinks={current.trashedAt ? [] : backlinks(userId, current.id).map((row) => ({ id: row.id, title: row.title }))}
                 links={extractLinks(current.content).map((title) => ({ title, id: findNoteByTitle(userId, title)?.id }))}
                 versions={listVersions(userId, current.id).map((version) => ({ id: version.id, createdAt: version.createdAt.toISOString() }))}
+                exportFormats={current.trashedAt ? [] : (await noteExportFormats(userId)).map(({ pluginId, id, label }) => ({ pluginId, id, label }))}
                 checklist={checklistItems(current.content).map((item) => ({
                   ...item,
                   taskId: linkedTasks.find((task) => task.noteItem === item.text)?.id,

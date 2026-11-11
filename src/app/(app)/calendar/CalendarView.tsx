@@ -171,7 +171,7 @@ function Chip({ item, onOpen, compact }: { item: CalendarItem; onOpen: (item: Ca
   const content = (
     <>
       {!item.allDay && <span className={styles.chipTime}>{time(item.start)}</span>}
-      <span className={styles.chipTitle}>{item.title}</span>
+      <span className={styles.chipTitle}>{item.label ?? item.title}</span>
     </>
   );
   if (item.kind === "task") {

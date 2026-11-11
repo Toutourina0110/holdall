@@ -29,6 +29,7 @@ type Props = {
   links: { title: string; id?: string }[];
   versions: { id: string; createdAt: string }[];
   checklist: { text: string; done: boolean; taskId?: string }[];
+  exportFormats: { pluginId: string; id: string; label: string }[];
 };
 
 function when(value: string) {
@@ -79,6 +80,15 @@ export function NoteDetails(props: Props) {
         <ButtonLink href={`/api/notes/export?id=${props.id}`} icon="download">
           {t.export}
         </ButtonLink>
+        {props.exportFormats.map((format) => (
+          <ButtonLink
+            key={`${format.pluginId}:${format.id}`}
+            href={`/api/notes/export?id=${props.id}&plugin=${encodeURIComponent(format.pluginId)}&format=${encodeURIComponent(format.id)}`}
+            icon="download"
+          >
+            {format.label}
+          </ButtonLink>
+        ))}
         <IconButton icon="trash" label={t.moveToTrash} onClick={() => start(() => trashNoteAction(props.id))} />
       </div>
       <p className={styles.meta}>

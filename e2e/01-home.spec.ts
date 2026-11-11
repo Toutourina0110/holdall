@@ -75,7 +75,7 @@ test("unknown route shows the custom 404", async ({ page }) => {
 test("no horizontal scroll at 375 px", async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 812 });
   await signIn(page);
-  for (const path of ["/", "/notes", "/tasks", "/downloads", "/files", "/converter", "/calendar", "/calendar/accounts", "/settings", "/settings/appearance", "/plugins", "/admin", "/login"]) {
+  for (const path of ["/", "/notes", "/tasks", "/downloads", "/files", "/converter", "/calendar", "/calendar/accounts", "/settings", "/settings/appearance", "/plugins", "/notifications", "/admin", "/login"]) {
     await page.goto(path);
     const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
     expect(scrollWidth, path).toBeLessThanOrEqual(375);

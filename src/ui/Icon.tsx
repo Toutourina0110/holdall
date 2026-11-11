@@ -51,6 +51,7 @@ const paths = {
   folder: ["M2.5 4.5h4l1.5 1.5h5.5v7h-11z"],
   tag: ["M2.5 2.5h5l6 6-5 5-6-6z", "M5.5 5.5h.01"],
   alert: ["M8 2.5 14 13H2z", "M8 6.5v3M8 11.2h.01"],
+  bell: ["M4 11V7.2a4 4 0 0 1 8 0V11l1.2 1.5H2.8z", "M6.6 14a1.5 1.5 0 0 0 2.8 0"],
 } as const;
 
 export type IconName = keyof typeof paths;

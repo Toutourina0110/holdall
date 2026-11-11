@@ -284,8 +284,16 @@
 }
 
 .crumb b {
+  overflow: hidden;
   color: var(--color-ink);
   font-weight: var(--weight-semibold);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.crumbTile,
+.topRight {
+  flex-shrink: 0;
 }
 
 .crumbTile {
@@ -503,5 +511,23 @@
     left: var(--space-4);
     right: var(--space-4);
     width: auto;
+  }
+}
+
+.count {
+  min-width: var(--size-kbd);
+  padding: 0 var(--space-1);
+  border-radius: var(--radius-sm);
+  background: var(--color-accent-fill);
+  color: var(--color-on-accent);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-bold);
+  line-height: var(--size-kbd);
+  text-align: center;
+}
+
+@media (max-width: 640px) {
+  .wideOnly {
+    display: none;
   }
 }

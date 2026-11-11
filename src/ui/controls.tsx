@@ -34,9 +34,9 @@ export function IconButton({ icon, label, ...rest }: ButtonHTMLAttributes<HTMLBu
   );
 }
 
-export function ButtonLink({ href, variant = "quiet", icon, children }: { href: string; variant?: Variant; icon?: IconName; children: ReactNode }) {
+export function ButtonLink({ href, variant = "quiet", icon, label, children }: { href: string; variant?: Variant; icon?: IconName; label?: string; children?: ReactNode }) {
   return (
-    <Link className={buttonClass(variant)} href={href}>
+    <Link className={buttonClass(variant)} href={href} aria-label={label} title={label}>
       {icon && <Icon name={icon} />}
       {children}
     </Link>

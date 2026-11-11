@@ -16,7 +16,16 @@ export const permissions = [
   "ui:replace",
 ] as const;
 
-export const hooks = ["notes.saved", "notes.deleted", "notes.export.formats", "tasks.completed", "download.finished", "calendar.event.render", "dashboard.widgets"] as const;
+export const hooks = [
+  "notes.saved",
+  "notes.deleted",
+  "notes.export.formats",
+  "notes.export.render",
+  "tasks.completed",
+  "download.finished",
+  "calendar.event.render",
+  "dashboard.widgets",
+] as const;
 
 export type BasePermission = (typeof permissions)[number];
 export type HookName = (typeof hooks)[number];
@@ -68,6 +77,27 @@ export type TaskInput = {
 };
 export type CalendarEvent = { id: string; title: string; start: string; end: string; allDay: boolean; location: string };
 export type FetchResult = { status: number; headers: Record<string, string>; body: string };
+export type FileEntry = { name: string; path: string; kind: "folder" | "file"; size: number; modified: string; type: "folder" | "image" | "video" | "audio" | "pdf" | "text" | "other" };
+export type DownloadOptions = {
+  kind: "video" | "audio";
+  container?: "mp4" | "webm" | "mkv";
+  quality?: "best" | "2160" | "1440" | "1080" | "720" | "480" | "360";
+  audioFormat?: "mp3" | "m4a" | "opus";
+};
+export type ExportFormat = { id: string; label: string; extension: string };
+export type WidgetRef = { id: string; label: string };
+export type RenderedEvent = { id: string; title: string; color: string };
+
+export type HookPayloads = {
+  "notes.saved": { payload: { id: string; title: string }; result: void };
+  "notes.deleted": { payload: { id: string }; result: void };
+  "notes.export.formats": { payload: ExportFormat[]; result: ExportFormat[] };
+  "notes.export.render": { payload: { format: string; note: { id: string; title: string; content: string } }; result: { content: string } };
+  "tasks.completed": { payload: { id: string; title: string }; result: void };
+  "download.finished": { payload: { id: string; file: string; title?: string }; result: void };
+  "calendar.event.render": { payload: RenderedEvent[]; result: RenderedEvent[] };
+  "dashboard.widgets": { payload: WidgetRef[]; result: WidgetRef[] };
+};
 
 export type Methods = {
   "theme.tokens": { params: undefined; result: Record<string, string> };
@@ -83,6 +113,12 @@ export type Methods = {
   "tasks.create": { params: TaskInput; result: Task };
   "tasks.complete": { params: { id: string; done: boolean }; result: Task };
   "downloads.list": { params: undefined; result: { id: string; status: string; progress: number; result: unknown }[] };
+  "downloads.create": { params: { url: string; title?: string; options?: DownloadOptions }; result: { id: string } };
+  "files.list": { params: { root?: "files" | "downloads"; path?: string }; result: FileEntry[] };
+  "files.read": { params: { root?: "files" | "downloads"; path: string; encoding?: "utf8" | "base64" }; result: { content: string; size: number } };
+  "files.write": { params: { path: string; content: string; encoding?: "utf8" | "base64"; overwrite?: boolean }; result: { path: string; size: number } };
+  "files.delete": { params: { path: string }; result: true };
+  "notifications.show": { params: { title: string; body?: string }; result: true };
   "calendar.list": { params: { from: string; to: string }; result: CalendarEvent[] };
   "calendar.create": {
     params: { title: string; start: string; end: string; allDay?: boolean; location?: string; description?: string };
@@ -95,7 +131,7 @@ export type MethodName = keyof Methods;
 export type HookContext = { userId: string; callId: string };
 
 export type Holdall = {
-  on<P = unknown, R = unknown>(hook: HookName, handler: (payload: P, context: HookContext) => R | Promise<R>): void;
+  on<H extends HookName>(hook: H, handler: (payload: HookPayloads[H]["payload"], context: HookContext) => HookPayloads[H]["result"] | Promise<HookPayloads[H]["result"]>): void;
   api<M extends MethodName>(method: M, params: Methods[M]["params"], context: HookContext): Promise<Methods[M]["result"]>;
   storage: {
     get(key: string, context: HookContext): Promise<unknown>;

@@ -524,6 +524,17 @@ export const en = {
     errorState: "The sign-in could not be confirmed. Try again.",
     errorDenied: "Access was not granted.",
   },
+  notifications: {
+    title: "Notifications",
+    intro: "Messages from your plugins. Holdall keeps the last 100.",
+    unread: "unread",
+    empty: "No notifications. Plugins you turn on can send you some here.",
+    markAllRead: "Mark all as read",
+    clearAll: "Clear all",
+    clearConfirm: "Delete every notification?",
+    remove: "Delete",
+    newLabel: "New",
+  },
   notFound: {
     title: "Page not found",
     crumb: "Not found",

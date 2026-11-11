@@ -6,7 +6,7 @@ import type { ReactNode } from "react";
 import type { ResolvedItem, SlotItem } from "@/core/layout/registry";
 import type { UserLayout } from "@/core/layout/schema";
 import { strings } from "@/core/strings";
-import { Button } from "@/ui/controls";
+import { Button, ButtonLink } from "@/ui/controls";
 import { Icon, type IconName } from "@/ui/Icon";
 import { SurveyMark } from "@/ui/SurveyMark";
 import { signOutAction } from "../actions";
@@ -84,26 +84,30 @@ function Rail({ user }: { user: ShellUser }) {
   );
 }
 
-function TopBar() {
+function TopBar({ unread }: { unread: number }) {
   const t = strings.shell;
   const customize = useCustomize();
   const pathname = usePathname();
   const all = [...customize.slot("rail.main"), ...customize.slot("rail.media"), ...customize.slot("rail.system")];
+  const onNotifications = isActive(pathname, "/notifications");
   const current = all.filter((item) => isActive(pathname, item.href)).sort((a, b) => (b.href?.length ?? 0) - (a.href?.length ?? 0))[0];
   return (
     <header className={styles.top}>
       <span className={styles.crumb}>
         <span className={styles.crumbTile}>
-          <Icon name={current?.icon ?? "today"} size={14} />
+          <Icon name={onNotifications ? "bell" : (current?.icon ?? "today")} size={14} />
         </span>
         {strings.app.name}
         <span aria-hidden="true">/</span>
-        <b>{current?.style.label || current?.label || t.untitled}</b>
+        <b>{onNotifications ? strings.notifications.title : current?.style.label || current?.label || t.untitled}</b>
       </span>
       <div className={styles.topRight}>
+        <ButtonLink href="/notifications" icon="bell" label={unread > 0 ? `${strings.notifications.title}, ${unread} ${strings.notifications.unread}` : strings.notifications.title}>
+          {unread > 0 && <span className={styles.count}>{unread > 99 ? "99+" : unread}</span>}
+        </ButtonLink>
         {!customize.customizing && (
-          <Button icon="layout" onClick={customize.start}>
-            {t.customize}
+          <Button icon="layout" onClick={customize.start} aria-label={t.customize} title={t.customize}>
+            <span className={styles.wideOnly}>{t.customize}</span>
           </Button>
         )}
       </div>
@@ -151,7 +155,21 @@ function BottomBar() {
   );
 }
 
-export function Shell({ user, items, layout, demo, children }: { user: ShellUser; items: SlotItem[]; layout: UserLayout; demo?: boolean; children: ReactNode }) {
+export function Shell({
+  user,
+  items,
+  layout,
+  demo,
+  unread,
+  children,
+}: {
+  user: ShellUser;
+  items: SlotItem[];
+  layout: UserLayout;
+  demo?: boolean;
+  unread: number;
+  children: ReactNode;
+}) {
   return (
     <CustomizeProvider items={items} layout={layout}>
       <div className={styles.shell}>
@@ -162,7 +180,7 @@ export function Shell({ user, items, layout, demo, children }: { user: ShellUser
               {strings.demo.banner}
             </p>
           )}
-          <TopBar />
+          <TopBar unread={unread} />
           <main className={styles.main} id="main">
             {children}
           </main>
