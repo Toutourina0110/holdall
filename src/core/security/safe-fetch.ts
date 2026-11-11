@@ -2,42 +2,15 @@ import dns from "node:dns";
 import http from "node:http";
 import https from "node:https";
 import net from "node:net";
+import ipaddr from "ipaddr.js";
 import type { LookupFunction } from "node:net";
 import { UserFacingError } from "@/core/errors";
 
-const blockedV4: [string, number][] = [
-  ["0.0.0.0", 8],
-  ["10.0.0.0", 8],
-  ["100.64.0.0", 10],
-  ["127.0.0.0", 8],
-  ["169.254.0.0", 16],
-  ["172.16.0.0", 12],
-  ["192.0.0.0", 24],
-  ["192.168.0.0", 16],
-  ["198.18.0.0", 15],
-  ["224.0.0.0", 4],
-  ["240.0.0.0", 4],
-];
-
-function v4ToNumber(address: string): number {
-  return address.split(".").reduce((total, part) => total * 256 + Number(part), 0);
-}
-
 export function isBlockedAddress(address: string): boolean {
-  const mapped = address.toLowerCase().match(/^::ffff:(\d+\.\d+\.\d+\.\d+)$/);
-  if (mapped) return isBlockedAddress(mapped[1]!);
-  if (net.isIPv4(address)) {
-    const value = v4ToNumber(address);
-    return blockedV4.some(([base, bits]) => {
-      const mask = bits === 0 ? 0 : (0xffffffff << (32 - bits)) >>> 0;
-      return (value & mask) >>> 0 === (v4ToNumber(base) & mask) >>> 0;
-    });
-  }
-  if (net.isIPv6(address)) {
-    const lower = address.toLowerCase();
-    return lower === "::" || lower === "::1" || /^f[cd]/.test(lower) || /^fe[89ab]/.test(lower) || /^ff/.test(lower);
-  }
-  return true;
+  if (!ipaddr.isValid(address)) return true;
+  const parsed = ipaddr.process(address);
+  if (parsed.kind() === "ipv6" && (parsed as ipaddr.IPv6).parts.slice(0, 6).every((part) => part === 0)) return true;
+  return parsed.range() !== "unicast";
 }
 
 const guardedLookup: LookupFunction = (hostname, options, callback) => {
@@ -101,6 +74,8 @@ export async function safeFetch(
         incoming.on("error", reject);
       },
     );
+    const deadline = setTimeout(() => request.destroy(new UserFacingError("The remote server took too long to answer.")), options.timeoutMs ?? 15000);
+    request.on("close", () => clearTimeout(deadline));
     request.on("timeout", () => request.destroy(new UserFacingError("The remote server took too long to answer.")));
     request.on("error", (error: Error & { code?: string }) =>
       reject(error.code === "EBLOCKED" ? new UserFacingError(error.message) : error instanceof UserFacingError ? error : new UserFacingError("The remote server could not be reached.")),

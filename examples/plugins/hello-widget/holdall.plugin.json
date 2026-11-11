@@ -1,0 +1,15 @@
+{
+  "id": "io.github.toutourina0110.hello-widget",
+  "name": "Hello widget",
+  "version": "1.0.0",
+  "type": "extension",
+  "description": "Example plugin: a Today widget that counts how many times you opened it.",
+  "author": { "name": "Holdall", "url": "https://github.com/Toutourina0110/holdall" },
+  "license": "AGPL-3.0-or-later",
+  "holdall": ">=0.0.1",
+  "permissions": ["ui:slots", "storage"],
+  "entry": { "ui": "ui/widget.html" },
+  "contributes": {
+    "widgets": [{ "id": "counter", "title": "Hello", "entry": "ui/widget.html", "width": 1 }]
+  }
+}
