@@ -4,6 +4,7 @@
 :root[data-theme="light"] {
   --font-plex: "IBM Plex Sans";
   --sl-font: var(--font-sans);
+  --sl-content-width: 1000rem;
   --sl-color-white: var(--color-ink);
   --sl-color-gray-1: var(--color-text);
   --sl-color-gray-2: var(--color-text);
