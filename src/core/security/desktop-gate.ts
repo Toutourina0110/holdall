@@ -20,3 +20,20 @@ export function desktopGate(input: {
   if (sameToken(input.token, input.queryToken)) return "set-cookie";
   return "deny";
 }
+
+export function desktopRequestAllowed(request: Request): boolean {
+  const cookie = request.headers
+    .get("cookie")
+    ?.split(";")
+    .map((part) => part.trim())
+    .find((part) => part.startsWith(`${launchCookie}=`))
+    ?.slice(launchCookie.length + 1);
+  return (
+    desktopGate({
+      token: process.env.HOLDALL_LAUNCH_TOKEN,
+      port: Number(process.env.PORT ?? 3000),
+      host: request.headers.get("host") ?? undefined,
+      cookieToken: cookie,
+    }) === "allow"
+  );
+}

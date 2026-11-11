@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { desktopGate } from "./desktop-gate";
+import { afterEach, vi } from "vitest";
+import { desktopGate, desktopRequestAllowed } from "./desktop-gate";
 
 const token = "a".repeat(64);
 const base = { token, port: 41234 };
@@ -24,5 +25,20 @@ describe("desktop gate", () => {
 
   it("refuses everything when no token was configured", () => {
     expect(desktopGate({ token: undefined, port: 41234, host: "127.0.0.1:41234", cookieToken: "" })).toBe("deny");
+  });
+});
+
+describe("desktop requests outside the proxy", () => {
+  afterEach(() => vi.unstubAllEnvs());
+
+  it("needs the launch cookie and the right host", () => {
+    vi.stubEnv("HOLDALL_LAUNCH_TOKEN", token);
+    vi.stubEnv("PORT", "41234");
+    const ok = new Request("http://127.0.0.1:41234/api/files/upload", { headers: { host: "127.0.0.1:41234", cookie: `a=1; holdall_launch=${token}` } });
+    const noCookie = new Request("http://127.0.0.1:41234/api/files/upload", { headers: { host: "127.0.0.1:41234" } });
+    const badHost = new Request("http://127.0.0.1:41234/api/files/upload", { headers: { host: "evil.example", cookie: `holdall_launch=${token}` } });
+    expect(desktopRequestAllowed(ok)).toBe(true);
+    expect(desktopRequestAllowed(noCookie)).toBe(false);
+    expect(desktopRequestAllowed(badHost)).toBe(false);
   });
 });

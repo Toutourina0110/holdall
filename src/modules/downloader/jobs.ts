@@ -6,6 +6,7 @@ import { UserFacingError } from "@/core/errors";
 import { registerJobHandler } from "@/core/jobs/queue";
 import { createLogger } from "@/core/log";
 import { userPath } from "@/core/paths";
+import { egressProxyUrl } from "@/core/security/egress-proxy";
 import { assertPublicUrl } from "@/core/security/safe-fetch";
 import { doAction } from "@/core/plugins/hooks";
 import { downloadArgs, downloadOptionsSchema, parseFinalPath, parseProgress, probeArgs } from "./args";
@@ -80,6 +81,12 @@ function run(binary: string, args: string[], signal: AbortSignal, onLine?: (line
   });
 }
 
+async function viaProxy(args: string[]): Promise<string[]> {
+  const proxy = await egressProxyUrl();
+  const split = args.lastIndexOf("--");
+  return [...args.slice(0, split), "--proxy", proxy, ...args.slice(split)];
+}
+
 function summarize(info: RawInfo, url: string): ProbeResult {
   const isPlaylist = info._type === "playlist" || Array.isArray(info.entries);
   return {
@@ -119,7 +126,7 @@ registerJobHandler("downloader.probe", async (job, context) => {
   const { url } = job.payload as { url: string };
   await assertPublicUrl(url);
   context.progress(0.1, "Reading the link");
-  const { stdout } = await run(requireYtdlp(), probeArgs(url), context.signal, undefined, 30 * 1024 * 1024);
+  const { stdout } = await run(requireYtdlp(), await viaProxy(probeArgs(url)), context.signal, undefined, 30 * 1024 * 1024);
   return summarize(JSON.parse(stdout) as RawInfo, url);
 });
 
@@ -134,7 +141,7 @@ registerJobHandler("downloader.download", async (job, context) => {
   context.progress(0, "Starting");
   await run(
     requireYtdlp(),
-    downloadArgs({ url: payload.url, options, outputDir, ffmpegPath: ffmpegPath() }),
+    await viaProxy(downloadArgs({ url: payload.url, options, outputDir, ffmpegPath: ffmpegPath() })),
     context.signal,
     (line) => {
       const progress = parseProgress(line);
