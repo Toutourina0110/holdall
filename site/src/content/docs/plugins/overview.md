@@ -15,7 +15,10 @@ An admin installs it once for the whole server, after reviewing what it asks for
 | Have its own page in the side bar | A page: an HTML file | [Interface code](/holdall/plugins/interface/) |
 | Read or change notes, tasks, events, files | API methods, each behind a permission | [API reference](/holdall/plugins/api/) |
 | Start downloads | `downloads.create` | [API reference](/holdall/plugins/api/) |
-| Call an outside web service | `network.fetch`, only to hosts you declare | [API reference](/holdall/plugins/api/) |
+| Load libraries, images, videos, players from any site | Directly in your interface | [Interface code](/holdall/plugins/interface/) |
+| Call a web API | `fetch()` in the interface, or `network.fetch` from the server | [Interface code](/holdall/plugins/interface/#fetch-or-networkfetch) |
+| Run your own logic on the server, keep API keys secret | Server functions, called from the interface | [Server code](/holdall/plugins/server-and-hooks/#server-functions) |
+| Update the screen live | Live events pushed from the server | [Server code](/holdall/plugins/server-and-hooks/#live-events) |
 | Remember things | Private storage, separate for each person | [API reference](/holdall/plugins/api/) |
 | Notify the person | `notifications.show`, shown under the bell in the top bar | [API reference](/holdall/plugins/api/) |
 | React when something happens | Action hooks, in server code | [Server code and hooks](/holdall/plugins/server-and-hooks/) |

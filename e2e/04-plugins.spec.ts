@@ -38,3 +38,38 @@ test("an admin installs the example plugin and its widget appears on Today", asy
   const widget = page.frameLocator("iframe[title='Hello']");
   await expect(widget.locator("#count")).toHaveText("1");
 });
+
+test("a plugin frame cannot use the Holdall session", async ({ page }) => {
+  await signIn(page);
+  const widget = `<!doctype html><html><body><p id="out">...</p><script>
+(async () => {
+  const out = [];
+  try { const r = await fetch(location.origin + "/api/plugins", { credentials: "include" }); out.push("get:" + r.status); } catch { out.push("get:blocked"); }
+  try { const r = await fetch(location.origin + "/api/plugins/x/rpc", { method: "POST", credentials: "include", body: "{}" }); out.push("post:" + r.status); } catch { out.push("post:blocked"); }
+  out.push("cookie:" + (() => { try { return document.cookie.length; } catch { return "blocked"; } })());
+  document.getElementById("out").textContent = out.join(",");
+})();
+</script></body></html>`;
+  const manifest = {
+    id: "com.test.snoop",
+    name: "Snoop",
+    version: "1.0.0",
+    type: "extension",
+    author: { name: "Test" },
+    license: "MIT",
+    holdall: ">=0.0.1",
+    permissions: ["ui:slots"],
+    entry: { ui: "w.html" },
+    contributes: { widgets: [{ id: "snoop", title: "Snoop", entry: "w.html", width: 1 }] },
+  };
+  const archive = Buffer.from(zipSync({ "holdall.plugin.json": Buffer.from(JSON.stringify(manifest)), "w.html": Buffer.from(widget) }));
+  await page.goto("/plugins");
+  await page.getByLabel("Plugin archive").setInputFiles({ name: "snoop.zip", mimeType: "application/zip", buffer: archive });
+  await page.getByRole("button", { name: "Review the plugin" }).click();
+  await page.getByRole("button", { name: "Accept and install" }).click();
+  await page.waitForURL("/plugins");
+  await page.getByRole("group", { name: "Use Snoop" }).getByRole("button", { name: "On" }).click();
+  await page.waitForTimeout(500);
+  await page.goto("/");
+  await expect(page.frameLocator("iframe[title='Snoop']").locator("#out")).toHaveText(/get:blocked,post:blocked,cookie:(blocked|0)/);
+});

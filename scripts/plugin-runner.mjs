@@ -3,6 +3,7 @@ import { pathToFileURL } from "node:url";
 const entry = process.argv[2];
 const pending = new Map();
 const hooks = new Map();
+const functions = new Map();
 let sequence = 0;
 
 function send(message) {
@@ -21,6 +22,13 @@ const holdall = {
   on(hook, handler) {
     hooks.set(hook, handler);
     send({ type: "hook.register", hook });
+  },
+  handle(name, handler) {
+    functions.set(name, handler);
+    send({ type: "fn.register", name });
+  },
+  push(userId, event, data) {
+    send({ type: "push", userId, event, data });
   },
   api(method, params, context) {
     return request(method, params, context);
@@ -43,10 +51,10 @@ process.on("message", async (message) => {
     else call.resolve(message.result);
     return;
   }
-  if (message?.type === "hook.call") {
-    const handler = hooks.get(message.hook);
+  if (message?.type === "hook.call" || message?.type === "fn.call") {
+    const handler = message.type === "hook.call" ? hooks.get(message.hook) : functions.get(message.name);
     try {
-      if (!handler) throw new Error(`No handler for ${message.hook}.`);
+      if (!handler) throw new Error(`No handler for ${message.hook ?? message.name}.`);
       const result = await handler(message.payload, { userId: message.userId, callId: message.callId });
       send({ type: "hook.result", id: message.id, result });
     } catch (error) {

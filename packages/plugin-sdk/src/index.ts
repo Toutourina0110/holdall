@@ -101,6 +101,8 @@ export type HookPayloads = {
 
 export type Methods = {
   "theme.tokens": { params: undefined; result: Record<string, string> };
+  "server.call": { params: { name: string; args?: unknown }; result: unknown };
+  "events.subscribe": { params: undefined; result: true };
   "storage.get": { params: { key: string }; result: unknown };
   "storage.set": { params: { key: string; value: unknown }; result: true };
   "storage.delete": { params: { key: string }; result: true };
@@ -132,6 +134,8 @@ export type HookContext = { userId: string; callId: string };
 
 export type Holdall = {
   on<H extends HookName>(hook: H, handler: (payload: HookPayloads[H]["payload"], context: HookContext) => HookPayloads[H]["result"] | Promise<HookPayloads[H]["result"]>): void;
+  handle<A = unknown, R = unknown>(name: string, handler: (args: A, context: HookContext) => R | Promise<R>): void;
+  push(userId: string, event: string, data?: unknown): void;
   api<M extends MethodName>(method: M, params: Methods[M]["params"], context: HookContext): Promise<Methods[M]["result"]>;
   storage: {
     get(key: string, context: HookContext): Promise<unknown>;

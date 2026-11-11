@@ -28,6 +28,18 @@ Interface code only. No permission.
 
 **Returns** an object of CSS variables, for example `{ "--color-surface": "#ffffff", ... }`. See [Match the theme](/holdall/plugins/interface/#match-the-theme).
 
+## Your server code
+
+Interface code only. No permission; needs `entry.server`.
+
+### `server.call`
+
+**Params** `{ name, args? }`. Calls the function your server code registered with `holdall.handle(name, ...)`. **Returns** what it returns. See [Server functions](/holdall/plugins/server-and-hooks/#server-functions).
+
+### `events.subscribe`
+
+No params. **Returns** `true`. From then on, events your server code sends with `holdall.push` arrive as `{ type: "holdall:event", event, data }` messages. See [Receive live events](/holdall/plugins/interface/#receive-live-events).
+
 ## Storage
 
 Private data for your plugin, separate for each person, shared between your interface and server code. Deleted when the plugin is uninstalled.

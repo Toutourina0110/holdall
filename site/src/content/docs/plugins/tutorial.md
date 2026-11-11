@@ -107,7 +107,7 @@ The `try` around `notifications.show` matters: if the admin refused the optional
 
 ## 4. Write the widget
 
-`ui/widget.html` is a complete HTML file. Keep everything inline: the iframe cannot load other files from Holdall.
+`ui/widget.html` is a complete HTML file. Everything is inline here to keep the tutorial in one file; a real plugin can also load `style.css`, `app.js` or images from its archive.
 
 ```html
 <!doctype html>

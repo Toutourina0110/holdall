@@ -43,7 +43,7 @@ With the SDK, `payload` in each handler has the right type for its hook.
 
 ## Bundle your interface
 
-The sandbox cannot load other files, so each HTML file must carry its own script. This setup bundles `src/<name>.ts` into `ui/<name>.html`.
+Your interface can load files from your archive, so a bundler is optional: you can ship `ui/app.js` next to `ui/page.html`. A bundler is still handy for TypeScript and npm packages. This setup bundles `src/<name>.ts` straight into `ui/<name>.html`.
 
 ```
 my-plugin/

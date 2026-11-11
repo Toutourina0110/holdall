@@ -120,6 +120,52 @@ describe("plugin sandbox", () => {
     expect(listNotifications("bob")).toHaveLength(0);
   });
 
+  it("lets interface code call its own server functions and pushes live events only to people who turned it on", async () => {
+    const { confirmInstall, stagePlugin } = await import("./install");
+    const { setPluginEnabledFor } = await import("./store");
+    const { callPluginFunction } = await import("./host");
+    const { onPluginEvent } = await import("./live");
+    const server = `
+export default function (holdall) {
+  holdall.handle("greet", async ({ name }, context) => {
+    await holdall.storage.set("last", name, context);
+    holdall.push(context.userId, "greeted", { name });
+    holdall.push("bob", "greeted", { name: "leak" });
+    return "Hello " + name;
+  });
+}
+`;
+    const staged = stagePlugin(
+      archive({ ...base, id: "com.test.live", name: "Live", permissions: ["storage"], entry: { server: "server.mjs" } }, { "server.mjs": server }),
+      { source: "third-party" },
+    );
+    confirmInstall(staged.stageId, [], "alice");
+    setPluginEnabledFor("alice", "com.test.live", true);
+    const alice: unknown[] = [];
+    const bob: unknown[] = [];
+    const stopAlice = onPluginEvent("com.test.live", "alice", (message) => alice.push(message));
+    const stopBob = onPluginEvent("com.test.live", "bob", (message) => bob.push(message));
+    expect(await callPluginFunction("com.test.live", "greet", { name: "Ada" }, "alice")).toBe("Hello Ada");
+    await new Promise((resolve) => setTimeout(resolve, 200));
+    expect(alice).toEqual([{ event: "greeted", data: { name: "Ada" } }]);
+    expect(bob).toEqual([]);
+    await expect(callPluginFunction("com.test.live", "missing", {}, "alice")).rejects.toThrow(/no server function/);
+    stopAlice();
+    stopBob();
+  }, 30000);
+
+  it("signs plugin file links for one plugin and one person, for a limited time", async () => {
+    const { signAssetToken, verifyAssetToken } = await import("./asset-token");
+    const token = signAssetToken("com.test.live", "alice", 1000);
+    expect(verifyAssetToken("com.test.live", token, 2000)).toBe("alice");
+    expect(verifyAssetToken("com.test.other", token, 2000)).toBeUndefined();
+    expect(verifyAssetToken("com.test.live", token, 1000 + 13 * 60 * 60 * 1000)).toBeUndefined();
+    expect(verifyAssetToken("com.test.live", token.replace(/.$/, (c) => (c === "A" ? "B" : "A")), 2000)).toBeUndefined();
+    const [payload, mac] = token.split(".");
+    const forged = `${Buffer.from(`bob:${Buffer.from(payload!, "base64url").toString().split(":")[1]}`).toString("base64url")}.${mac}`;
+    expect(verifyAssetToken("com.test.live", forged, 2000)).toBeUndefined();
+  });
+
   it("runs the tutorial plugin from the documentation", async () => {
     await import("@/modules/notes/register");
     const { confirmInstall, stagePlugin } = await import("./install");

@@ -5,7 +5,8 @@ import { createLogger } from "@/core/log";
 import { safeJoin } from "@/core/paths";
 import { callPluginApi } from "./api";
 import { installedDir } from "./install";
-import { getInstalledPlugin } from "./store";
+import { pushToUser } from "./live";
+import { getInstalledPlugin, isPluginEnabledFor } from "./store";
 
 type Pending = { resolve(value: unknown): void; reject(error: Error): void; timer: ReturnType<typeof setTimeout> };
 
@@ -13,6 +14,7 @@ type PluginProcess = {
   child: ChildProcess;
   ready: Promise<void>;
   hooks: Set<string>;
+  functions: Set<string>;
   pending: Map<number, Pending>;
   calls: Map<string, string>;
   sequence: number;
@@ -22,6 +24,8 @@ const globalKey = Symbol.for("holdall.pluginHost");
 const store = globalThis as unknown as Record<symbol, Map<string, PluginProcess> | undefined>;
 const processes: Map<string, PluginProcess> = (store[globalKey] ??= new Map());
 const log = createLogger("plugins");
+
+export class PluginCallError extends Error {}
 
 export function runnerPath(): string {
   return path.join(process.env.HOLDALL_ROOT ?? process.cwd(), "scripts", "plugin-runner.mjs");
@@ -41,7 +45,7 @@ export function startPluginProcess(pluginId: string): PluginProcess | undefined 
     ["--permission", `--allow-fs-read=${dir}`, `--allow-fs-read=${runner}`, "--max-old-space-size=128", "--disallow-code-generation-from-strings", runner, entry],
     { cwd: dir, stdio: ["ignore", "pipe", "pipe", "ipc"], env: { NODE_ENV: process.env.NODE_ENV ?? "production" }, windowsHide: true },
   );
-  const proc: PluginProcess = { child, hooks: new Set(), pending: new Map(), calls: new Map(), sequence: 0, ready: Promise.resolve() };
+  const proc: PluginProcess = { child, hooks: new Set(), functions: new Set(), pending: new Map(), calls: new Map(), sequence: 0, ready: Promise.resolve() };
   proc.ready = new Promise<void>((resolve, reject) => {
     const timer = setTimeout(() => reject(new Error(`${pluginId} did not start in time.`)), 10000);
     child.on("message", async (message: Record<string, unknown>) => {
@@ -63,12 +67,30 @@ export function startPluginProcess(pluginId: string): PluginProcess | undefined 
           else log.warn("Plugin tried to use a hook it was not granted", { pluginId, hook });
           break;
         }
+        case "fn.register": {
+          const name = String(message.name);
+          if (/^[A-Za-z0-9_.:-]{1,80}$/.test(name)) proc.functions.add(name);
+          break;
+        }
+        case "push": {
+          const userId = String(message.userId);
+          const event = String(message.event).slice(0, 80);
+          let size = 0;
+          try {
+            size = JSON.stringify(message.data ?? null).length;
+          } catch {
+            break;
+          }
+          if (size > 64 * 1024) log.warn("Plugin push is larger than 64 KB and was dropped", { pluginId });
+          else if (isPluginEnabledFor(userId, pluginId)) pushToUser(pluginId, userId, { event, data: message.data ?? null });
+          break;
+        }
         case "hook.result": {
           const call = proc.pending.get(Number(message.id));
           if (!call) break;
           proc.pending.delete(Number(message.id));
           clearTimeout(call.timer);
-          if (message.error) call.reject(new Error(String(message.error)));
+          if (message.error) call.reject(new PluginCallError(String(message.error).slice(0, 500)));
           else call.resolve(message.result);
           break;
         }
@@ -106,11 +128,12 @@ export function startPluginProcess(pluginId: string): PluginProcess | undefined 
   return proc;
 }
 
-export async function callPluginHook(pluginId: string, hook: string, payload: unknown, userId: string, timeoutMs = 5000): Promise<unknown> {
+async function invoke(pluginId: string, kind: "hook" | "fn", name: string, payload: unknown, userId: string, timeoutMs: number): Promise<unknown> {
   const proc = startPluginProcess(pluginId);
   if (!proc) throw new Error(`${pluginId} has no server code.`);
   await proc.ready;
-  if (!proc.hooks.has(hook)) return undefined;
+  if (kind === "hook" && !proc.hooks.has(name)) return undefined;
+  if (kind === "fn" && !proc.functions.has(name)) throw new PluginCallError(`The plugin has no server function named ${name}.`);
   const id = ++proc.sequence;
   const callId = randomUUID();
   proc.calls.set(callId, userId);
@@ -118,14 +141,23 @@ export async function callPluginHook(pluginId: string, hook: string, payload: un
     return await new Promise((resolve, reject) => {
       const timer = setTimeout(() => {
         proc.pending.delete(id);
-        reject(new Error(`${pluginId} took too long to answer ${hook}.`));
+        reject(new PluginCallError(`${pluginId} took too long to answer ${name}.`));
       }, timeoutMs);
       proc.pending.set(id, { resolve, reject, timer });
-      proc.child.send({ type: "hook.call", id, hook, payload, userId, callId });
+      proc.child.send({ type: kind === "hook" ? "hook.call" : "fn.call", id, hook: name, name, payload, userId, callId });
     });
   } finally {
     proc.calls.delete(callId);
   }
+}
+
+
+export function callPluginHook(pluginId: string, hook: string, payload: unknown, userId: string, timeoutMs = 5000): Promise<unknown> {
+  return invoke(pluginId, "hook", hook, payload, userId, timeoutMs);
+}
+
+export function callPluginFunction(pluginId: string, name: string, args: unknown, userId: string, timeoutMs = 30000): Promise<unknown> {
+  return invoke(pluginId, "fn", name, args, userId, timeoutMs);
 }
 
 export async function pluginHooks(pluginId: string): Promise<Set<string>> {

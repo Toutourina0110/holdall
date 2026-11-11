@@ -32,3 +32,16 @@ export async function applyTheme(call: Client): Promise<void> {
   const tokens = await call("theme.tokens");
   for (const [name, value] of Object.entries(tokens)) document.documentElement.style.setProperty(name, value);
 }
+
+export function callServer<R = unknown>(call: Client, name: string, args?: unknown): Promise<R> {
+  return call("server.call", { name, args }) as Promise<R>;
+}
+
+export async function onEvent(call: Client, handler: (event: string, data: unknown) => void): Promise<void> {
+  addEventListener("message", (message: MessageEvent) => {
+    const data = message.data as { type?: string; event?: string; data?: unknown } | null;
+    if (message.source !== parent || data?.type !== "holdall:event" || typeof data.event !== "string") return;
+    handler(data.event, data.data);
+  });
+  await call("events.subscribe");
+}

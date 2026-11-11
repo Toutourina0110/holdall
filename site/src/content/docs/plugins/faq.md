@@ -9,7 +9,11 @@ No. Many plugins are only a widget or a page that calls the API. Add server code
 
 ## Can my interface code use `fetch()` or load a library from a CDN?
 
-No. The sandbox has no access to Holdall's session and loads nothing from outside. Bundle libraries into your HTML file (see [Tooling](/holdall/plugins/tooling/#bundle-your-interface)), and call outside services with `network.fetch`.
+Yes. Your interface can load scripts, styles, fonts, images and videos from any site, embed other sites, and call web APIs that allow CORS. It only never sees the Holdall session. For APIs without CORS, or with a secret key, call them from your server code.
+
+## Can I embed a video or a live stream?
+
+Yes. Use the player the site gives you (an `<iframe>` or its script). Fullscreen and autoplay are allowed.
 
 ## Can my server code use npm packages?
 

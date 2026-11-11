@@ -18,9 +18,9 @@ function readTheme(): Record<string, string> {
 
 export function PluginFrame({ pluginId, entry, title, tall }: { pluginId: string; entry: string; title: string; tall?: boolean }) {
   const frame = useRef<HTMLIFrameElement>(null);
-  const url = `/api/plugins/${encodeURIComponent(pluginId)}/ui/${entry.split("/").map(encodeURIComponent).join("/")}`;
 
   useEffect(() => {
+    let events: EventSource | undefined;
     async function onMessage(event: MessageEvent) {
       const target = frame.current?.contentWindow;
       if (!target || event.source !== target) return;
@@ -31,11 +31,27 @@ export function PluginFrame({ pluginId, entry, title, tall }: { pluginId: string
         reply({ result: readTheme() });
         return;
       }
+      if (data.method === "events.subscribe") {
+        if (!events) {
+          events = new EventSource(`/api/plugins/${encodeURIComponent(pluginId)}/events`);
+          events.onmessage = (message) => {
+            try {
+              const { event, data: payload } = JSON.parse(message.data) as { event: string; data: unknown };
+              target.postMessage({ type: "holdall:event", event, data: payload }, "*");
+            } catch {
+              return;
+            }
+          };
+        }
+        reply({ result: true });
+        return;
+      }
+      const server = data.method === "server.call";
       try {
-        const response = await fetch(`/api/plugins/${encodeURIComponent(pluginId)}/rpc`, {
+        const response = await fetch(`/api/plugins/${encodeURIComponent(pluginId)}/${server ? "call" : "rpc"}`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ method: data.method, params: data.params ?? {} }),
+          body: JSON.stringify(server ? (data.params ?? {}) : { method: data.method, params: data.params ?? {} }),
         });
         const body = (await response.json()) as { result?: unknown; error?: string };
         reply(response.ok ? { result: body.result } : { error: body.error ?? "The call failed." });
@@ -44,9 +60,21 @@ export function PluginFrame({ pluginId, entry, title, tall }: { pluginId: string
       }
     }
     window.addEventListener("message", onMessage);
-    if (frame.current && !frame.current.getAttribute("src")) frame.current.setAttribute("src", url);
-    return () => window.removeEventListener("message", onMessage);
-  }, [pluginId, url]);
+    let cancelled = false;
+    void fetch(`/api/plugins/${encodeURIComponent(pluginId)}/token`)
+      .then((response) => (response.ok ? (response.json() as Promise<{ token: string }>) : undefined))
+      .then((body) => {
+        if (cancelled || !body || !frame.current || frame.current.getAttribute("src")) return;
+        const path = entry.split("/").map(encodeURIComponent).join("/");
+        frame.current.setAttribute("src", `/api/plugins/${encodeURIComponent(pluginId)}/ui/${body.token}/${path}`);
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+      window.removeEventListener("message", onMessage);
+      events?.close();
+    };
+  }, [pluginId, entry]);
 
   return (
     <iframe
@@ -54,7 +82,9 @@ export function PluginFrame({ pluginId, entry, title, tall }: { pluginId: string
       className={styles.frame}
       data-tall={tall || undefined}
       title={title}
-      sandbox="allow-scripts"
+      sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox allow-forms allow-downloads"
+      allow="fullscreen; clipboard-write; autoplay; encrypted-media; picture-in-picture"
+      allowFullScreen
       referrerPolicy="no-referrer"
     />
   );

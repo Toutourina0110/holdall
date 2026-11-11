@@ -18,6 +18,8 @@ export default function setup(holdall) {
 | Member | Use |
 |---|---|
 | `holdall.on(hook, handler)` | Listen to a hook. `handler(payload, context)` may be `async`. |
+| `holdall.handle(name, handler)` | Expose a function your interface can call. See [Server functions](#server-functions). |
+| `holdall.push(userId, event, data)` | Send a live event to that person's open widgets and pages. See [Live events](#live-events). |
 | `holdall.api(method, params, context)` | Call any method of the [API reference](/holdall/plugins/api/). |
 | `holdall.storage.get(key, context)` | Shortcut for `storage.get`. |
 | `holdall.storage.set(key, value, context)` | Shortcut for `storage.set`. |
@@ -130,6 +132,48 @@ holdall.on("dashboard.widgets", (widgets) => {
   return weekend ? widgets.filter((widget) => widget.id !== "tasks.today") : widgets;
 });
 ```
+
+## Server functions
+
+Your interface can call functions of your server code. Use them for anything the browser should not do: secret API keys, sites without CORS, heavy work.
+
+```js
+holdall.handle("weather", async ({ city }, context) => {
+  const response = await holdall.fetch(`https://api.example.com/weather?city=${encodeURIComponent(city)}&key=SECRET`, undefined, context);
+  return JSON.parse(response.body);
+});
+```
+
+From the interface:
+
+```js
+const weather = await holdall("server.call", { name: "weather", args: { city: "Lisbon" } });
+```
+
+- `name`: letters, digits and `_ . : -`, up to 80 characters.
+- The handler receives the arguments and a `context` for the person who called it, so every API call inside works as in a hook.
+- Return anything JSON can hold. A thrown error comes back to the interface with its message.
+- Arguments are limited to 1 MB; the handler has 30 seconds.
+
+## Live events
+
+`holdall.push(userId, event, data)` sends an event to every widget and page of your plugin that this person has open, as soon as it happens:
+
+```js
+holdall.handle("start", async (_args, context) => {
+  for (let step = 1; step <= 3; step++) {
+    holdall.push(context.userId, "progress", { step });
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+  }
+  return "done";
+});
+```
+
+- Holdall only delivers to people who turned your plugin on; events for anyone else are dropped.
+- `data` is limited to 64 KB once encoded.
+- Nothing is stored: a person who has no page open does not get the event later. Keep state in storage if it matters.
+
+The interface receives them as described in [Receive live events](/holdall/plugins/interface/#receive-live-events).
 
 ## Logs
 

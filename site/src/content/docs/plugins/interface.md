@@ -3,19 +3,38 @@ title: Interface code
 description: Widgets and pages in a sandboxed iframe, how they talk to Holdall, and how to match the theme.
 ---
 
-Widgets and pages are HTML files from your archive, shown in an iframe with `sandbox="allow-scripts"` and no same origin.
+Widgets and pages are HTML files from your archive, shown in a sandboxed iframe. Inside it you are free; the only thing you never get is the Holdall session.
 
-## What the sandbox allows
+## What your interface can do
 
 | Allowed | Not allowed |
 |---|---|
-| Running your inline scripts and styles | Reading the Holdall session, cookies or page |
-| Calling Holdall through `postMessage` | Loading other files from Holdall (requests carry no session) |
-| Drawing anything inside your frame | Opening pop-ups, submitting forms to other sites, top navigation |
+| Load other files from your archive: scripts, styles, images, fonts, sounds, videos, WebAssembly | Read the Holdall session, cookies or page |
+| Load anything from any website: libraries from a CDN, images, videos, fonts | Navigate the Holdall tab away |
+| Call any web API with `fetch()`, `WebSocket` or `EventSource` (the site must allow it with CORS) | Send requests to Holdall as the person (they are refused) |
+| Embed other sites in frames, for example a video or stream player | |
+| Open links in a new tab, go fullscreen, play media, offer downloads, submit forms, copy to the clipboard | |
+| Call Holdall and your own server code through `postMessage` | |
 
-So: **keep each HTML file self-contained.** Inline your scripts and styles, or bundle them into the file (see [Tooling](/holdall/plugins/tooling/#bundle-your-interface)). Images can be inline SVG or `data:` URLs.
+Files of your archive are served from the same folder as your HTML file, so relative paths just work:
 
-To reach the internet, ask Holdall: call `network.fetch` (with the `network` permission) instead of `fetch()`.
+```html
+<link rel="stylesheet" href="style.css">
+<script type="module" src="app.js"></script>
+<img src="images/logo.png" alt="">
+```
+
+Supported file types: `.html`, `.js`, `.mjs`, `.css`, `.json`, `.map`, `.txt`, `.svg`, `.png`, `.jpg`, `.gif`, `.webp`, `.avif`, `.ico`, `.woff`, `.woff2`, `.ttf`, `.mp3`, `.ogg`, `.wav`, `.mp4`, `.webm`, `.wasm`. The links include a signed key valid for 12 hours, for the person viewing the plugin; reload the page if it stays open longer.
+
+### `fetch()` or `network.fetch`?
+
+| | `fetch()` from the interface | `network.fetch` or your server code |
+|---|---|---|
+| Runs in | The person's browser | The Holdall server |
+| Needs | The site to allow CORS | The `network` permission and the host in `network` |
+| Good for | Public APIs, CDNs, embeds | Secret API keys, sites without CORS |
+
+Never put a secret API key in interface code: anyone using the plugin can read it. Keep it in your server code and call that code with `server.call` (see [Call your server code](#call-your-server-code)).
 
 ## Talk to Holdall
 
@@ -52,6 +71,31 @@ function holdall(method, params) {
 Always check `event.source === parent`: other frames could send you messages too. The [SDK's `createClient()`](/holdall/plugins/tooling/#the-sdk) does all of this, with types and a 15 second timeout.
 
 Every method of the [API reference](/holdall/plugins/api/) is available, with the person looking at the page as the user.
+
+## Call your server code
+
+Your interface can call functions of your own [server code](/holdall/plugins/server-and-hooks/#server-functions):
+
+```js
+const greeting = await holdall("server.call", { name: "greet", args: { name: "Ada" } });
+```
+
+The function runs for the person looking at the page. An error it throws comes back as the error of the call. Arguments are limited to 1 MB, and the function has 30 seconds to answer.
+
+## Receive live events
+
+Your server code can push events to the interface at any time, for example new chat messages or progress. Subscribe once, then listen:
+
+```js
+addEventListener("message", (event) => {
+  const data = event.data;
+  if (event.source !== parent || !data || data.type !== "holdall:event") return;
+  if (data.event === "message") showMessage(data.data);
+});
+await holdall("events.subscribe");
+```
+
+Every open widget and page of your plugin receives the events sent to the person looking at it. With the SDK: `onEvent(holdall, (event, data) => { ... })`.
 
 ## Match the theme
 

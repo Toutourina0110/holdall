@@ -2,6 +2,7 @@ import { getSessionCookie } from "better-auth/cookies";
 import { NextResponse, type NextRequest } from "next/server";
 import { contentSecurityPolicy, staticSecurityHeaders } from "@/core/security/headers";
 import { desktopGate, launchCookie } from "@/core/security/desktop-gate";
+import { isForeignWrite } from "@/core/security/origin";
 import { isPublicPath } from "@/core/security/public-routes";
 import { isDesktop } from "@/core/target";
 
@@ -28,6 +29,10 @@ export function proxy(request: NextRequest) {
       response.cookies.set(launchCookie, token, { httpOnly: true, sameSite: "lax", path: "/" });
       return response;
     }
+  }
+
+  if (isForeignWrite(request.method, request.headers.get("origin"), request.headers.get("x-forwarded-host") ?? request.headers.get("host"))) {
+    return NextResponse.json({ error: "Requests from other sites are not allowed." }, { status: 403 });
   }
 
   if (!isPublicPath(pathname) && !getSessionCookie(request)) {
