@@ -45,7 +45,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
           <style nonce={nonce} id="holdall-theme" dangerouslySetInnerHTML={{ __html: themeToCss(choice.theme) }} />
         )}
       </head>
-      <body>{children}</body>
+      <body suppressHydrationWarning>{children}</body>
     </html>
   );
 }

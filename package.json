@@ -9,7 +9,7 @@
     "node": ">=26"
   },
   "scripts": {
-    "dev": "next dev",
+    "dev": "pnpm db:migrate && next dev",
     "build": "next build",
     "postbuild": "node scripts/postbuild.mjs",
     "start": "node --env-file-if-exists=.env .next/standalone/start.mjs",

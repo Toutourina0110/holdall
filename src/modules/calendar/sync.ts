@@ -163,12 +163,16 @@ const store = globalThis as unknown as Record<symbol, ReturnType<typeof setInter
 export function startCalendarScheduler(): void {
   if (store[globalKey] || getEnv().demoMode) return;
   const tick = () => {
-    for (const account of allSyncedAccounts()) {
-      try {
-        requestSync(account.userId, account.id);
-      } catch (error) {
-        log.warn("Could not schedule calendar sync", { error: String(error) });
+    try {
+      for (const account of allSyncedAccounts()) {
+        try {
+          requestSync(account.userId, account.id);
+        } catch (error) {
+          log.warn("Could not schedule calendar sync", { error: String(error) });
+        }
       }
+    } catch (error) {
+      log.warn("Could not list calendar accounts", { error: String(error) });
     }
   };
   store[globalKey] = setInterval(tick, 15 * 60 * 1000);

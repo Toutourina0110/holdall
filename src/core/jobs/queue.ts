@@ -178,6 +178,8 @@ async function tick() {
       const handler = state.handlers.get(candidate.type)!;
       void run({ ...candidate, status: "running" }, handler);
     }
+  } catch (error) {
+    log.warn("Could not read the job queue", { error: String(error) });
   } finally {
     state.ticking = false;
   }
