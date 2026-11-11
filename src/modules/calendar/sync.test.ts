@@ -32,6 +32,7 @@ let db: Awaited<ReturnType<typeof useTempDatabase>>;
 beforeAll(async () => {
   db = await useTempDatabase("sync");
   await insertUser("alice");
+  await insertUser("bob");
 });
 
 afterAll(async () => {
@@ -39,6 +40,16 @@ afterAll(async () => {
 });
 
 describe("calendar sync", () => {
+  it("does not let another user sync or change the status of an account", async () => {
+    const store = await import("./store");
+    const { requestSync } = await import("./sync");
+    const account = store.addAccount("alice", { provider: "caldav", name: "Private", credentials: { kind: "basic", serverUrl: "https://x.example", username: "u", password: "p" } });
+    expect(() => requestSync("bob", account.id)).toThrow("does not exist");
+    store.setAccountStatus("bob", account.id, "error", "changed by bob");
+    expect(store.getAccount("alice", account.id).error).toBeNull();
+    store.removeAccount("alice", account.id);
+  });
+
   it("pulls, pushes local changes, and follows remote deletions", async () => {
     const store = await import("./store");
     const { syncAccount } = await import("./sync");

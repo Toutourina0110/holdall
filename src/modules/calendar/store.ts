@@ -77,11 +77,11 @@ export function saveCredentials(userId: string, id: string, credentials: Credent
     .run();
 }
 
-export function setAccountStatus(id: string, status: AccountRow["status"], error: string | null): void {
+export function setAccountStatus(userId: string, id: string, status: AccountRow["status"], error: string | null): void {
   getDb()
     .update(calendarAccount)
     .set({ status, error, ...(status === "ok" ? { lastSyncAt: new Date() } : {}) })
-    .where(eq(calendarAccount.id, id))
+    .where(and(eq(calendarAccount.id, id), eq(calendarAccount.userId, userId)))
     .run();
 }
 

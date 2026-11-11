@@ -135,19 +135,21 @@ export async function syncAccount(userId: string, accountId: string): Promise<{ 
 registerJobHandler("calendar.sync", async (job, context) => {
   const { accountId } = job.payload as { accountId: string };
   if (getEnv().demoMode) throw new Error("Calendar sync is turned off on the demo instance.");
-  setAccountStatus(accountId, "syncing", null);
+  getAccount(job.userId, accountId);
+  setAccountStatus(job.userId, accountId, "syncing", null);
   context.progress(0.1, "Syncing");
   try {
     const result = await syncAccount(job.userId, accountId);
-    setAccountStatus(accountId, "ok", null);
+    setAccountStatus(job.userId, accountId, "ok", null);
     return result;
   } catch (error) {
-    setAccountStatus(accountId, "error", error instanceof Error ? error.message.slice(0, 300) : String(error));
+    setAccountStatus(job.userId, accountId, "error", error instanceof Error ? error.message.slice(0, 300) : String(error));
     throw error;
   }
 });
 
 export function requestSync(userId: string, accountId: string): string | undefined {
+  getAccount(userId, accountId);
   const pending = listJobs(userId, "calendar.sync").some(
     (job) => (job.status === "queued" || job.status === "running") && (JSON.parse(job.payload) as { accountId: string }).accountId === accountId,
   );
