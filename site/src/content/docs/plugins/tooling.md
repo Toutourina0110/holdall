@@ -140,7 +140,15 @@ Interface code runs in the browser: open the developer tools (F12), and pick you
 | *API calls are only allowed while Holdall is calling the plugin, or with the background permission...* | Server code called the API outside a handler without `background`, or with a `context` for someone who did not turn the plugin on. |
 | *The plugin did not declare X in its network list.* | Add the host to `network`. |
 | *Plugins can only use https addresses.* | Use `https://`. |
-| *X took too long to answer.* | Your handler took more than 5 seconds (15 for `notes.export.render`), or an interface call more than 15. |
+| *X took too long to answer.* | A hook handler took more than 5 seconds (15 for `notes.export.render`), a server function or library call more than 30, or an interface call more than 15. |
+| *The plugin has no server function named X.* | `server.call` used a name your server code never registered with `holdall.handle`, or the server code failed at start (read the log). |
+| *Declare X in dependencies to call it.* | Add the library to `dependencies` in your manifest. |
+| *X is not an installed library.* or *does not match* | The admin must install the library, in a version that matches your range. |
+| *The plugin was not granted the storage permission.* | `holdall.userDir` and `holdall.sharedDir` need `storage`. |
+| Install says *... which can harm this server* | The plugin needs a dangerous permission and the server does not allow them. See [Dangerous permissions](/holdall/plugins/permissions/#dangerous-permissions). |
+| *Only pages can change the address.* | `page.navigate` was called from a widget. |
+| *The call is larger than 24 MB.* | Send less at once, or move big files through your data folder from server code. |
+| Uninstall says *Uninstall X first* | Another plugin depends on this library. Uninstall it first. |
 | A hook never runs | It is missing from `contributes.hooks`, the `hooks:<name>` permission or the data permission is missing, or the default export did not call `holdall.on`. |
 | A filter seems ignored | Your answer was not valid, so Holdall kept its own value. The log says *Plugin filter returned an invalid value*. |
 | Install says *needs Holdall X* | Change `holdall` in the manifest, or update Holdall. |

@@ -27,7 +27,9 @@ await applyTheme(holdall);
 const notes = await holdall("notes.list", {});
 ```
 
-Interface files run in a sandboxed iframe, so bundle and inline the script into your HTML file.
+Interface files run in a sandboxed iframe. They can load other files from your archive and content from any website, but never the Holdall session.
+
+Call your own server code with `callServer(holdall, "name", args)` and receive live events with `onEvent(holdall, (event, data) => {})`.
 
 ## Manifest
 

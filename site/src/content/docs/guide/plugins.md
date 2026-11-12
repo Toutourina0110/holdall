@@ -36,6 +36,9 @@ Admins see three more sections on the same page.
 - **Required** permissions are locked. If you do not accept them, **Cancel**.
 - **Optional** permissions can be unchecked.
 - On an update, permissions the plugin did not have before are marked **New**.
+- **Sensitive** permissions (any website, local network, running in the background) and **Dangerous** ones (any file, running programs, full access) are marked. Optional ones of these start unchecked.
+- If the plugin can read your data and has an interface, a note reminds you that it could send that data to any website.
+- Dangerous permissions are refused on a server unless `ALLOW_UNSAFE_PLUGINS=true`. See [Settings](/holdall/install/configuration/).
 
 **Accept and install** installs the plugin for everyone on this Holdall. Each person then turns it on for themselves.
 
