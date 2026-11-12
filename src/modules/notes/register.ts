@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { registerSlotContributor } from "@/core/layout/registry";
 import { registerPluginApi } from "@/core/plugins/api";
-import { createNote, getNote, listNotes, saveNote, searchNotes } from "./store";
+import { createNote, getNote, listNotes, restoreNote, saveNote, searchNotes, setNoteFlags, setNoteTags, trashNote } from "./store";
 
 registerSlotContributor("notes", () => [
   { id: "notes.page", slot: "rail.main", label: "Notes", icon: "notes", href: "/notes", order: 10, source: "notes" },
@@ -38,4 +38,27 @@ registerPluginApi(
   "notes:write",
   z.object({ id: z.string().max(64), title: z.string().max(200).optional(), content: z.string().max(5 * 1024 * 1024).optional() }),
   ({ id, ...input }, { userId }) => summary(saveNote(userId, id, input)),
+);
+
+const noteId = z.object({ id: z.string().max(64) });
+
+registerPluginApi("notes.trash", "notes:write", noteId, ({ id }, { userId }) => {
+  trashNote(userId, id);
+  return true;
+});
+
+registerPluginApi("notes.restore", "notes:write", noteId, ({ id }, { userId }) => summary(restoreNote(userId, id)));
+
+registerPluginApi("notes.move", "notes:write", noteId.extend({ folder: z.string().max(300) }), ({ id, folder }, { userId }) => summary(saveNote(userId, id, { folder })));
+
+registerPluginApi("notes.setTags", "notes:write", noteId.extend({ tags: z.array(z.string().max(40)).max(30) }), ({ id, tags }, { userId }) => setNoteTags(userId, id, tags));
+
+registerPluginApi(
+  "notes.setFlags",
+  "notes:write",
+  noteId.extend({ pinned: z.boolean().optional(), favorite: z.boolean().optional() }),
+  ({ id, pinned, favorite }, { userId }) => {
+    setNoteFlags(userId, id, { pinned, favorite });
+    return true;
+  },
 );

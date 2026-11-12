@@ -315,6 +315,49 @@ export default function (holdall) {
     expect(() => uninstallPlugin("com.test.lib")).toThrow(/App/);
   }, 30000);
 
+  it("lets plugins change and delete notes, tasks, events and files of the calling person only", async () => {
+    await import("@/modules/notes/register");
+    await import("@/modules/tasks/register");
+    await import("@/modules/calendar/register");
+    await import("@/modules/files/register");
+    const { confirmInstall, stagePlugin } = await import("./install");
+    const { setPluginEnabledFor } = await import("./store");
+    const { callPluginApi } = await import("./api");
+    const { createNote } = await import("@/modules/notes/store");
+    const { createTask } = await import("@/modules/tasks/store");
+    const { createEvent, localCalendar } = await import("@/modules/calendar/store");
+    const staged = stagePlugin(
+      archive(
+        { ...base, id: "com.test.writer", name: "Writer", permissions: ["notes:write", "tasks:write", "tasks:read", "calendar:write", "files:write", "files:read"], entry: { ui: "u.html" } },
+        { "u.html": "x" },
+      ),
+      { source: "third-party" },
+    );
+    confirmInstall(staged.stageId, [], "alice");
+    for (const user of ["alice", "bob"]) setPluginEnabledFor(user, "com.test.writer", true);
+    const alice = { pluginId: "com.test.writer", userId: "alice" };
+    const bob = { pluginId: "com.test.writer", userId: "bob" };
+
+    const note = createNote("bob", { title: "Bob private" });
+    const task = createTask("bob", { title: "Bob task" });
+    const event = createEvent("bob", { calendarId: localCalendar("bob").id, title: "Bob event", start: new Date(), end: new Date() });
+    await expect(callPluginApi("notes.trash", { id: note.id }, alice)).rejects.toThrow();
+    await expect(callPluginApi("tasks.update", { id: task.id, title: "pwned" }, alice)).rejects.toThrow();
+    await expect(callPluginApi("tasks.delete", { id: task.id }, alice)).rejects.toThrow();
+    await expect(callPluginApi("calendar.update", { id: event.id, title: "pwned" }, alice)).rejects.toThrow();
+    await expect(callPluginApi("calendar.delete", { id: event.id }, alice)).rejects.toThrow();
+
+    expect(((await callPluginApi("tasks.update", { id: task.id, title: "Renamed", priority: 2 }, bob)) as { title: string }).title).toBe("Renamed");
+    expect(await callPluginApi("calendar.delete", { id: event.id }, bob)).toBe(true);
+    expect(await callPluginApi("notes.trash", { id: note.id }, bob)).toBe(true);
+
+    await callPluginApi("files.mkdir", { path: "Inbox" }, alice);
+    await callPluginApi("files.write", { path: "Inbox/a.txt", content: "a" }, alice);
+    expect(await callPluginApi("files.move", { path: "Inbox/a.txt", to: "" }, alice)).toEqual({ path: "a.txt" });
+    await expect(callPluginApi("files.move", { path: "a.txt", to: "../bob" }, alice)).rejects.toThrow();
+    await expect(callPluginApi("files.rename", { path: "a.txt", name: "../b.txt" }, alice)).rejects.toThrow();
+  });
+
   it("signs plugin file links for one plugin and one person, for a limited time", async () => {
     const { signAssetToken, verifyAssetToken } = await import("./asset-token");
     const token = signAssetToken("com.test.live", "alice", 1000);

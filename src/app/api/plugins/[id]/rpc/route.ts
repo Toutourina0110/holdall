@@ -1,4 +1,5 @@
-import { z } from "zod";
+import { z, ZodError } from "zod";
+import { UserFacingError } from "@/core/errors";
 import { apiSession, unauthorized } from "@/core/auth/session";
 import { getEnv } from "@/core/env";
 import { callPluginApi, PluginPermissionError } from "@/core/plugins/api";
@@ -11,8 +12,9 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   if (!session) return unauthorized();
   const origin = request.headers.get("origin");
   if (origin && origin !== new URL(getEnv().appUrl).origin) return Response.json({ error: "Cross-origin calls are not allowed." }, { status: 403 });
-  const text = await readLimitedText(request, 8 * 1024 * 1024);
-  if (text === undefined) return Response.json({ error: "The call is larger than 8 MB." }, { status: 413 });
+  const limit = Math.ceil(getEnv().maxUploadMb * 1024 * 1024 * 1.4) + 1024 * 1024;
+  const text = await readLimitedText(request, limit);
+  if (text === undefined) return Response.json({ error: "The call is too large." }, { status: 413 });
   let json: unknown = null;
   try {
     json = JSON.parse(text);
@@ -26,6 +28,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     return Response.json({ result });
   } catch (error) {
     if (error instanceof PluginPermissionError) return Response.json({ error: error.message }, { status: 403 });
+    if (error instanceof UserFacingError) return Response.json({ error: error.message }, { status: 422 });
+    if (error instanceof ZodError) return Response.json({ error: error.issues[0]?.message ?? "Check the parameters." }, { status: 400 });
     return Response.json({ error: "The plugin call failed." }, { status: 500 });
   }
 }

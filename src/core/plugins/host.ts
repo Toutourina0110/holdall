@@ -7,6 +7,7 @@ import { createLogger } from "@/core/log";
 import { pluginDataPath, safeJoin } from "@/core/paths";
 import { callPluginApi } from "./api";
 import { installedDir } from "./install";
+import { satisfies } from "./manifest";
 import { pushToUser } from "./live";
 import { isUnsafePermission } from "./permissions";
 import { getInstalledPlugin, isPluginEnabledFor, listInstalledPlugins, usersWithPlugin } from "./store";
@@ -175,10 +176,14 @@ export function startPluginProcess(pluginId: string): PluginProcess | undefined 
           let reply: { result?: unknown; error?: string };
           const library = String(message.library);
           const name = String(message.name);
-          if (!(library in (getInstalledPlugin(pluginId)?.manifest.dependencies ?? {}))) {
+          const range = getInstalledPlugin(pluginId)?.manifest.dependencies[library];
+          const target = getInstalledPlugin(library);
+          if (range === undefined) {
             reply = { error: `Declare ${library} in dependencies to call it.` };
-          } else if (!getInstalledPlugin(library)) {
-            reply = { error: `The library ${library} is not installed.` };
+          } else if (!target || target.manifest.type !== "library") {
+            reply = { error: `${library} is not an installed library.` };
+          } else if (!satisfies(target.version, range)) {
+            reply = { error: `${library} ${target.version} does not match ${range}. Update it.` };
           } else {
             try {
               const userId = message.callId || message.userId ? callerOf(proc, pluginId, message) : "";

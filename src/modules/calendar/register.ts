@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { registerSlotContributor } from "@/core/layout/registry";
 import { registerPluginApi } from "@/core/plugins/api";
-import { createEvent, listEvents, localCalendar } from "./store";
+import { createEvent, deleteEvent, listEvents, localCalendar, updateEvent } from "./store";
 import "./sync";
 
 registerSlotContributor("calendar", () => [
@@ -22,3 +22,26 @@ registerPluginApi(
     return { id: event.id };
   },
 );
+
+registerPluginApi(
+  "calendar.update",
+  "calendar:write",
+  z.object({
+    id: z.string().max(64),
+    title: z.string().max(300).optional(),
+    start: z.coerce.date().optional(),
+    end: z.coerce.date().optional(),
+    allDay: z.boolean().optional(),
+    location: z.string().max(300).optional(),
+    description: z.string().max(20000).optional(),
+  }),
+  ({ id, ...changes }, { userId }) => {
+    const event = updateEvent(userId, id, Object.fromEntries(Object.entries(changes).filter(([, value]) => value !== undefined)));
+    return { id: event.id, title: event.title, start: event.start.toISOString(), end: event.end.toISOString(), allDay: event.allDay, location: event.location };
+  },
+);
+
+registerPluginApi("calendar.delete", "calendar:write", z.object({ id: z.string().max(64) }), ({ id }, { userId }) => {
+  deleteEvent(userId, id);
+  return true;
+});

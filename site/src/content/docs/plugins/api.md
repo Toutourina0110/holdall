@@ -120,6 +120,22 @@ Permission `notes:write`. **Params** `{ title, folder?, content? }`. `folder` us
 
 Permission `notes:write`. **Params** `{ id, title?, content? }`. **Returns** the summary. Holdall keeps the previous text in the note's history.
 
+### `notes.trash`, `notes.restore`
+
+Permission `notes:write`. **Params** `{ id }`. Move a note to the trash, or bring it back. **Returns** `true`, or the restored summary.
+
+### `notes.move`
+
+Permission `notes:write`. **Params** `{ id, folder }`, with `/` for subfolders and `""` for the top. **Returns** the summary.
+
+### `notes.setTags`
+
+Permission `notes:write`. **Params** `{ id, tags }`. Replaces the tags. **Returns** the tags as saved.
+
+### `notes.setFlags`
+
+Permission `notes:write`. **Params** `{ id, pinned?, favorite? }`. **Returns** `true`.
+
 ## Tasks
 
 ### `tasks.list`
@@ -145,6 +161,22 @@ Permission `tasks:write`. **Params** `{ title, description?, dueDate?, dueTime?,
 
 Permission `tasks:write`. **Params** `{ id, done }`. **Returns** the task.
 
+### `tasks.update`
+
+Permission `tasks:write`. **Params** `{ id }` plus any field of `tasks.create`. Fields you leave out keep their value. **Returns** the task.
+
+### `tasks.delete`
+
+Permission `tasks:write`. **Params** `{ id }`. Deletes the task and its subtasks. **Returns** `true`.
+
+### `tasks.lists`
+
+Permission `tasks:read`. No params. **Returns** the person's lists, `[{ id, name, ... }]`.
+
+### `tasks.createList`, `tasks.renameList`, `tasks.deleteList`
+
+Permission `tasks:write`. **Params** `{ name }`, `{ id, name }` and `{ id }`. Deleting a list deletes its tasks. **Returns** the new list, or `true`.
+
 ## Calendar
 
 ### `calendar.list`
@@ -158,6 +190,14 @@ Permission `calendar:read`. **Params** `{ from, to }`. **Returns** events in tha
 ### `calendar.create`
 
 Permission `calendar:write`. **Params** `{ title, start, end, allDay?, location?, description? }`. The event goes to the person's Holdall calendar. **Returns** `{ id }`.
+
+### `calendar.update`
+
+Permission `calendar:write`. **Params** `{ id, title?, start?, end?, allDay?, location?, description? }`. Fields you leave out keep their value. Changes to synced events are sent to their service at the next sync. Repeating events and read-only calendars are refused. **Returns** the event.
+
+### `calendar.delete`
+
+Permission `calendar:write`. **Params** `{ id }`. Same rules as `calendar.update`. **Returns** `true`.
 
 ## Files
 
@@ -180,7 +220,7 @@ Permission `files:read`. **Params** `{ root?, path? }`.
 
 ### `files.read`
 
-Permission `files:read`. **Params** `{ root?, path, encoding? }`. `encoding` is `utf8` (default) or `base64` for binary files. **Returns** `{ content, size }`. Files over 5 MB are refused.
+Permission `files:read`. **Params** `{ root?, path, encoding? }`. `encoding` is `utf8` (default) or `base64` for binary files. **Returns** `{ content, size }`. Files larger than the upload limit of the server (`MAX_UPLOAD_MB`, 500 MB by default) are refused.
 
 ### `files.write`
 
@@ -189,9 +229,21 @@ Permission `files:write`. **Params** `{ path, content, encoding?, overwrite? }`.
 - Writes in **My files** only. Missing folders are created.
 - `encoding`: `utf8` (default) or `base64`.
 - `overwrite`: `false` (default) adds ` (2)`, ` (3)`... to the name if a file exists; `true` replaces it.
-- Up to 5 MB.
+- Up to the upload limit of the server (`MAX_UPLOAD_MB`).
 
 **Returns** `{ path, size }` with the path actually used.
+
+### `files.mkdir`
+
+Permission `files:write`. **Params** `{ path }`, the folder to create in **My files**. **Returns** `{ path }`.
+
+### `files.rename`
+
+Permission `files:write`. **Params** `{ path, name }`. Renames a file or folder in **My files**. **Returns** `{ path }` with the new path.
+
+### `files.move`
+
+Permission `files:write`. **Params** `{ path, to }`, `to` being a folder (`""` for the top). **Returns** `{ path }` with the new path.
 
 ### `files.delete`
 

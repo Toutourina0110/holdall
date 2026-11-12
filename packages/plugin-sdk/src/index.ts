@@ -142,6 +142,25 @@ export type Methods = {
   "files.write": { params: { path: string; content: string; encoding?: "utf8" | "base64"; overwrite?: boolean }; result: { path: string; size: number } };
   "files.delete": { params: { path: string }; result: true };
   "notifications.show": { params: { title: string; body?: string }; result: true };
+  "notes.trash": { params: { id: string }; result: true };
+  "notes.restore": { params: { id: string }; result: NoteSummary };
+  "notes.move": { params: { id: string; folder: string }; result: NoteSummary };
+  "notes.setTags": { params: { id: string; tags: string[] }; result: string[] };
+  "notes.setFlags": { params: { id: string; pinned?: boolean; favorite?: boolean }; result: true };
+  "tasks.update": { params: Partial<TaskInput> & { id: string; listId?: string | null; parentId?: string | null }; result: Task };
+  "tasks.delete": { params: { id: string }; result: true };
+  "tasks.lists": { params: undefined; result: { id: string; name: string }[] };
+  "tasks.createList": { params: { name: string }; result: { id: string; name: string } };
+  "tasks.renameList": { params: { id: string; name: string }; result: true };
+  "tasks.deleteList": { params: { id: string }; result: true };
+  "calendar.update": {
+    params: { id: string; title?: string; start?: string; end?: string; allDay?: boolean; location?: string; description?: string };
+    result: CalendarEvent;
+  };
+  "calendar.delete": { params: { id: string }; result: true };
+  "files.mkdir": { params: { path: string }; result: { path: string } };
+  "files.rename": { params: { path: string; name: string }; result: { path: string } };
+  "files.move": { params: { path: string; to: string }; result: { path: string } };
   "calendar.list": { params: { from: string; to: string }; result: CalendarEvent[] };
   "calendar.create": {
     params: { title: string; start: string; end: string; allDay?: boolean; location?: string; description?: string };
