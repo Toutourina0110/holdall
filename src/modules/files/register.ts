@@ -13,7 +13,9 @@ registerSlotContributor("files", () => [
   { id: "converter.page", slot: "rail.media", label: "Converter", icon: "converter", href: "/converter", order: 30, source: "converter" },
 ]);
 
-const maxBytes = () => getEnv().maxUploadMb * 1024 * 1024;
+const fileCapBytes = 16 * 1024 * 1024;
+const maxBytes = () => Math.min(getEnv().maxUploadMb * 1024 * 1024, fileCapBytes);
+const maxMb = () => Math.round(maxBytes() / 1024 / 1024);
 const root = z.enum(["files", "downloads"]).default("files");
 const relativePath = z.string().max(1000);
 const encoding = z.enum(["utf8", "base64"]).default("utf8");
@@ -25,19 +27,19 @@ registerPluginApi("files.list", "files:read", z.object({ root, path: relativePat
 registerPluginApi("files.read", "files:read", z.object({ root, path: relativePath, encoding }), ({ root, path: relative, encoding }, { userId }) => {
   const { full, stat } = fileInfo(userId, root, relative);
   if (!stat.isFile()) throw new UserFacingError("This is a folder, not a file.");
-  if (stat.size > maxBytes()) throw new UserFacingError(`Plugins can read files up to ${getEnv().maxUploadMb} MB.`);
+  if (stat.size > maxBytes()) throw new UserFacingError(`Plugins can read files up to ${maxMb()} MB.`);
   return { content: fs.readFileSync(full).toString(encoding), size: stat.size };
 });
 
 registerPluginApi(
   "files.write",
   "files:write",
-  z.object({ path: relativePath, content: z.string(), encoding, overwrite: z.boolean().default(false) }),
+  z.object({ path: relativePath, content: z.string().max(Math.ceil((fileCapBytes * 4) / 3) + 4), encoding, overwrite: z.boolean().default(false) }),
   ({ path: relative, content, encoding, overwrite }, { userId }) => {
     const parts = cleanRelative(relative);
     const name = cleanName(parts.pop() ?? "");
     const data = Buffer.from(content, encoding);
-    if (data.length > maxBytes()) throw new UserFacingError(`Plugins can write files up to ${getEnv().maxUploadMb} MB.`);
+    if (data.length > maxBytes()) throw new UserFacingError(`Plugins can write files up to ${maxMb()} MB.`);
     rootDir(userId, "files");
     const dir = resolve(userId, "files", parts.join("/"));
     fs.mkdirSync(dir, { recursive: true });

@@ -220,7 +220,7 @@ Permission `files:read`. **Params** `{ root?, path? }`.
 
 ### `files.read`
 
-Permission `files:read`. **Params** `{ root?, path, encoding? }`. `encoding` is `utf8` (default) or `base64` for binary files. **Returns** `{ content, size }`. Files larger than the upload limit of the server (`MAX_UPLOAD_MB`, 500 MB by default) are refused.
+Permission `files:read`. **Params** `{ root?, path, encoding? }`. `encoding` is `utf8` (default) or `base64` for binary files. **Returns** `{ content, size }`. Files over 16 MB, or over the upload limit of the server (`MAX_UPLOAD_MB`) if it is lower, are refused. For bigger files, use your [data folder](/holdall/plugins/server-and-hooks/#data-folder) from server code.
 
 ### `files.write`
 
@@ -229,7 +229,7 @@ Permission `files:write`. **Params** `{ path, content, encoding?, overwrite? }`.
 - Writes in **My files** only. Missing folders are created.
 - `encoding`: `utf8` (default) or `base64`.
 - `overwrite`: `false` (default) adds ` (2)`, ` (3)`... to the name if a file exists; `true` replaces it.
-- Up to the upload limit of the server (`MAX_UPLOAD_MB`).
+- Up to 16 MB, or the upload limit of the server (`MAX_UPLOAD_MB`) if it is lower.
 
 **Returns** `{ path, size }` with the path actually used.
 

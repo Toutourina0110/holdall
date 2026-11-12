@@ -12,9 +12,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   if (!session) return unauthorized();
   const origin = request.headers.get("origin");
   if (origin && origin !== new URL(getEnv().appUrl).origin) return Response.json({ error: "Cross-origin calls are not allowed." }, { status: 403 });
-  const limit = Math.ceil(getEnv().maxUploadMb * 1024 * 1024 * 1.4) + 1024 * 1024;
-  const text = await readLimitedText(request, limit);
-  if (text === undefined) return Response.json({ error: "The call is too large." }, { status: 413 });
+  const text = await readLimitedText(request, 24 * 1024 * 1024);
+  if (text === undefined) return Response.json({ error: "The call is larger than 24 MB." }, { status: 413 });
   let json: unknown = null;
   try {
     json = JSON.parse(text);
