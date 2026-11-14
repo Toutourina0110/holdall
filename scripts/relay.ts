@@ -16,7 +16,7 @@ type ProviderConfig = {
   label: string;
 };
 
-type Ticket = { provider: Provider; returnUrl: string; state: string; key: string };
+type Ticket = { provider: Provider; returnUrl: string; state: string; key: string; browser: string };
 type Flight = Ticket & { verifier: string };
 
 const log = createLogger("relay");
@@ -24,6 +24,20 @@ const ticketLifetime = 10 * 60 * 1000;
 const windowMs = 10 * 60 * 1000;
 const browserLimit = 30;
 const refreshLimit = 600;
+const browserCookie = "holdall_relay";
+
+function fingerprint(value: string): string {
+  return createHash("sha256").update(value).digest("base64url");
+}
+
+function sameBrowser(req: http.IncomingMessage, expected: string): boolean {
+  const value = (req.headers.cookie ?? "")
+    .split(";")
+    .map((part) => part.trim())
+    .find((part) => part.startsWith(`${browserCookie}=`))
+    ?.slice(browserCookie.length + 1);
+  return Boolean(value) && fingerprint(value!) === expected;
+}
 
 export type RelaySettings = {
   publicUrl: string;
@@ -252,10 +266,12 @@ export function createRelay(settings: RelaySettings): http.Server {
         res.end(page("Invalid request", "<h1>This link is not valid</h1><p>Start again from the Calendar accounts page of your Holdall.</p>"));
         return;
       }
-      const ticket = seal(settings.secret, { provider, returnUrl, state, key } satisfies Ticket, ticketLifetime);
+      const mark = randomBytes(24).toString("base64url");
+      const ticket = seal(settings.secret, { provider, returnUrl, state, key, browser: fingerprint(mark) } satisfies Ticket, ticketLifetime);
+      const secure = settings.publicUrl.startsWith("https://") ? "; Secure" : "";
       const host = new URL(returnUrl).host;
       const go = `${settings.publicUrl}/relay/${provider}/go?t=${encodeURIComponent(ticket)}`;
-      res.writeHead(200, pageHeaders);
+      res.writeHead(200, { ...pageHeaders, "Set-Cookie": `${browserCookie}=${mark}; Path=/relay; HttpOnly; SameSite=Lax; Max-Age=600${secure}` });
       res.end(
         page(
           `Connect ${config.label}`,
@@ -267,7 +283,7 @@ export function createRelay(settings: RelaySettings): http.Server {
 
     if (step === "go") {
       const ticket = unseal<Ticket>(settings.secret, url.searchParams.get("t") ?? "");
-      if (!ticket || ticket.provider !== provider) {
+      if (!ticket || ticket.provider !== provider || !sameBrowser(req, ticket.browser)) {
         res.writeHead(400, pageHeaders);
         res.end(page("Link expired", "<h1>This link has expired</h1><p>Start again from the Calendar accounts page of your Holdall.</p>"));
         return;
@@ -290,7 +306,7 @@ export function createRelay(settings: RelaySettings): http.Server {
     }
 
     const flight = unseal<Flight>(settings.secret, url.searchParams.get("state") ?? "");
-    if (!flight || flight.provider !== provider) {
+    if (!flight || flight.provider !== provider || !sameBrowser(req, flight.browser)) {
       res.writeHead(400, pageHeaders);
       res.end(page("Link expired", "<h1>This sign-in has expired</h1><p>Start again from the Calendar accounts page of your Holdall.</p>"));
       return;

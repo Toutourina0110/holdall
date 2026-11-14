@@ -27,6 +27,7 @@ const repo = "https://github.com/Toutourina0110/holdall";
       About once an hour, while your calendar syncs, your Holdall asks the relay to renew the access. The relay passes the request to Google or Microsoft and returns the answer.
     </li>
     <li>The relay stores nothing: no database, no files, no copy of your access or of your calendar. It never reads your events.</li>
+    <li>It sets one cookie for 10 minutes, so that a sign-in can only be finished in the browser that saw its confirmation page.</li>
     <li>
       Its log only notes errors, with the provider name and the error code from the provider. Addresses are kept in memory for a few minutes to limit abuse, then
       forgotten.

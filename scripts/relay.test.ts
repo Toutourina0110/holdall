@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import type http from "node:http";
 import type { AddressInfo } from "node:net";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
@@ -33,8 +34,8 @@ afterAll(() => {
   server.close();
 });
 
-function get(path: string) {
-  return fetch(`${base}${path}`, { redirect: "manual" });
+function get(path: string, cookie?: string) {
+  return fetch(`${base}${path}`, { redirect: "manual", headers: cookie ? { Cookie: cookie } : {} });
 }
 
 describe("relay crypto", () => {
@@ -72,15 +73,21 @@ describe("relay flow", () => {
     expect(html).toContain("holdall.example.com");
     expect(start.headers.get("x-frame-options")).toBe("DENY");
     const go = html.match(/href="([^"]+)"/)![1]!.replace(/&amp;/g, "&").replace("http://127.0.0.1:1", base);
+    const cookie = start.headers.get("set-cookie")!.split(";")[0]!;
+    expect(start.headers.get("set-cookie")).toContain("HttpOnly");
 
-    const authorize = await get(go.slice(base.length));
+    expect((await get(go.slice(base.length))).status).toBe(400);
+    expect((await get(go.slice(base.length), "holdall_relay=someone-else")).status).toBe(400);
+    const authorize = await get(go.slice(base.length), cookie);
     expect(authorize.status).toBe(303);
     const provider = new URL(authorize.headers.get("location")!);
     expect(provider.origin).toBe("https://accounts.google.com");
     expect(provider.searchParams.get("code_challenge_method")).toBe("S256");
     expect(provider.searchParams.get("redirect_uri")).toBe("http://127.0.0.1:1/relay/google/callback");
 
-    const callback = await get(`/relay/google/callback?${new URLSearchParams({ code: "good", state: provider.searchParams.get("state")! })}`);
+    const callbackPath = `/relay/google/callback?${new URLSearchParams({ code: "good", state: provider.searchParams.get("state")! })}`;
+    expect((await get(callbackPath)).status).toBe(400);
+    const callback = await get(callbackPath, cookie);
     expect(callback.status).toBe(303);
     const back = new URL(callback.headers.get("location")!);
     expect(back.origin + back.pathname).toBe(instanceReturn);
@@ -100,8 +107,9 @@ describe("relay flow", () => {
     expect((await get("/relay/google/callback?code=good&state=forged")).status).toBe(400);
     expect((await get("/relay/microsoft/start")).status).toBe(404);
 
-    const flight = seal(secret, { provider: "google", returnUrl: instanceReturn, state: "state-0123456789abcdef", key, verifier: "v" }, 60000);
-    const failed = await get(`/relay/google/callback?code=bad&state=${encodeURIComponent(flight)}`);
+    const browser = createHash("sha256").update("mark").digest("base64url");
+    const flight = seal(secret, { provider: "google", returnUrl: instanceReturn, state: "state-0123456789abcdef", key, verifier: "v", browser }, 60000);
+    const failed = await get(`/relay/google/callback?code=bad&state=${encodeURIComponent(flight)}`, "holdall_relay=mark");
     expect(new URL(failed.headers.get("location")!).searchParams.get("error")).toBe("exchange");
   });
 

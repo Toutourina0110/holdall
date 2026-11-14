@@ -73,3 +73,13 @@ describe("calendar sign-in through the relay", () => {
     expect(await callback({ state, relay: encryptForInstance(other.key, tokens) })).toBe("?error=exchange");
   });
 });
+
+describe("pending sign-ins", () => {
+  it("keeps at most five per person, so one person cannot push others out", async () => {
+    const { relayStartUrl, takePending } = await import("./relay");
+    const states = Array.from({ length: 7 }, () => new URL(relayStartUrl("bob", "google")!).searchParams.get("state")!);
+    const other = new URL(relayStartUrl("alice", "google")!).searchParams.get("state")!;
+    expect(states.map((state) => Boolean(takePending(state)))).toEqual([false, false, true, true, true, true, true]);
+    expect(takePending(other)?.userId).toBe("alice");
+  });
+});
