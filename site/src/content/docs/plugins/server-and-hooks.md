@@ -20,7 +20,7 @@ export default function setup(holdall) {
 | `holdall.on(hook, handler)` | Listen to a hook. `handler(payload, context)` may be `async`. |
 | `holdall.handle(name, handler)` | Expose a function your interface can call. See [Server functions](#server-functions). |
 | `holdall.push(userId, event, data)` | Send a live event to that person's open widgets and pages. See [Live events](#live-events). |
-| `holdall.api(method, params, context)` | Call any method of the [API reference](/holdall/plugins/api/). |
+| `holdall.api(method, params, context)` | Call any method of the [API reference](/plugins/api/). |
 | `holdall.storage.get(key, context)` | Shortcut for `storage.get`. |
 | `holdall.storage.set(key, value, context)` | Shortcut for `storage.set`. |
 | `holdall.storage.delete(key, context)` | Shortcut for `storage.delete`. |
@@ -55,7 +55,7 @@ By default the process is started with the Node permission model:
 
 Everything else goes through `holdall` calls, checked against your permissions. Use `holdall.fetch` instead of `fetch`, and your data folder, storage or `files.write` for files.
 
-Need more? The [dangerous permissions](/holdall/plugins/permissions/#dangerous-permissions) open the sandbox step by step: `network:direct` for your own network connections, `fs:host` for any file, `process:spawn` to start programs, `system` for no sandbox at all.
+Need more? The [dangerous permissions](/plugins/permissions/#dangerous-permissions) open the sandbox step by step: `network:direct` for your own network connections, `fs:host` for any file, `process:spawn` to start programs, `system` for no sandbox at all.
 
 :::note
 The Node permission model blocks what ordinary code can do. It is not a full security boundary against someone who finds a bug in Node itself, which is why admins review every plugin before installing it.
@@ -261,8 +261,8 @@ holdall.handle("start", async (_args, context) => {
 - `data` is limited to 64 KB once encoded.
 - Nothing is stored: a person who has no page open does not get the event later. Keep state in storage if it matters.
 
-The interface receives them as described in [Receive live events](/holdall/plugins/interface/#receive-live-events).
+The interface receives them as described in [Receive live events](/plugins/interface/#receive-live-events).
 
 ## Logs
 
-`holdall.log("message")`, `console.log` and errors your code throws all end up in the Holdall log, prefixed with your plugin id. See [Read the logs](/holdall/plugins/tooling/#read-the-logs).
+`holdall.log("message")`, `console.log` and errors your code throws all end up in the Holdall log, prefixed with your plugin id. See [Read the logs](/plugins/tooling/#read-the-logs).

@@ -17,7 +17,7 @@ Yes. Use the player the site gives you (an `<iframe>` or its script). Fullscreen
 
 ## Can my server code use npm packages?
 
-Yes, if you bundle them into your server file. Packages that need native addons, write files, start programs or open network connections need the matching [dangerous permission](/holdall/plugins/permissions/#dangerous-permissions).
+Yes, if you bundle them into your server file. Packages that need native addons, write files, start programs or open network connections need the matching [dangerous permission](/plugins/permissions/#dangerous-permissions).
 
 ## Can a plugin really do anything?
 
@@ -25,15 +25,15 @@ Almost. With `system`, its server code runs as plain Node with no sandbox, on se
 
 ## Can my server code run on a timer?
 
-Yes, with the `background` permission: use `setInterval`, then `holdall.users()` and `holdall.as(userId)` to act for each person who turned the plugin on. See [Background code](/holdall/plugins/server-and-hooks/#background-code).
+Yes, with the `background` permission: use `setInterval`, then `holdall.users()` and `holdall.as(userId)` to act for each person who turned the plugin on. See [Background code](/plugins/server-and-hooks/#background-code).
 
 ## Where do I keep settings?
 
-Declare them in the manifest and Holdall draws the form for you, with personal and global values and encrypted secrets. See [Settings](/holdall/plugins/manifest/#settings). For anything more complex, use storage and your own form. Bigger data goes in your [data folder](/holdall/plugins/server-and-hooks/#data-folder).
+Declare them in the manifest and Holdall draws the form for you, with personal and global values and encrypted secrets. See [Settings](/plugins/manifest/#settings). For anything more complex, use storage and your own form. Bigger data goes in your [data folder](/plugins/server-and-hooks/#data-folder).
 
 ## Can I use SQLite or keep big files?
 
-Yes, in your [data folder](/holdall/plugins/server-and-hooks/#data-folder). A pure JavaScript or WebAssembly SQLite works in the sandbox; a native one needs `system`.
+Yes, in your [data folder](/plugins/server-and-hooks/#data-folder). A pure JavaScript or WebAssembly SQLite works in the sandbox; a native one needs `system`.
 
 ## How do I know who is using the plugin?
 
@@ -41,7 +41,7 @@ You don't need to: every call already acts for the right person. `context.userId
 
 ## How do I share data between people?
 
-A person's notes, files, events and storage are always theirs only: a plugin cannot show them to someone else through the API. For data meant for everyone, use [`holdall.sharedDir()`](/holdall/plugins/server-and-hooks/#data-folder) in server code, or a `global` [setting](/holdall/plugins/manifest/#settings).
+A person's notes, files, events and storage are always theirs only: a plugin cannot show them to someone else through the API. For data meant for everyone, use [`holdall.sharedDir()`](/plugins/server-and-hooks/#data-folder) in server code, or a `global` [setting](/plugins/manifest/#settings).
 
 ## Can I show a notification from the interface?
 
@@ -49,11 +49,11 @@ Yes, `notifications.show` works from interface code too, with the `notifications
 
 ## My widget shows nothing after an update
 
-Reload the page: widgets and pages are loaded once. If it still fails, read the browser console (F12) and the [Holdall log](/holdall/plugins/tooling/#read-the-logs).
+Reload the page: widgets and pages are loaded once. If it still fails, read the browser console (F12) and the [Holdall log](/plugins/tooling/#read-the-logs).
 
 ## Can a plugin replace a Holdall screen?
 
-Not yet. The `ui:replace` permission is reserved for that. See [Not available yet](/holdall/plugins/overview/#not-available-yet).
+Not yet. The `ui:replace` permission is reserved for that. See [Not available yet](/plugins/overview/#not-available-yet).
 
 ## Which license should I use?
 

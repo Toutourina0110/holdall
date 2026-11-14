@@ -28,7 +28,7 @@ Under **People**, change someone's role between **Member** and **Admin**, or cre
 | Member | Use every module with their own data, customize their own layout and theme, turn installed plugins on or off. |
 | Admin | Everything a member can, plus invite people, change roles, create password reset links, open registration, install and remove plugins, add CalDAV servers on the local network. |
 
-Nobody, not even an admin, can open another person's notes, tasks, events or files in Holdall. The only exception is a plugin with dangerous permissions, which the admin must allow on purpose (see [Use plugins](/holdall/guide/plugins/#how-plugins-are-kept-apart)).
+Nobody, not even an admin, can open another person's notes, tasks, events or files in Holdall. The only exception is a plugin with dangerous permissions, which the admin must allow on purpose (see [Use plugins](/guide/plugins/#how-plugins-are-kept-apart)).
 
 ## Find your way around
 

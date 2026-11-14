@@ -7,7 +7,7 @@ description: Deploy Holdall on Coolify from its Git repository.
 2. Build pack: **Dockerfile**. Port: **3000**.
 3. In **Environment Variables**, add:
    - `APP_URL`: the domain Coolify gives you, or your own;
-   - `APP_SECRET`: a random string of at least 32 characters (see [Settings](/holdall/install/configuration/));
+   - `APP_SECRET`: a random string of at least 32 characters (see [Settings](/install/configuration/));
    - `TRUST_PROXY=true`, because Coolify puts a proxy in front of the app.
 4. In **Storages**, add a persistent volume mounted on `/data`. Without it, your data is lost at the next deploy.
 5. In **Domains**, set your domain. Coolify handles HTTPS.

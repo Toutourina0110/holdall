@@ -2,8 +2,7 @@ import { defineConfig } from "astro/config";
 import starlight from "@astrojs/starlight";
 
 export default defineConfig({
-  site: "https://toutourina0110.github.io",
-  base: "/holdall",
+  site: "https://docs.holdall.site",
   integrations: [
     starlight({
       title: "Holdall",

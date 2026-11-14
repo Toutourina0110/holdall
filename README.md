@@ -4,14 +4,18 @@ Holdall is a self-hosted personal toolbox: notes and tasks, a synced calendar, a
 
 **Status:** early development. Notes, tasks, calendar sync (Google, Outlook, iCloud, CalDAV), video downloads, file manager, converter, customizable layout, themes, plugins and the plugin store all work. Expect rough edges.
 
+## Try it
+
+A public demo runs at **https://demo.holdall.site**: each visitor gets their own account with made-up data, deleted after an hour.
+
 ## Documentation
 
-Everything is on the documentation site: **https://toutourina0110.github.io/holdall/**
+Everything is on the documentation site: **https://docs.holdall.site/**
 
-- [Install on a server](https://toutourina0110.github.io/holdall/install/configuration/) (Docker, Ubuntu, Coolify)
-- [Desktop app](https://toutourina0110.github.io/holdall/desktop/install/)
-- [User guide](https://toutourina0110.github.io/holdall/guide/first-steps/)
-- [Write plugins and themes](https://toutourina0110.github.io/holdall/plugins/overview/)
+- [Install on a server](https://docs.holdall.site/install/configuration/) (Docker, Ubuntu, Coolify)
+- [Desktop app](https://docs.holdall.site/desktop/install/)
+- [User guide](https://docs.holdall.site/guide/first-steps/)
+- [Write plugins and themes](https://docs.holdall.site/plugins/overview/)
 
 The site source is in `site/`.
 
@@ -28,7 +32,7 @@ pnpm install
 pnpm dev
 ```
 
-Then open http://localhost:3000. The first visit creates the admin account. Configuration goes in a `.env` file, see `.env.example`. All commands are listed in [Development](https://toutourina0110.github.io/holdall/contributing/development/).
+Then open http://localhost:3000. The first visit creates the admin account. Configuration goes in a `.env` file, see `.env.example`. All commands are listed in [Development](https://docs.holdall.site/contributing/development/).
 
 ## License
 

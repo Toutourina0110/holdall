@@ -21,3 +21,16 @@ How it behaves:
 :::danger
 Never turn on `DEMO_MODE` on an instance that holds real data: the sign-in page is replaced by the demo page.
 :::
+
+## Free hosting on Render
+
+A demo keeps nothing for long, so a free host without a disk is enough. The repository has a `render.yaml` file that sets everything up.
+
+1. Create an account at https://render.com and connect your GitHub account.
+2. **New, Blueprint**, then pick the Holdall repository. Render reads `render.yaml` and creates the `holdall-demo` web service, with a random `APP_SECRET`.
+3. Change `APP_URL` in the service's **Environment** if your address is not `https://demo.holdall.site`.
+4. In **Settings, Custom Domains**, add your address. At your domain provider, add the `CNAME` record Render shows (for example `demo` pointing to `holdall-demo.onrender.com`).
+
+Free Render services stop after 15 minutes without visits and take about a minute to start again. To keep the demo awake, create a free monitor at https://uptimerobot.com that opens `https://demo.holdall.site/api/health` every 5 minutes. One service running all month stays within Render's free hours.
+
+Render may restart a free service at any time. For a demo this only empties it earlier than planned.

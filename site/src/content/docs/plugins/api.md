@@ -10,7 +10,7 @@ await holdall("notes.list", { query: "trip" });
 await holdall.api("notes.list", { query: "trip" }, context);
 ```
 
-The first line is interface code ([Interface code](/holdall/plugins/interface/)); the second is server code, inside a hook, a server function or background code ([Server code and hooks](/holdall/plugins/server-and-hooks/)).
+The first line is interface code ([Interface code](/plugins/interface/)); the second is server code, inside a hook, a server function or background code ([Server code and hooks](/plugins/server-and-hooks/)).
 
 Every call:
 
@@ -26,7 +26,7 @@ Dates are ISO 8601 strings (`2026-11-11` or `2026-11-11T14:30:00.000Z`).
 
 Interface code only. No permission.
 
-**Returns** an object of CSS variables, for example `{ "--color-surface": "#ffffff", ... }`. See [Match the theme](/holdall/plugins/interface/#match-the-theme).
+**Returns** an object of CSS variables, for example `{ "--color-surface": "#ffffff", ... }`. See [Match the theme](/plugins/interface/#match-the-theme).
 
 ## Your server code
 
@@ -34,15 +34,15 @@ Interface code only. No permission; needs `entry.server`.
 
 ### `server.call`
 
-**Params** `{ name, args? }`. Calls the function your server code registered with `holdall.handle(name, ...)`. **Returns** what it returns. See [Server functions](/holdall/plugins/server-and-hooks/#server-functions).
+**Params** `{ name, args? }`. Calls the function your server code registered with `holdall.handle(name, ...)`. **Returns** what it returns. See [Server functions](/plugins/server-and-hooks/#server-functions).
 
 ### `events.subscribe`
 
-No params. **Returns** `true`. From then on, events your server code sends with `holdall.push` arrive as `{ type: "holdall:event", event, data }` messages. See [Receive live events](/holdall/plugins/interface/#receive-live-events).
+No params. **Returns** `true`. From then on, events your server code sends with `holdall.push` arrive as `{ type: "holdall:event", event, data }` messages. See [Receive live events](/plugins/interface/#receive-live-events).
 
 ## Page address
 
-Interface code of a page only. No permission. See [Pages and addresses](/holdall/plugins/interface/#pages-and-addresses).
+Interface code of a page only. No permission. See [Pages and addresses](/plugins/interface/#pages-and-addresses).
 
 ### `page.path`
 
@@ -56,7 +56,7 @@ No params. **Returns** the current path under `/p/<plugin id>/`, `""` on the mai
 
 ### `settings.get`
 
-No permission. No params. **Returns** the values of your [settings](/holdall/plugins/manifest/#settings) for the person: their personal values, the global values, and defaults for anything not saved.
+No permission. No params. **Returns** the values of your [settings](/plugins/manifest/#settings) for the person: their personal values, the global values, and defaults for anything not saved.
 
 ```json
 { "apiKey": "abc123", "city": "Lisbon", "units": "c", "days": 3, "alerts": false }
@@ -220,7 +220,7 @@ Permission `files:read`. **Params** `{ root?, path? }`.
 
 ### `files.read`
 
-Permission `files:read`. **Params** `{ root?, path, encoding? }`. `encoding` is `utf8` (default) or `base64` for binary files. **Returns** `{ content, size }`. Files over 16 MB, or over the upload limit of the server (`MAX_UPLOAD_MB`) if it is lower, are refused. For bigger files, use your [data folder](/holdall/plugins/server-and-hooks/#data-folder) from server code.
+Permission `files:read`. **Params** `{ root?, path, encoding? }`. `encoding` is `utf8` (default) or `base64` for binary files. **Returns** `{ content, size }`. Files over 16 MB, or over the upload limit of the server (`MAX_UPLOAD_MB`) if it is lower, are refused. For bigger files, use your [data folder](/plugins/server-and-hooks/#data-folder) from server code.
 
 ### `files.write`
 

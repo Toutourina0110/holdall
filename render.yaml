@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: holdall-demo
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: DEMO_MODE
+        value: "true"
+      - key: DEMO_RESET_MINUTES
+        value: "60"
+      - key: APP_URL
+        value: https://demo.holdall.site
+      - key: APP_SECRET
+        generateValue: true
+      - key: TRUST_PROXY
+        value: "true"

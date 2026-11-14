@@ -6,13 +6,13 @@ hero:
   tagline: Notes, tasks, a synced calendar, video downloads, a file converter and a file manager. On your desktop or your own server, with your data in one folder you control.
   actions:
     - text: Install on a server
-      link: /holdall/install/configuration/
+      link: /install/configuration/
       icon: right-arrow
     - text: Desktop app
-      link: /holdall/desktop/install/
+      link: /desktop/install/
       variant: secondary
     - text: Write a plugin
-      link: /holdall/plugins/overview/
+      link: /plugins/overview/
       variant: minimal
 ---
 
@@ -20,9 +20,9 @@ hero:
 
 | You want to | Read |
 |---|---|
-| Understand what Holdall is and how it stores data | [Overview](/holdall/overview/) |
-| Run Holdall on a server with Docker or Coolify | [Settings](/holdall/install/configuration/), then [Docker](/holdall/install/docker/) or [Coolify](/holdall/install/coolify/) |
-| Use Holdall on your own computer | [Desktop app](/holdall/desktop/install/) |
-| Learn each screen | [User guide](/holdall/guide/first-steps/) |
-| Build a plugin or a theme | [Write plugins](/holdall/plugins/overview/) |
-| Work on Holdall itself | [Development](/holdall/contributing/development/) |
+| Understand what Holdall is and how it stores data | [Overview](/overview/) |
+| Run Holdall on a server with Docker or Coolify | [Settings](/install/configuration/), then [Docker](/install/docker/) or [Coolify](/install/coolify/) |
+| Use Holdall on your own computer | [Desktop app](/desktop/install/) |
+| Learn each screen | [User guide](/guide/first-steps/) |
+| Build a plugin or a theme | [Write plugins](/plugins/overview/) |
+| Work on Holdall itself | [Development](/contributing/development/) |

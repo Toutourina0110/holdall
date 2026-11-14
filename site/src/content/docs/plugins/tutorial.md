@@ -7,7 +7,7 @@ You will build **Word count**: it counts the words in the notes you edit each da
 
 The finished plugin is in the Holdall repository, in `examples/plugins/word-count`. Holdall's own tests install and run it, so it always works with the current version.
 
-**You need:** a Holdall where you are admin (a local one is fine, see [Development](/holdall/contributing/development/)), Node 26, and a copy of the Holdall repository for the packing script.
+**You need:** a Holdall where you are admin (a local one is fine, see [Development](/contributing/development/)), Node 26, and a copy of the Holdall repository for the packing script.
 
 ## 1. Create the folder
 
@@ -100,7 +100,7 @@ export default function setup(holdall) {
 Three rules to remember:
 
 1. **Always pass `context`** as the last argument of every call. It says which person the call is for. Calls without it are refused.
-2. **Calls work inside a hook or a server function.** To work on a timer, ask for the `background` permission (see [Background code](/holdall/plugins/server-and-hooks/#background-code)).
+2. **Calls work inside a hook or a server function.** To work on a timer, ask for the `background` permission (see [Background code](/plugins/server-and-hooks/#background-code)).
 3. **Each person has their own storage.** The same key holds different values for different people.
 
 The `try` around `notifications.show` matters: if the admin refused the optional permission, the call fails with a clear error, and the plugin keeps working.
@@ -164,7 +164,7 @@ The `try` around `notifications.show` matters: if the admin refused the optional
 
 What happens here:
 
-- The small `holdall()` function sends a request to Holdall with `postMessage` and waits for the answer. The [SDK](/holdall/plugins/tooling/#the-sdk) gives you the same thing, typed.
+- The small `holdall()` function sends a request to Holdall with `postMessage` and waits for the answer. The [SDK](/plugins/tooling/#the-sdk) gives you the same thing, typed.
 - `theme.tokens` returns the person's current colors and sizes. Setting them as CSS variables makes the widget follow light, dark and custom themes. The values after the commas in `var()` are only used if that call fails.
 - The widget reads the same storage key the server code writes. Storage is shared between your server code and your interface code, for the same person.
 
@@ -194,7 +194,7 @@ In Holdall:
 
 Open a note and write a few lines. Wait a second for it to save, then open **Today**: the total has changed. Paste a long text to pass 500 words: the bell in the top bar shows **1**.
 
-Nothing happens? Read [Tooling and debugging](/holdall/plugins/tooling/#when-something-does-not-work).
+Nothing happens? Read [Tooling and debugging](/plugins/tooling/#when-something-does-not-work).
 
 ## 8. Change it
 
@@ -204,7 +204,7 @@ Bump `version` before you share a new release, so admins see **Update to x.y.z**
 
 ## Next steps
 
-- Look at every method in the [API reference](/holdall/plugins/api/).
-- Add an export format with [filter hooks](/holdall/plugins/server-and-hooks/#filters).
-- Write it in TypeScript with the [SDK and a bundler](/holdall/plugins/tooling/).
-- [Publish it](/holdall/plugins/publishing/) so every Holdall can install it in one click.
+- Look at every method in the [API reference](/plugins/api/).
+- Add an export format with [filter hooks](/plugins/server-and-hooks/#filters).
+- Write it in TypeScript with the [SDK and a bundler](/plugins/tooling/).
+- [Publish it](/plugins/publishing/) so every Holdall can install it in one click.

@@ -19,7 +19,7 @@ The desktop app starts a private Holdall server on `127.0.0.1`, with a random po
 
 yt-dlp is installed and kept up to date by the app. On Windows, ffmpeg is installed too. On macOS and Linux, install ffmpeg with your package manager (`brew install ffmpeg`, `sudo apt install ffmpeg`).
 
-Google and Outlook calendars need a server instance. iCloud and CalDAV work on the desktop (see [Calendar sync](/holdall/install/calendar-sync/)).
+Google and Outlook calendars need a server instance. iCloud and CalDAV work on the desktop (see [Calendar sync](/install/calendar-sync/)).
 
 ## Data folder
 

@@ -12,7 +12,7 @@ pnpm install
 pnpm dev
 ```
 
-`pnpm dev` applies the database migrations, then starts the app. Open http://localhost:3000; the first visit creates the admin account. Settings go in a `.env` file, see `.env.example` and [Settings](/holdall/install/configuration/).
+`pnpm dev` applies the database migrations, then starts the app. Open http://localhost:3000; the first visit creates the admin account. Settings go in a `.env` file, see `.env.example` and [Settings](/install/configuration/).
 
 ## Commands
 
@@ -46,3 +46,11 @@ pnpm dev
 ## Documentation
 
 The pages of this site are Markdown files in `site/src/content/docs`. Every push to `main` that changes `site/` publishes the site to GitHub Pages.
+
+The site is served at `docs.holdall.site`. To set it up once:
+
+1. The repository must be public (GitHub Pages is not free for private repositories).
+2. In **Settings, Pages**, set **Source** to **GitHub Actions**, then **Custom domain** to `docs.holdall.site` and turn on **Enforce HTTPS** once it is offered.
+3. At your domain provider, add a `CNAME` record: `docs` pointing to `toutourina0110.github.io`.
+
+The file `site/public/CNAME` keeps the domain on every publish.
