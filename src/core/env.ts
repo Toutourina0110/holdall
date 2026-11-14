@@ -24,6 +24,7 @@ export type Env = {
   microsoftClientId?: string;
   microsoftClientSecret?: string;
   microsoftTenantId: string;
+  oauthRelayUrl?: string;
 };
 
 const flag = (fallback: "true" | "false") =>
@@ -64,7 +65,10 @@ const envSchema = z.object({
   MICROSOFT_CLIENT_ID: optional,
   MICROSOFT_CLIENT_SECRET: optional,
   MICROSOFT_TENANT_ID: z.string().default("common"),
+  OAUTH_RELAY_URL: z.union([z.literal("off"), z.literal(""), z.url({ protocol: /^https?$/ })]).optional(),
 });
+
+export const defaultRelayUrl = "https://auth.holdall.site";
 
 export const defaultRegistryUrl = "https://raw.githubusercontent.com/Toutourina0110/holdall-registry/main/index.json";
 
@@ -101,6 +105,7 @@ export function parseEnv(source: Record<string, string | undefined>, cwd: string
     microsoftClientId: data.MICROSOFT_CLIENT_ID,
     microsoftClientSecret: data.MICROSOFT_CLIENT_SECRET,
     microsoftTenantId: data.MICROSOFT_TENANT_ID,
+    oauthRelayUrl: data.OAUTH_RELAY_URL === "off" ? undefined : (data.OAUTH_RELAY_URL || defaultRelayUrl).replace(/\/+$/, ""),
   };
 }
 

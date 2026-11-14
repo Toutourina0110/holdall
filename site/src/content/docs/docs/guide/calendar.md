@@ -19,7 +19,7 @@ Events from a read-only calendar, and repeating events, cannot be changed in Hol
 
 Open **Accounts** from the calendar.
 
-- **Connect Google Calendar** and **Connect Outlook** open the provider's sign-in page. They appear only when the admin has set them up (see [Calendar sync](/docs/install/calendar-sync/)).
+- **Connect Google Calendar** and **Connect Outlook** open the provider's sign-in page. They are there unless the admin turned off the sign-in relay without setting up their own apps (see [Calendar sync](/docs/install/calendar-sync/)).
 - **Add iCloud or CalDAV**: for iCloud, use your Apple ID email and an app-specific password created at account.apple.com. For Nextcloud, Fastmail or others, choose **Other CalDAV** and enter the CalDAV address of your server.
 
 For each connected account you can:

@@ -6,9 +6,9 @@ import { isDesktop } from "@/core/target";
 import { Notice } from "@/ui/controls";
 import { Icon } from "@/ui/Icon";
 import { PageHeader } from "@/ui/PageHeader";
-import { oauthConfig } from "@/modules/calendar/providers";
+import { canConnect } from "@/modules/calendar/providers";
 import { listAccounts, listCalendars, listHistory } from "@/modules/calendar/store";
-import { AccountActions, CaldavForm, CalendarToggle } from "./AccountsPanel";
+import { AccountActions, CaldavForm, CalendarToggle, RefreshOnFocus } from "./AccountsPanel";
 import styles from "./accounts.module.css";
 
 export const metadata: Metadata = { title: strings.calendarAccounts.title };
@@ -17,6 +17,9 @@ function errorText(code: string | undefined) {
   const t = strings.calendarAccounts;
   if (!code) return undefined;
   if (code === "denied") return t.errorDenied;
+  if (code === "offline") return t.errorOffline;
+  if (code === "exchange") return t.errorExchange;
+  if (code === "not-configured") return t.notConfigured.replace("{provider}", "This provider");
   return t.errorState;
 }
 
@@ -42,22 +45,21 @@ export default async function CalendarAccountsPage({ searchParams }: { searchPar
       {params.connected && <Notice tone="success">{t.connected}</Notice>}
       {params.error && <Notice tone="error">{errorText(params.error)}</Notice>}
 
-      {!isDesktop() && (
-        <section className={styles.connect} aria-label={t.title}>
-          {providers.map((provider) =>
-            oauthConfig(provider.id) ? (
-              <a key={provider.id} className={styles.provider} href={`/api/calendar/oauth/${provider.id}/start`}>
-                <Icon name="link" />
-                {provider.label}
-              </a>
-            ) : (
-              <p key={provider.id} className={styles.unavailable}>
-                {t.notConfigured.replace("{provider}", provider.name)}
-              </p>
-            ),
-          )}
-        </section>
-      )}
+      {isDesktop() && <RefreshOnFocus />}
+      <section className={styles.connect} aria-label={t.title}>
+        {providers.map((provider) =>
+          canConnect(provider.id) ? (
+            <a key={provider.id} className={styles.provider} href={`/api/calendar/oauth/${provider.id}/start`}>
+              <Icon name="link" />
+              {provider.label}
+            </a>
+          ) : (
+            <p key={provider.id} className={styles.unavailable}>
+              {t.notConfigured.replace("{provider}", provider.name)}
+            </p>
+          ),
+        )}
+      </section>
 
       <section className={styles.panel}>
         <h2>{t.listTitle}</h2>

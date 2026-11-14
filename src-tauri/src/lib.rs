@@ -9,6 +9,7 @@ use std::time::{Duration, Instant};
 
 use tauri::{Manager, RunEvent, WebviewUrl, WebviewWindowBuilder};
 use tauri_plugin_dialog::{DialogExt, MessageDialogButtons, MessageDialogKind};
+use tauri_plugin_opener::OpenerExt;
 use tauri_plugin_updater::UpdaterExt;
 
 struct Server(Mutex<Option<Child>>);
@@ -112,7 +113,17 @@ fn start_server(app: &tauri::AppHandle) -> Result<String, String> {
 
 fn open_window(app: &tauri::AppHandle, url: &str) -> Result<(), String> {
     let target = url.parse().map_err(|_| "Invalid server address.".to_string())?;
+    let handle = app.clone();
     WebviewWindowBuilder::new(app, "main", WebviewUrl::External(target))
+        .on_navigation(move |next| {
+            let web = next.scheme() == "http" || next.scheme() == "https";
+            let local = matches!(next.host_str(), Some("127.0.0.1") | Some("localhost"));
+            if !web || local {
+                return true;
+            }
+            let _ = handle.opener().open_url(next.as_str(), None::<&str>);
+            false
+        })
         .title("Holdall")
         .inner_size(1280.0, 800.0)
         .min_inner_size(375.0, 600.0)
@@ -175,6 +186,7 @@ fn report(app: &tauri::AppHandle, message: &str) {
 pub fn run() {
     let app = tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .manage(Server(Mutex::new(None)))
         .setup(|app| {

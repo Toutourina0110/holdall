@@ -1,0 +1,61 @@
+---
+import Legal from "../layouts/Legal.astro";
+
+const repo = "https://github.com/Toutourina0110/holdall";
+---
+
+<Legal title="Privacy" description="What the Holdall project sees about you: the sign-in relay, this website and the update checks." updated="14 November 2026">
+  <h2>In short</h2>
+  <p>
+    Holdall runs on your own computer or server. Your notes, tasks, calendars and files stay there. The Holdall project has no account system, no analytics and no
+    advertising. This page lists the few moments where something from your Holdall reaches a service run by the project.
+  </p>
+
+  <h2>The sign-in relay (auth.holdall.site)</h2>
+  <p>
+    Google and Microsoft only let registered apps open their sign-in pages. So that you do not have to register your own app, the project runs a small relay at
+    auth.holdall.site. It is used when you click <b>Connect Google Calendar</b> or <b>Connect Outlook</b> in a Holdall that has the relay turned on, which is the
+    default.
+  </p>
+  <ul>
+    <li>
+      When you connect, the relay receives the address of your Holdall, sends you to Google or Microsoft, and receives the access granted to your calendar. It encrypts
+      that access with a one-time key made by your Holdall for this sign-in, so it never shows readable in your browser history, and sends it straight back to your
+      Holdall.
+    </li>
+    <li>
+      About once an hour, while your calendar syncs, your Holdall asks the relay to renew the access. The relay passes the request to Google or Microsoft and returns the answer.
+    </li>
+    <li>The relay stores nothing: no database, no files, no copy of your access or of your calendar. It never reads your events.</li>
+    <li>
+      Its log only notes errors, with the provider name and the error code from the provider. Addresses are kept in memory for a few minutes to limit abuse, then
+      forgotten.
+    </li>
+    <li>The relay is open source: its code is <a href={`${repo}/blob/main/scripts/relay.ts`}>scripts/relay.ts</a> in the Holdall repository.</li>
+  </ul>
+  <p>
+    Your calendar data goes from Google or Microsoft to your Holdall directly. Your Holdall stores the access encrypted, and only uses it to sync your calendar. You can
+    remove it at any time from <b>Calendar, Accounts, Remove</b>, and revoke it at https://myaccount.google.com/permissions or https://account.live.com/consent/Manage.
+  </p>
+  <p>
+    Holdall's use and transfer of information received from Google APIs adheres to the
+    <a href="https://developers.google.com/terms/api-services-user-data-policy">Google API Services User Data Policy</a>, including the Limited Use requirements. The
+    project does not sell, share or use this information for advertising, and no person at the project reads it.
+  </p>
+  <p>The admin of a Holdall can turn the relay off and use their own Google and Microsoft apps instead. Then nothing reaches the relay.</p>
+
+  <h2>This website and the demo</h2>
+  <p>
+    holdall.site is hosted on GitHub Pages and the demo on Render, both behind Cloudflare. These services see your IP address and browser like any website. The project
+    adds no cookies, analytics or trackers. A demo account and everything in it are deleted after one hour.
+  </p>
+
+  <h2>Update checks</h2>
+  <p>
+    A Holdall server asks GitHub once a day for the latest release, and the desktop app does it when it starts. Nothing about you or your data is sent. Server admins can
+    turn it off with <code>UPDATE_CHECK=false</code>.
+  </p>
+
+  <h2>Contact</h2>
+  <p>For any question about this page or to report a problem, open an issue at <a href={`${repo}/issues`}>github.com/Toutourina0110/holdall/issues</a>.</p>
+</Legal>

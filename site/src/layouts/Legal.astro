@@ -1,0 +1,53 @@
+---
+import "@fontsource/ibm-plex-sans/400.css";
+import "@fontsource/ibm-plex-sans/600.css";
+import "@fontsource/ibm-plex-sans/700.css";
+import "../styles/landing.css";
+
+const { title, description, updated } = Astro.props as { title: string; description: string; updated: string };
+const repo = "https://github.com/Toutourina0110/holdall";
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}, Holdall</title>
+    <meta name="description" content={description} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  </head>
+  <body>
+    <header class="top">
+      <a class="brand" href="/">
+        <img src="/favicon.svg" alt="" width="24" height="24" />
+        <span>Holdall</span>
+      </a>
+      <nav class="nav" aria-label="Main">
+        <a href="/docs/">Docs</a>
+        <a href="https://demo.holdall.site">Demo</a>
+        <a href={repo}>GitHub</a>
+      </nav>
+    </header>
+
+    <main class="sheet">
+      <section class="hero" aria-labelledby="title">
+        <h1 id="title">{title}</h1>
+        <p class="meta">Last updated {updated}</p>
+      </section>
+      <section class="panel">
+        <div class="panel-body legal">
+          <slot />
+        </div>
+      </section>
+    </main>
+
+    <footer class="foot">
+      <span>Holdall</span>
+      <a href="/docs/">Documentation</a>
+      <a href="/privacy/">Privacy</a>
+      <a href="/terms/">Terms</a>
+      <a href={repo}>Source code</a>
+    </footer>
+  </body>
+</html>

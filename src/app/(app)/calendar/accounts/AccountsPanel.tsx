@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, useTransition, type CSSProperties, type FormEvent } from "react";
+import { useEffect, useState, useTransition, type CSSProperties, type FormEvent } from "react";
 import { strings } from "@/core/strings";
 import { Button, Field, Notice, Segmented } from "@/ui/controls";
 import { addCaldavAction, removeAccountAction, setCalendarShownAction, syncAccountAction } from "../actions";
@@ -118,4 +118,14 @@ export function CaldavForm() {
       </div>
     </form>
   );
+}
+
+export function RefreshOnFocus() {
+  const router = useRouter();
+  useEffect(() => {
+    const refresh = () => router.refresh();
+    window.addEventListener("focus", refresh);
+    return () => window.removeEventListener("focus", refresh);
+  }, [router]);
+  return null;
 }

@@ -1,0 +1,31 @@
+---
+import Legal from "../layouts/Legal.astro";
+
+const repo = "https://github.com/Toutourina0110/holdall";
+---
+
+<Legal title="Terms" description="Terms for the Holdall software, the sign-in relay, the demo and this website." updated="14 November 2026">
+  <h2>The software</h2>
+  <p>
+    Holdall is free software under the <a href={`${repo}/blob/main/LICENSE`}>GNU Affero General Public License, version 3</a>. You may use, study, change and share it
+    under that license. It comes without any warranty, as the license explains.
+  </p>
+
+  <h2>Your Holdall</h2>
+  <p>
+    Whoever runs a Holdall, on a computer or a server, is responsible for it and for the data in it. The Holdall project has no access to your Holdall and cannot recover
+    lost data. Keep backups.
+  </p>
+
+  <h2>The sign-in relay and the demo</h2>
+  <p>
+    The sign-in relay at auth.holdall.site and the demo at demo.holdall.site are free services offered on a best effort basis. They can be slow, unavailable, changed or
+    stopped at any time. If the relay stops, a Holdall admin can still connect Google and Outlook with their own apps, see the
+    <a href="/docs/install/calendar-sync/">calendar sync guide</a>.
+  </p>
+  <p>Do not use these services to attack them or other people, to break the rules of Google or Microsoft, or to store anything unlawful in the demo.</p>
+  <p>How these services handle data is described on the <a href="/privacy/">privacy page</a>.</p>
+
+  <h2>Contact</h2>
+  <p>Questions and problems: <a href={`${repo}/issues`}>github.com/Toutourina0110/holdall/issues</a>.</p>
+</Legal>
