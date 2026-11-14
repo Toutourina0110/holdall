@@ -10,7 +10,6 @@ type Tokens = { accessToken: string; refreshToken?: string; expiresIn: number };
 
 const lifetime = 10 * 60 * 1000;
 const perUser = 5;
-const maxPending = 1000;
 const storeKey = Symbol.for("holdall.oauthRelay");
 const holder = globalThis as unknown as Record<symbol, Map<string, Pending> | undefined>;
 
@@ -30,7 +29,6 @@ export function relayStartUrl(userId: string, provider: OAuthProvider, now = Dat
   for (const [state, entry] of store) if (entry.expires <= now) store.delete(state);
   const mine = [...store].filter(([, entry]) => entry.userId === userId).map(([state]) => state);
   for (const state of mine.slice(0, Math.max(0, mine.length - perUser + 1))) store.delete(state);
-  while (store.size >= maxPending) store.delete(store.keys().next().value!);
   const state = randomBytes(24).toString("base64url");
   const key = newDeliveryKey();
   store.set(state, { userId, provider, key, expires: now + lifetime });
