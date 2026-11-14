@@ -7,23 +7,27 @@ test("write a note, find it, trash it and restore it", async ({ page }) => {
   await page.goto("/notes");
   await page.getByRole("button", { name: "New note" }).click();
   await page.waitForURL(/\/notes\?id=/);
-  await page.getByLabel("Title").fill("Groceries");
+  const title = `Groceries ${Date.now()}`;
+  await page.getByLabel("Title").fill(title);
   const editor = page.locator(".ProseMirror");
   await editor.click();
+  const contentSaved = page.waitForResponse((response) => response.request().method() === "POST" && (response.request().postData() ?? "").includes("Buy oranges and coffee"));
   await page.keyboard.type("Buy oranges and coffee");
+  await contentSaved;
   await expect(page.getByRole("status").filter({ hasText: "Saved" })).toBeVisible({ timeout: 10000 });
   await page.reload();
   await expect(page.locator(".ProseMirror")).toContainText("Buy oranges and coffee");
 
+  const link = page.getByRole("link", { name: new RegExp(title) });
   await page.goto("/notes?q=oranges");
-  await expect(page.getByRole("link", { name: /Groceries/ })).toBeVisible();
-  await page.getByRole("link", { name: /Groceries/ }).click();
+  await expect(link).toBeVisible();
+  await link.click();
   await page.getByRole("button", { name: "Move to trash" }).click();
   await page.waitForURL("/notes");
   await page.goto("/notes?view=trash");
-  await page.getByRole("link", { name: /Groceries/ }).click();
+  await link.click();
   await page.getByRole("button", { name: "Restore" }).click();
-  await expect(page.getByLabel("Title")).toHaveValue("Groceries");
+  await expect(page.getByLabel("Title")).toHaveValue(title);
 });
 
 test("add a task for today and complete it", async ({ page }) => {
