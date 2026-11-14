@@ -35,7 +35,7 @@
   },
   "plugins": {
     "updater": {
-      "pubkey": "REPLACE_WITH_UPDATER_PUBLIC_KEY",
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IERBMEVDNDVCMTM0ODQ3ODkKUldTSlIwZ1RXOFFPMmlodzVza1N6bmtQVTBrb3JDQTBUTEp0ejU4SzBvS2E2OUs1d3FqY0lKK0EK",
       "endpoints": [
         "https://github.com/Toutourina0110/holdall/releases/latest/download/latest.json"
       ],

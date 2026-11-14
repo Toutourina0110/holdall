@@ -24,4 +24,6 @@ To run the desktop app in development, with live reload:
 pnpm desktop:dev
 ```
 
+The build also signs the update files, so it needs the signing key in the environment. Without the maintainer's key, turn the update files off for your own build: in `src-tauri/tauri.conf.json`, set `bundle.createUpdaterArtifacts` to `false`. Your build then works normally, but does not update itself.
+
 Installers are built for the system you build on. The release workflow builds all of them on GitHub (see [Releases](/docs/contributing/releases/)).
