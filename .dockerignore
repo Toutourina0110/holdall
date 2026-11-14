@@ -8,3 +8,6 @@
 !scripts
 !src
 !public
+src/**/*.test.ts
+scripts/**/*.test.ts
+src/test
