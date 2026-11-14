@@ -20,7 +20,7 @@ if (import.meta.main || bundled) {
     log.error(problem);
     process.exit(1);
   }
-  const { dataDir } = parseEnv(process.env, process.cwd());
+  const { dataDir, trustProxy, trustProxyHeader } = parseEnv(process.env, process.cwd());
   process.env.DATA_DIR = dataDir;
   runMigrations(dataDir, path.join(root, "drizzle"));
   log.info("Database ready", { dataDir });
@@ -34,6 +34,6 @@ if (import.meta.main || bundled) {
       }
     }, 2000).unref();
   }
-  installClientIpHeader(http);
+  installClientIpHeader(http, { trustProxy, header: trustProxyHeader });
   await import(pathToFileURL(server).href);
 }

@@ -8,6 +8,7 @@ export type Env = {
   appSecret: string;
   allowRegistration: boolean;
   trustProxy: boolean;
+  trustProxyHeader: "auto" | "cf-connecting-ip" | "x-real-ip" | "x-forwarded-for";
   demoMode: boolean;
   demoResetMinutes: number;
   maxConcurrentJobs: number;
@@ -43,6 +44,7 @@ const envSchema = z.object({
   APP_SECRET: optional.pipe(z.string().min(32, "must be at least 32 characters").optional()),
   ALLOW_REGISTRATION: flag("false"),
   TRUST_PROXY: flag("false"),
+  TRUST_PROXY_HEADER: z.enum(["auto", "cf-connecting-ip", "x-real-ip", "x-forwarded-for", ""]).default("auto"),
   DEMO_MODE: flag("false"),
   DEMO_RESET_MINUTES: z.coerce.number().int().min(5).default(60),
   MAX_CONCURRENT_JOBS: z.coerce.number().int().min(1).max(32).default(2),
@@ -77,6 +79,7 @@ export function parseEnv(source: Record<string, string | undefined>, cwd: string
     appSecret: data.APP_SECRET ?? devSecret,
     allowRegistration: data.ALLOW_REGISTRATION,
     trustProxy: data.TRUST_PROXY,
+    trustProxyHeader: data.TRUST_PROXY_HEADER || "auto",
     demoMode: data.DEMO_MODE,
     demoResetMinutes: data.DEMO_RESET_MINUTES,
     maxConcurrentJobs: data.MAX_CONCURRENT_JOBS,

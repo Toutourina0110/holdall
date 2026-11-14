@@ -29,6 +29,25 @@ function replaceLinks(dir) {
 
 replaceLinks(standalone);
 
+const musl = process.platform === "linux" && !process.report?.getReport().header.glibcVersionRuntime;
+const nativeName = `${process.platform}${musl ? "musl" : ""}-${process.arch}.node`;
+
+function keepOnlyOwnPrebuilds(dir) {
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const full = path.join(dir, entry.name);
+    if (!entry.isDirectory()) continue;
+    if (entry.name === "prebuilds") {
+      const files = fs.readdirSync(full);
+      if (!files.includes(nativeName)) continue;
+      for (const file of files) if (file !== nativeName) fs.rmSync(path.join(full, file), { recursive: true, force: true });
+    } else {
+      keepOnlyOwnPrebuilds(full);
+    }
+  }
+}
+
+keepOnlyOwnPrebuilds(standalone);
+
 copy(path.join(root, ".next", "static"), path.join(standalone, ".next", "static"));
 copy(path.join(root, "public"), path.join(standalone, "public"));
 copy(path.join(root, "drizzle"), path.join(standalone, "drizzle"));

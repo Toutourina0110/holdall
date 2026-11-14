@@ -39,7 +39,7 @@ function createAuth() {
     },
     advanced: {
       ipAddress: {
-        ipAddressHeaders: env.trustProxy ? ["cf-connecting-ip", "x-real-ip", "x-forwarded-for"] : [clientIpHeader],
+        ipAddressHeaders: [clientIpHeader],
       },
     },
     hooks: {

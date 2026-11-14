@@ -17,7 +17,7 @@ export async function POST(request: Request) {
   const origin = request.headers.get("origin");
   if (origin && origin !== new URL(env.appUrl).origin) return new Response("Forbidden", { status: 403 });
   try {
-    const headers = await startDemoSession(clientIpOf(request.headers, env.trustProxy));
+    const headers = await startDemoSession(clientIpOf(request.headers, { trustProxy: env.trustProxy, header: env.trustProxyHeader }));
     return go("/", headers.getSetCookie());
   } catch (error) {
     const text = error instanceof UserFacingError ? error.message : "";

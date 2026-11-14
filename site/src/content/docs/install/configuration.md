@@ -37,6 +37,7 @@ openssl rand -base64 48
 | `HOLDALL_TARGET` | `server` | `server` for Docker and browsers, `desktop` for the desktop app. |
 | `ALLOW_REGISTRATION` | `false` | Let anyone who reaches the instance create an account. When `false`, people join with an invitation link. An admin can also change this in **Admin**. |
 | `TRUST_PROXY` | `false` | Set to `true` only behind a reverse proxy. See [Reverse proxy](/install/reverse-proxy/). |
+| `TRUST_PROXY_HEADER` | `auto` | Which header holds the visitor's address behind the proxy. See [Reverse proxy](/install/reverse-proxy/). |
 | `DEMO_MODE` | `false` | Public demo with throwaway accounts. Never on real data. See [Public demo](/install/public-demo/). |
 | `DEMO_RESET_MINUTES` | `60` | Lifetime of a demo account, at least 5. |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | empty | Google Calendar sync. See [Calendar sync](/install/calendar-sync/). |
