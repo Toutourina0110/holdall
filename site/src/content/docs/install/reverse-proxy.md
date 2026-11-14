@@ -9,9 +9,9 @@ Set `TRUST_PROXY=true` **only** when Holdall can be reached **only** through the
 
 | Proxy | `TRUST_PROXY_HEADER` |
 |---|---|
-| Cloudflare (proxied DNS or Tunnel) | `cf-connecting-ip` |
+| Cloudflare (proxied DNS or Tunnel), and Render, which runs behind Cloudflare | `cf-connecting-ip` |
 | Nginx with `proxy_set_header X-Real-IP $remote_addr` | `x-real-ip` |
-| Coolify, Caddy, Traefik, Render and most hosting platforms | `x-forwarded-for` (Holdall reads its last entry, the one the proxy added) |
+| Coolify, Caddy, Traefik and most self-hosted proxies | `x-forwarded-for` (Holdall reads its last entry, the one the proxy added) |
 
 Pick the header your proxy always writes itself. A visitor can send any other header with a made-up address. The default, `auto`, tries the three in that order and is only safe if your proxy overwrites all of them.
 

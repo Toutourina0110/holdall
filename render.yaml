@@ -18,4 +18,4 @@ services:
       - key: TRUST_PROXY
         value: "true"
       - key: TRUST_PROXY_HEADER
-        value: x-forwarded-for
+        value: cf-connecting-ip
