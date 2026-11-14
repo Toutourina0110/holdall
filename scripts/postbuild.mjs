@@ -65,13 +65,3 @@ await build({
   banner: { js: "import { createRequire as __holdallRequire } from 'node:module'; const require = __holdallRequire(import.meta.url);" },
   logLevel: "warning",
 });
-
-await build({
-  entryPoints: [path.join(root, "scripts", "relay.ts")],
-  outfile: path.join(standalone, "relay.mjs"),
-  bundle: true,
-  platform: "node",
-  format: "esm",
-  target: "node22",
-  logLevel: "warning",
-});

@@ -271,22 +271,3 @@ a:focus-visible {
     min-height: var(--size-control);
   }
 }
-
-.legal h2 {
-  margin: var(--space-6) 0 var(--space-2);
-  font-size: var(--text-lg);
-}
-
-.legal h2:first-child {
-  margin-top: 0;
-}
-
-.legal p,
-.legal ul {
-  max-width: var(--measure);
-  margin: 0 0 var(--space-3);
-}
-
-.legal li + li {
-  margin-top: var(--space-1);
-}

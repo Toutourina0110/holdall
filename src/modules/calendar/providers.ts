@@ -6,7 +6,6 @@ import { UserFacingError } from "@/core/errors";
 import { isDesktop } from "@/core/target";
 import { safeFetch } from "@/core/security/safe-fetch";
 import { buildEvent, parseEvents } from "./ical";
-import { refreshThroughRelay } from "./relay";
 import type { CalendarProvider, Credentials, EventFields, Provider, RemoteCalendar, RemoteEvent } from "./types";
 
 type OAuth = Extract<Credentials, { kind: "oauth" }>;
@@ -337,11 +336,6 @@ export function oauthConfig(provider: OAuthProvider) {
   };
 }
 
-export function canConnect(provider: OAuthProvider): boolean {
-  const env = getEnv();
-  return !env.demoMode && Boolean(oauthConfig(provider) || env.oauthRelayUrl);
-}
-
 export function redirectUri(provider: OAuthProvider): string {
   return `${getEnv().appUrl}/api/calendar/oauth/${provider}/callback`;
 }
@@ -360,13 +354,6 @@ export async function exchangeCode(provider: OAuthProvider, code: string, verifi
 export async function freshCredentials(provider: Provider, credentials: Credentials): Promise<{ credentials: Credentials; changed: boolean }> {
   if (credentials.kind !== "oauth" || (provider !== "google" && provider !== "microsoft")) return { credentials, changed: false };
   if (credentials.expiresAt - 60000 > Date.now()) return { credentials, changed: false };
-  if (credentials.via === "relay") {
-    const tokens = await refreshThroughRelay(provider, credentials.refreshToken);
-    return {
-      credentials: { ...credentials, accessToken: tokens.accessToken, refreshToken: tokens.refreshToken ?? credentials.refreshToken, expiresAt: Date.now() + tokens.expiresIn * 1000 },
-      changed: true,
-    };
-  }
   const config = oauthConfig(provider);
   if (!config) throw new UserFacingError("This provider is not configured on this Holdall anymore.");
   const data = await json<{ access_token: string; refresh_token?: string; expires_in: number }>(config.tokenUrl, {

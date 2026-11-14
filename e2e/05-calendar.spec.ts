@@ -22,4 +22,6 @@ test("calendar accounts page explains missing providers", async ({ page }) => {
   await page.goto("/calendar/accounts");
   await expect(page.getByRole("heading", { level: 1, name: "Calendar accounts" })).toBeVisible();
   await expect(page.getByText("No account connected.", { exact: false })).toBeVisible();
+  await expect(page.getByText("Want Google Calendar or Outlook here?")).toBeVisible();
+  await expect(page.getByRole("link", { name: "Step by step guide" })).toHaveAttribute("href", "https://holdall.site/docs/install/calendar-sync/");
 });

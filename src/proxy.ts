@@ -11,9 +11,8 @@ const crossOriginIsolatedPrefixes = ["/converter"];
 export function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
   const isApi = pathname.startsWith("/api/");
-  const desktopOAuthReturn = isDesktop() && /^\/api\/calendar\/oauth\/(google|microsoft)\/callback$/.test(pathname);
 
-  if (isDesktop() && !desktopOAuthReturn) {
+  if (isDesktop()) {
     const token = process.env.HOLDALL_LAUNCH_TOKEN;
     const decision = desktopGate({
       token,
@@ -36,7 +35,7 @@ export function proxy(request: NextRequest) {
     return NextResponse.json({ error: "Requests from other sites are not allowed." }, { status: 403 });
   }
 
-  if (!isPublicPath(pathname) && !desktopOAuthReturn && !getSessionCookie(request)) {
+  if (!isPublicPath(pathname) && !getSessionCookie(request)) {
     if (isApi) return NextResponse.json({ error: "Sign in to continue." }, { status: 401 });
     const login = new URL("/login", request.url);
     if (pathname !== "/") login.searchParams.set("next", pathname + search);

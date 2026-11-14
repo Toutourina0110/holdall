@@ -6,9 +6,9 @@ import { isDesktop } from "@/core/target";
 import { Notice } from "@/ui/controls";
 import { Icon } from "@/ui/Icon";
 import { PageHeader } from "@/ui/PageHeader";
-import { canConnect } from "@/modules/calendar/providers";
+import { oauthConfig } from "@/modules/calendar/providers";
 import { listAccounts, listCalendars, listHistory } from "@/modules/calendar/store";
-import { AccountActions, CaldavForm, CalendarToggle, RefreshOnFocus } from "./AccountsPanel";
+import { AccountActions, CaldavForm, CalendarToggle } from "./AccountsPanel";
 import styles from "./accounts.module.css";
 
 export const metadata: Metadata = { title: strings.calendarAccounts.title };
@@ -17,9 +17,6 @@ function errorText(code: string | undefined) {
   const t = strings.calendarAccounts;
   if (!code) return undefined;
   if (code === "denied") return t.errorDenied;
-  if (code === "offline") return t.errorOffline;
-  if (code === "exchange") return t.errorExchange;
-  if (code === "not-configured") return t.notConfigured.replace("{provider}", "This provider");
   return t.errorState;
 }
 
@@ -34,6 +31,8 @@ export default async function CalendarAccountsPage({ searchParams }: { searchPar
     { id: "google" as const, label: t.connectGoogle, name: "Google Calendar" },
     { id: "microsoft" as const, label: t.connectMicrosoft, name: "Outlook" },
   ];
+  const ready = providers.filter((provider) => oauthConfig(provider.id));
+  const missing = providers.filter((provider) => !oauthConfig(provider.id));
 
   return (
     <div className={styles.page}>
@@ -45,19 +44,19 @@ export default async function CalendarAccountsPage({ searchParams }: { searchPar
       {params.connected && <Notice tone="success">{t.connected}</Notice>}
       {params.error && <Notice tone="error">{errorText(params.error)}</Notice>}
 
-      {isDesktop() && <RefreshOnFocus />}
       <section className={styles.connect} aria-label={t.title}>
-        {providers.map((provider) =>
-          canConnect(provider.id) ? (
-            <a key={provider.id} className={styles.provider} href={`/api/calendar/oauth/${provider.id}/start`}>
-              <Icon name="link" />
-              {provider.label}
-            </a>
-          ) : (
-            <p key={provider.id} className={styles.unavailable}>
-              {t.notConfigured.replace("{provider}", provider.name)}
-            </p>
-          ),
+        {ready.map((provider) => (
+          <a key={provider.id} className={styles.provider} href={`/api/calendar/oauth/${provider.id}/start`}>
+            <Icon name="link" />
+            {provider.label}
+          </a>
+        ))}
+        {missing.length > 0 && (
+          <div className={styles.unavailable}>
+            <b>{t.setupTitle.replace("{providers}", missing.map((provider) => provider.name).join(" or "))}</b>
+            <p>{isDesktop() ? t.setupDesktop : session.user.role === "admin" ? t.setupAdmin : t.setupMember}</p>
+            {!isDesktop() && <a href="https://holdall.site/docs/install/calendar-sync/">{t.setupGuide}</a>}
+          </div>
         )}
       </section>
 

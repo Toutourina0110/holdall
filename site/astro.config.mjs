@@ -21,7 +21,7 @@ export default defineConfig({
         { label: "Start here", items: ["docs", "docs/overview"] },
         {
           label: "Install on a server",
-          items: ["docs/install/configuration", "docs/install/docker", "docs/install/coolify", "docs/install/reverse-proxy", "docs/install/calendar-sync", "docs/install/oauth-relay", "docs/install/public-demo", "docs/install/updates", "docs/install/troubleshooting"],
+          items: ["docs/install/configuration", "docs/install/docker", "docs/install/coolify", "docs/install/reverse-proxy", "docs/install/calendar-sync", "docs/install/public-demo", "docs/install/updates", "docs/install/troubleshooting"],
         },
         { label: "Desktop app", items: ["docs/desktop/install", "docs/desktop/build"] },
         {

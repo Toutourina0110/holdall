@@ -16,13 +16,7 @@ Nothing to set up on the server. Each person adds their account with an app pass
 
 Members can only reach public `https` servers. An admin can also add a CalDAV server on the local network, for example `http://192.168.1.10:5232`.
 
-## Google Calendar and Outlook
-
-Nothing to set up. By default, Holdall connects Google and Outlook through the [sign-in relay](/docs/install/oauth-relay/) run by the Holdall project at `auth.holdall.site`. It works on servers and in the desktop app. The relay stores nothing, and your calendar data goes from Google or Microsoft to your Holdall directly.
-
-If you prefer not to use the relay, set `OAUTH_RELAY_URL=off` and create your own apps as below. When your own app is set up for a provider, it is used instead of the relay for that provider.
-
-## Your own Google app (optional)
+## Google Calendar (admin, once)
 
 1. Open https://console.cloud.google.com and create a project.
 2. In **APIs & Services, Library**, enable **Google Calendar API**.
@@ -35,7 +29,7 @@ If you prefer not to use the relay, set `OAUTH_RELAY_URL=off` and create your ow
 
 5. Copy the client ID and secret into `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`, then restart Holdall.
 
-## Your own Microsoft app (optional)
+## Outlook and Microsoft 365 (admin, once)
 
 1. Open https://entra.microsoft.com, then **App registrations, New registration**.
 2. Supported account types: **Accounts in any organizational directory and personal Microsoft accounts**.
@@ -44,10 +38,8 @@ If you prefer not to use the relay, set `OAUTH_RELAY_URL=off` and create your ow
 5. In **Certificates & secrets**, create a client secret and copy its **Value**.
 6. Set `MICROSOFT_CLIENT_ID` (the Application ID) and `MICROSOFT_CLIENT_SECRET`. Keep `MICROSOFT_TENANT_ID=common` unless you want to allow only one organization. Restart Holdall.
 
-When the relay is off and a provider has no own app, the Accounts page says so and hides its button.
-
-Accounts connected through the relay keep using it to renew their access. If you turn the relay off later, connect those accounts again.
+When a provider is not set up, the Accounts page hides its button and shows a short note that links to this guide.
 
 ## Desktop app
 
-Google and Microsoft do not allow signing in from inside an app window, so the desktop app opens the sign-in page in your usual browser. When it says **Calendar connected**, go back to Holdall: the account is on the Accounts page. The desktop app always uses the relay for Google and Outlook.
+Google and Microsoft do not allow signing in from inside an embedded app window, so the desktop app offers iCloud and CalDAV only. To sync Google or Outlook, use a server instance.

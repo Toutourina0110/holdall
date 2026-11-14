@@ -40,9 +40,8 @@ openssl rand -base64 48
 | `TRUST_PROXY_HEADER` | `auto` | Which header holds the visitor's address behind the proxy. See [Reverse proxy](/docs/install/reverse-proxy/). |
 | `DEMO_MODE` | `false` | Public demo with throwaway accounts. Never on real data. See [Public demo](/docs/install/public-demo/). |
 | `DEMO_RESET_MINUTES` | `60` | Lifetime of a demo account, at least 5. |
-| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | empty | Google Calendar sync with your own app. See [Calendar sync](/docs/install/calendar-sync/). |
-| `MICROSOFT_CLIENT_ID`, `MICROSOFT_CLIENT_SECRET`, `MICROSOFT_TENANT_ID` | empty, empty, `common` | Outlook and Microsoft 365 sync with your own app. |
-| `OAUTH_RELAY_URL` | `https://auth.holdall.site` | Sign-in relay for Google and Outlook when you have no own app. `off` turns it off. See [Sign-in relay](/docs/install/oauth-relay/). |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | empty | Google Calendar sync. See [Calendar sync](/docs/install/calendar-sync/). |
+| `MICROSOFT_CLIENT_ID`, `MICROSOFT_CLIENT_SECRET`, `MICROSOFT_TENANT_ID` | empty, empty, `common` | Outlook and Microsoft 365 sync. |
 | `ALLOW_UNSAFE_PLUGINS` | `false` on a server, `true` on the desktop app | Allow plugins with dangerous permissions (`system`, `fs:host`, `process:spawn`, `network:direct`). Such a plugin can read every account's data. See [Permissions](/docs/plugins/permissions/#dangerous-permissions). |
 | `UPDATE_CHECK` | `true` | Look for a new Holdall version once a day and show a banner. See [Updates](/docs/install/updates/). |
 | `UPDATE_WEBHOOK_URL`, `UPDATE_WEBHOOK_TOKEN` | empty | Lets an admin start the update from the banner. See [Updates](/docs/install/updates/). |
