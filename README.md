@@ -10,12 +10,12 @@ A public demo runs at **https://demo.holdall.site**: each visitor gets their own
 
 ## Documentation
 
-Everything is on the documentation site: **https://docs.holdall.site/**
+Everything is on the documentation site: **https://holdall.site/docs/**
 
-- [Install on a server](https://docs.holdall.site/install/configuration/) (Docker, Ubuntu, Coolify)
-- [Desktop app](https://docs.holdall.site/desktop/install/)
-- [User guide](https://docs.holdall.site/guide/first-steps/)
-- [Write plugins and themes](https://docs.holdall.site/plugins/overview/)
+- [Install on a server](https://holdall.site/docs/install/configuration/) (Docker, Ubuntu, Coolify)
+- [Desktop app](https://holdall.site/docs/desktop/install/)
+- [User guide](https://holdall.site/docs/guide/first-steps/)
+- [Write plugins and themes](https://holdall.site/docs/plugins/overview/)
 
 The site source is in `site/`.
 
@@ -32,7 +32,7 @@ pnpm install
 pnpm dev
 ```
 
-Then open http://localhost:3000. The first visit creates the admin account. Configuration goes in a `.env` file, see `.env.example`. All commands are listed in [Development](https://docs.holdall.site/contributing/development/).
+Then open http://localhost:3000. The first visit creates the admin account. Configuration goes in a `.env` file, see `.env.example`. All commands are listed in [Development](https://holdall.site/docs/contributing/development/).
 
 ## License
 

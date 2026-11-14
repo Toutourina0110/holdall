@@ -24,4 +24,4 @@ To run the desktop app in development, with live reload:
 pnpm desktop:dev
 ```
 
-Installers are built for the system you build on. The release workflow builds all of them on GitHub (see [Releases](/contributing/releases/)).
+Installers are built for the system you build on. The release workflow builds all of them on GitHub (see [Releases](/docs/contributing/releases/)).

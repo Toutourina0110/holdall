@@ -68,13 +68,13 @@ function holdall(method, params) {
 }
 ```
 
-Always check `event.source === parent`: other frames could send you messages too. The [SDK's `createClient()`](/plugins/tooling/#the-sdk) does all of this, with types and a 15 second timeout.
+Always check `event.source === parent`: other frames could send you messages too. The [SDK's `createClient()`](/docs/plugins/tooling/#the-sdk) does all of this, with types and a 15 second timeout.
 
-Every method of the [API reference](/plugins/api/) is available, with the person looking at the page as the user.
+Every method of the [API reference](/docs/plugins/api/) is available, with the person looking at the page as the user.
 
 ## Call your server code
 
-Your interface can call functions of your own [server code](/plugins/server-and-hooks/#server-functions):
+Your interface can call functions of your own [server code](/docs/plugins/server-and-hooks/#server-functions):
 
 ```js
 const greeting = await holdall("server.call", { name: "greet", args: { name: "Ada" } });

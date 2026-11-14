@@ -1,0 +1,119 @@
+---
+import "@fontsource/ibm-plex-sans/400.css";
+import "@fontsource/ibm-plex-sans/600.css";
+import "@fontsource/ibm-plex-sans/700.css";
+import "../styles/landing.css";
+
+const repo = "https://github.com/Toutourina0110/holdall";
+
+const icons: Record<string, string[]> = {
+  notes: ["M3.5 2.5h9v11h-9z", "M6 6h4M6 8.5h4M6 11h2"],
+  tasks: ["M5 3.5 8 9H2z", "M10 6h4M10 11h4M2.5 12h5"],
+  calendar: ["M2.5 3.5h11v10h-11z", "M2.5 7h11M6 2v3M10 2v3"],
+  downloads: ["M2 12.5h12", "M8 2.5v7M5 7l3 3 3-3"],
+  converter: ["M3 5.5h9l-2.5-2.5M13 10.5H4l2.5 2.5"],
+  files: ["M2.5 4.5h4l1.5 1.5h5.5v7h-11z"],
+  plugins: ["M6 2.5v3M10 2.5v3M4.5 5.5h7v3a3.5 3.5 0 0 1-7 0zM8 12v2"],
+  palette: ["M8 2a6 6 0 1 0 0 12c1 0 1.3-.7 1-1.5-.4-.9.1-1.5 1-1.5h1.5A2.5 2.5 0 0 0 14 8.5C14 5 11.3 2 8 2z", "M5 7.5h.01M6.5 5h.01M9.5 5h.01"],
+};
+
+const features = [
+  { icon: "notes", title: "Notes", text: "Plain Markdown files with folders, tags, links between notes and a version history." },
+  { icon: "tasks", title: "Tasks", text: "Lists, due dates, priorities, labels and subtasks. Checklists in notes become tasks." },
+  { icon: "calendar", title: "Calendar", text: "Day, week, month and agenda views, synced both ways with Google, Outlook, iCloud and CalDAV." },
+  { icon: "downloads", title: "Downloads", text: "Videos, playlists and channels with yt-dlp, as video or audio, with a queue you can pause." },
+  { icon: "converter", title: "Converter", text: "Images, audio and video converted with ffmpeg on your own machine. Nothing is uploaded elsewhere." },
+  { icon: "files", title: "Files", text: "Upload, preview, move and rename your files, next to your downloads and conversions." },
+  { icon: "palette", title: "Your layout", text: "Move, hide and restyle every element. Light and dark themes, or build your own." },
+  { icon: "plugins", title: "Plugins", text: "Widgets, pages, live data and background jobs, each permission approved by you." },
+];
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Holdall, a self-hosted personal toolbox</title>
+    <meta
+      name="description"
+      content="Notes, tasks, a synced calendar, video downloads, a file converter and a file manager. On your desktop or your own server, with your data in one folder you control."
+    />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  </head>
+  <body>
+    <header class="top">
+      <a class="brand" href="/">
+        <img src="/favicon.svg" alt="" width="24" height="24" />
+        <span>Holdall</span>
+      </a>
+      <nav class="nav" aria-label="Main">
+        <a href="/docs/">Docs</a>
+        <a href="https://demo.holdall.site">Demo</a>
+        <a href={repo}>GitHub</a>
+      </nav>
+    </header>
+
+    <main class="sheet">
+      <section class="hero" aria-labelledby="title">
+        <h1 id="title">Holdall</h1>
+        <p class="lead">
+          Notes, tasks, a synced calendar, video downloads, a file converter and a file manager. On your desktop or your own server, with your data in one
+          folder you control.
+        </p>
+        <div class="actions">
+          <a class="button primary" href="https://demo.holdall.site">Try the demo</a>
+          <a class="button" href="/docs/">Read the docs</a>
+          <a class="button" href={`${repo}/releases/latest`}>Download</a>
+          <a class="button" href={repo}>GitHub</a>
+        </div>
+        <p class="meta">Free software under the AGPL-3.0. Windows, macOS, Linux and Docker.</p>
+      </section>
+
+      <section class="panel" aria-labelledby="inside">
+        <h2 id="inside" class="panel-head">What is inside <span class="count">{features.length}</span></h2>
+        <ul class="features">
+          {
+            features.map((feature) => (
+              <li>
+                <span class="tile" aria-hidden="true">
+                  <svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                    {icons[feature.icon]!.map((d) => (
+                      <path d={d} />
+                    ))}
+                  </svg>
+                </span>
+                <span>
+                  <strong>{feature.title}</strong>
+                  <span class="muted">{feature.text}</span>
+                </span>
+              </li>
+            ))
+          }
+        </ul>
+      </section>
+
+      <section class="panel" aria-labelledby="plugins">
+        <h2 id="plugins" class="panel-head">Make it yours with plugins</h2>
+        <div class="panel-body">
+          <p>
+            A plugin can add a widget to your day, a whole page, live data from any website, background jobs, export formats or a theme. Each one runs in its
+            own sandbox, and nothing happens without the permissions you approve.
+          </p>
+          <div class="actions">
+            <a class="button primary" href="/docs/plugins/tutorial/">Build your first plugin</a>
+            <a class="button" href="/docs/plugins/overview/">How plugins work</a>
+            <a class="button" href="https://github.com/Toutourina0110/holdall-registry">Browse the store</a>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="foot">
+      <span>Holdall</span>
+      <a href="/docs/">Documentation</a>
+      <a href="https://demo.holdall.site">Demo</a>
+      <a href={repo}>Source code</a>
+    </footer>
+  </body>
+</html>

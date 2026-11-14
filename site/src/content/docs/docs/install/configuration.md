@@ -36,13 +36,13 @@ openssl rand -base64 48
 | `PORT` | `3000` | Port the server listens on. |
 | `HOLDALL_TARGET` | `server` | `server` for Docker and browsers, `desktop` for the desktop app. |
 | `ALLOW_REGISTRATION` | `false` | Let anyone who reaches the instance create an account. When `false`, people join with an invitation link. An admin can also change this in **Admin**. |
-| `TRUST_PROXY` | `false` | Set to `true` only behind a reverse proxy. See [Reverse proxy](/install/reverse-proxy/). |
-| `TRUST_PROXY_HEADER` | `auto` | Which header holds the visitor's address behind the proxy. See [Reverse proxy](/install/reverse-proxy/). |
-| `DEMO_MODE` | `false` | Public demo with throwaway accounts. Never on real data. See [Public demo](/install/public-demo/). |
+| `TRUST_PROXY` | `false` | Set to `true` only behind a reverse proxy. See [Reverse proxy](/docs/install/reverse-proxy/). |
+| `TRUST_PROXY_HEADER` | `auto` | Which header holds the visitor's address behind the proxy. See [Reverse proxy](/docs/install/reverse-proxy/). |
+| `DEMO_MODE` | `false` | Public demo with throwaway accounts. Never on real data. See [Public demo](/docs/install/public-demo/). |
 | `DEMO_RESET_MINUTES` | `60` | Lifetime of a demo account, at least 5. |
-| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | empty | Google Calendar sync. See [Calendar sync](/install/calendar-sync/). |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | empty | Google Calendar sync. See [Calendar sync](/docs/install/calendar-sync/). |
 | `MICROSOFT_CLIENT_ID`, `MICROSOFT_CLIENT_SECRET`, `MICROSOFT_TENANT_ID` | empty, empty, `common` | Outlook and Microsoft 365 sync. |
-| `ALLOW_UNSAFE_PLUGINS` | `false` on a server, `true` on the desktop app | Allow plugins with dangerous permissions (`system`, `fs:host`, `process:spawn`, `network:direct`). Such a plugin can read every account's data. See [Permissions](/plugins/permissions/#dangerous-permissions). |
+| `ALLOW_UNSAFE_PLUGINS` | `false` on a server, `true` on the desktop app | Allow plugins with dangerous permissions (`system`, `fs:host`, `process:spawn`, `network:direct`). Such a plugin can read every account's data. See [Permissions](/docs/plugins/permissions/#dangerous-permissions). |
 | `PLUGIN_REGISTRY_URL` | official registry | Address of the plugin store index, if you use a mirror. |
 | `MAX_CONCURRENT_JOBS` | `2` | Background jobs (downloads, conversions, sync) that run at the same time. |
 | `MAX_UPLOAD_MB` | `500` | Largest file a person can upload. |
@@ -51,4 +51,4 @@ openssl rand -base64 48
 
 ## The first account
 
-The first visit to a new instance shows a setup page that creates the **admin** account. That page only works while no account exists. After that, the admin invites other people from **Admin** (see [First steps](/guide/first-steps/)).
+The first visit to a new instance shows a setup page that creates the **admin** account. That page only works while no account exists. After that, the admin invites other people from **Admin** (see [First steps](/docs/guide/first-steps/)).

@@ -12,7 +12,7 @@ pnpm install
 pnpm dev
 ```
 
-`pnpm dev` applies the database migrations, then starts the app. Open http://localhost:3000; the first visit creates the admin account. Settings go in a `.env` file, see `.env.example` and [Settings](/install/configuration/).
+`pnpm dev` applies the database migrations, then starts the app. Open http://localhost:3000; the first visit creates the admin account. Settings go in a `.env` file, see `.env.example` and [Settings](/docs/install/configuration/).
 
 ## Commands
 
@@ -43,14 +43,15 @@ pnpm dev
 | `src-tauri` | The desktop app |
 | `site` | This documentation site |
 
-## Documentation
+## Website and documentation
 
-The pages of this site are Markdown files in `site/src/content/docs`. Every push to `main` that changes `site/` publishes the site to GitHub Pages.
+The `site` folder builds one website: the home page at `holdall.site` (`site/src/pages/index.astro`) and this documentation under `holdall.site/docs/` (Markdown files in `site/src/content/docs/docs`). Every push to `main` that changes `site/` publishes it to GitHub Pages.
 
-The site is served at `docs.holdall.site`. To set it up once:
+To set it up once:
 
 1. The repository must be public (GitHub Pages is not free for private repositories).
-2. In **Settings, Pages**, set **Source** to **GitHub Actions**, then **Custom domain** to `docs.holdall.site` and turn on **Enforce HTTPS** once it is offered.
-3. At your domain provider, add a `CNAME` record: `docs` pointing to `toutourina0110.github.io`.
+2. In **Settings, Pages**, set **Source** to **GitHub Actions**, then **Custom domain** to `holdall.site`, and turn on **Enforce HTTPS** once it is offered.
+3. In the DNS of `holdall.site`, point the root of the domain to GitHub Pages: four `A` records for `@` with `185.199.108.153`, `185.199.109.153`, `185.199.110.153` and `185.199.111.153`. With Cloudflare, leave them **DNS only**.
+4. The file `site/public/CNAME` keeps the domain on every publish.
 
-The file `site/public/CNAME` keeps the domain on every publish.
+Old links to `docs.holdall.site` keep working with a redirect to `holdall.site/docs/` set up in Cloudflare (a proxied `docs` record and a redirect rule).

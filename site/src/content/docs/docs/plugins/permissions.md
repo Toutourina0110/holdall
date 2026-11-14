@@ -21,7 +21,7 @@ The **Shown as** column is the sentence people read on the consent screen.
 | `downloads:create` | Start downloads for you | `downloads.create` |
 | `network` | Connect to the internet addresses listed below | `network.fetch`, to the hosts in `network` |
 | `notifications` | Show you notifications | `notifications.show` |
-| `storage` | Keep its own private data and files on this server | `storage.get`, `storage.set`, `storage.delete`, and the [data folder](/plugins/server-and-hooks/#data-folder) |
+| `storage` | Keep its own private data and files on this server | `storage.get`, `storage.set`, `storage.delete`, and the [data folder](/docs/plugins/server-and-hooks/#data-folder) |
 | `background` | Keep running in the background and act for you at any time | Starting with Holdall, `holdall.users()`, `holdall.as(userId)` |
 | `ui:slots` | Add elements to the interface | Widgets, a page, the `dashboard.widgets` hook |
 | `network:any` | Connect to any address on the internet | `network.fetch` to any public `http` or `https` address, without listing hosts |
@@ -30,8 +30,8 @@ The **Shown as** column is the sentence people read on the consent screen.
 | `fs:host` | Read and change any file on this computer or server | Server code uses `fs` anywhere |
 | `process:spawn` | Start programs on this computer or server | Server code uses `child_process` |
 | `system` | Full access | Server code runs as plain Node, with no sandbox at all |
-| `ui:replace` | Replace elements of the interface | Nothing yet, see [Not available yet](/plugins/overview/#not-available-yet) |
-| `hooks:<name>` | The hook's description | Receiving that hook, see [Server code and hooks](/plugins/server-and-hooks/) |
+| `ui:replace` | Replace elements of the interface | Nothing yet, see [Not available yet](/docs/plugins/overview/#not-available-yet) |
+| `hooks:<name>` | The hook's description | Receiving that hook, see [Server code and hooks](/docs/plugins/server-and-hooks/) |
 
 A hook also needs the permission of the data it carries: `hooks:notes.saved` is useless without `notes:read`.
 

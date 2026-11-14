@@ -38,7 +38,7 @@ Admins see three more sections on the same page.
 - On an update, permissions the plugin did not have before are marked **New**.
 - **Sensitive** permissions (any website, local network, running in the background) and **Dangerous** ones (any file, running programs, full access) are marked. Optional ones of these start unchecked.
 - If the plugin can read your data and has an interface, a note reminds you that it could send that data to any website.
-- Dangerous permissions are refused on a server unless `ALLOW_UNSAFE_PLUGINS=true`. See [Settings](/install/configuration/).
+- Dangerous permissions are refused on a server unless `ALLOW_UNSAFE_PLUGINS=true`. See [Settings](/docs/install/configuration/).
 
 **Accept and install** installs the plugin for everyone on this Holdall. Each person then turns it on for themselves.
 
@@ -57,4 +57,4 @@ Plugins that do not come from the official registry show the banner **"Third-par
 - Every request a plugin makes is checked against the permissions you granted, and only reaches the data of the person using it.
 - **Dangerous** permissions (full access, any file, starting programs, raw network) leave that sandbox: such a plugin can read every account's data. On a server they are refused unless the admin sets `ALLOW_UNSAFE_PLUGINS=true`. The desktop app allows them, since it has one person and one computer.
 
-Read [Write plugins](/plugins/overview/) for the details.
+Read [Write plugins](/docs/plugins/overview/) for the details.

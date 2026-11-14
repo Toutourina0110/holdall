@@ -34,18 +34,18 @@ Every plugin has a `holdall.plugin.json` file at the root of its archive. Holdal
 | `id` | yes | Reverse domain name in lower case, for example `io.github.you.word-count` | Unique id. Never change it: Holdall uses it to recognize updates and keep data. |
 | `name` | yes | 1 to 60 characters | Shown in the store, the consent screen and notifications. |
 | `version` | yes | Semantic version, like `1.2.0` | Raise it for every release. |
-| `type` | yes | `module`, `extension`, `theme` or `library` | See [types](/plugins/overview/#types). |
+| `type` | yes | `module`, `extension`, `theme` or `library` | See [types](/docs/plugins/overview/#types). |
 | `description` | no | Up to 300 characters | One sentence about what it does. |
 | `author` | yes | `name` (up to 80 characters), optional `url` | Who made it. |
 | `license` | yes | Up to 40 characters, for example `MIT` | The license of your code. |
 | `holdall` | yes | `>=x.y.z`, `^x.y.z`, `~x.y.z`, an exact version or `*` | Holdall versions it works with. Install is refused on others. |
-| `permissions` | no | Known permissions, up to 40 | Required. Refusing one cancels the install. See [Permissions](/plugins/permissions/). |
+| `permissions` | no | Known permissions, up to 40 | Required. Refusing one cancels the install. See [Permissions](/docs/plugins/permissions/). |
 | `optionalPermissions` | no | Known permissions, up to 40 | The admin can uncheck them at install and change them later. |
 | `network` | no | Plain host names, up to 20 | Hosts `network.fetch` may call with the `network` permission. Not needed with `network:any` or `network:local`. |
-| `dependencies` | no | `{ "plugin.id": "version range" }` | Plugins that must be installed first, in a matching version. Your server code can call the [libraries](/plugins/server-and-hooks/#libraries) listed here. |
-| `entry.server` | no | Relative path to a file in the archive | Server code. See [Server code and hooks](/plugins/server-and-hooks/). |
+| `dependencies` | no | `{ "plugin.id": "version range" }` | Plugins that must be installed first, in a matching version. Your server code can call the [libraries](/docs/plugins/server-and-hooks/#libraries) listed here. |
+| `entry.server` | no | Relative path to a file in the archive | Server code. See [Server code and hooks](/docs/plugins/server-and-hooks/). |
 | `entry.ui` | no | Relative path | Main interface file. |
-| `theme` | theme only | Relative path | Theme file. See [Themes](/plugins/themes/). |
+| `theme` | theme only | Relative path | Theme file. See [Themes](/docs/plugins/themes/). |
 | `contributes.hooks` | no | Known hook names | Hooks your server code listens to. Each needs its `hooks:<name>` permission. |
 | `contributes.widgets` | no | Up to 10 | Widgets for **Today**. See below. |
 | `contributes.page` | no | `title` (up to 40 characters), `entry`, optional `icon` and `pages` | A page in the side bar, with sub pages. See [Page](#page). |
@@ -83,7 +83,7 @@ Widgets need the `ui:slots` permission. They appear on **Today** for each person
 - The page gets an entry in the side bar, named `title`, and opens at `/p/<plugin id>`. It fills the content area. It needs the `ui:slots` permission.
 - `icon`: an `.svg` file of your archive. Holdall draws it in one color, the color of the side bar, so it matches every theme. Use simple filled shapes on a 16 by 16 grid.
 - `pages`: up to 20 sub pages. When someone opens your page, they unfold under it in the side bar. Each one opens `/p/<plugin id>/<path>`, with the same `entry` file. `path` uses letters, digits and `. _ ~ -`, with `/` between parts.
-- Any address under `/p/<plugin id>/` opens your page, not only the listed ones, so you can give each item its own shareable address, like `/p/com.example.tv/channels/42`. See [Pages and addresses](/plugins/interface/#pages-and-addresses).
+- Any address under `/p/<plugin id>/` opens your page, not only the listed ones, so you can give each item its own shareable address, like `/p/com.example.tv/channels/42`. See [Pages and addresses](/docs/plugins/interface/#pages-and-addresses).
 
 ## Settings
 
@@ -115,7 +115,7 @@ Declare your settings and Holdall draws the form, validates the values, encrypts
 - Only your **server code** can read a secret. Your interface gets `true` when it is set and `null` when it is not, so a key never reaches the browser.
 - Personal settings are deleted with the person's account; all settings are deleted when the plugin is uninstalled.
 
-Read them with [`settings.get`](/plugins/api/#settingsget).
+Read them with [`settings.get`](/docs/plugins/api/#settingsget).
 
 ## Rules checked at install
 

@@ -23,7 +23,7 @@ Holdall is built from one codebase in two forms:
 | **Server** | A home server, a VPS, Coolify or any Docker host. Several people can have an account. | In a browser, from a computer or a phone. |
 | **Desktop** | One person on Windows, macOS or Linux. Everything runs on that computer. | As a normal app. |
 
-Both forms have the same features, except Google and Outlook calendar sync, which need a server (see [Calendar sync](/install/calendar-sync/)).
+Both forms have the same features, except Google and Outlook calendar sync, which need a server (see [Calendar sync](/docs/install/calendar-sync/)).
 
 ## Your data
 

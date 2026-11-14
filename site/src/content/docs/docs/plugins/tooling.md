@@ -3,13 +3,13 @@ title: Tooling and debugging
 description: The SDK, a ready-to-copy bundler setup, the update loop, logs, and what each error means.
 ---
 
-Plain JavaScript in HTML files, like in the [tutorial](/plugins/tutorial/), is enough for many plugins. For bigger ones, use TypeScript, the SDK and a bundler.
+Plain JavaScript in HTML files, like in the [tutorial](/docs/plugins/tutorial/), is enough for many plugins. For bigger ones, use TypeScript, the SDK and a bundler.
 
 ## The SDK
 
 `@holdall/plugin-sdk` gives you:
 
-- TypeScript types for the manifest, every [API method](/plugins/api/) and every [hook payload](/plugins/server-and-hooks/#hooks);
+- TypeScript types for the manifest, every [API method](/docs/plugins/api/) and every [hook payload](/docs/plugins/server-and-hooks/#hooks);
 - `createClient()` for interface code: the `postMessage` client, typed, with a 15 second timeout;
 - `applyTheme(client)`: applies the person's theme in one line;
 - `definePlugin()` and `defineManifest()`: they return what you give them, and let your editor check it.
@@ -114,7 +114,7 @@ It zips the folder (skipping files and folders that start with a dot), writes `d
 
 You can install the same version again while you work. Holdall replaces the files, restarts the server code at the next hook and keeps the storage. Reload the page to reload widgets and pages.
 
-Work on a local Holdall (see [Development](/contributing/development/)), with a test account, so mistakes never touch real data.
+Work on a local Holdall (see [Development](/docs/contributing/development/)), with a test account, so mistakes never touch real data.
 
 ## Read the logs
 
@@ -124,7 +124,7 @@ Work on a local Holdall (see [Development](/contributing/development/)), with a 
 |---|---|
 | `pnpm dev` on your computer | The terminal running it |
 | Docker | `docker compose logs -f holdall`, on the server |
-| Desktop app | `logs\server.log` in the [data folder](/desktop/install/#data-folder) |
+| Desktop app | `logs\server.log` in the [data folder](/docs/desktop/install/#data-folder) |
 
 Interface code runs in the browser: open the developer tools (F12), and pick your plugin's frame in the console's context menu to see its errors.
 
@@ -135,7 +135,7 @@ Interface code runs in the browser: open the developer tools (F12), and pick you
 | The widget or page does not appear | The plugin is not turned on in **On your account**, or `ui:slots` is missing. |
 | A call fails with *The plugin was not granted the X permission.* | Add X to `permissions`, or the admin refused it as optional. |
 | *This plugin is turned off for this user.* | The person turned it off. Your code should show this message and stop. |
-| *Invalid parameters for X.* | A parameter is missing or has the wrong type. Check the [API reference](/plugins/api/). |
+| *Invalid parameters for X.* | A parameter is missing or has the wrong type. Check the [API reference](/docs/plugins/api/). |
 | *Unknown plugin API method X.* | A typo in the method name, or a method this Holdall version does not have. |
 | *API calls are only allowed while Holdall is calling the plugin, or with the background permission...* | Server code called the API outside a handler without `background`, or with a `context` for someone who did not turn the plugin on. |
 | *The plugin did not declare X in its network list.* | Add the host to `network`. |
@@ -145,7 +145,7 @@ Interface code runs in the browser: open the developer tools (F12), and pick you
 | *Declare X in dependencies to call it.* | Add the library to `dependencies` in your manifest. |
 | *X is not an installed library.* or *does not match* | The admin must install the library, in a version that matches your range. |
 | *The plugin was not granted the storage permission.* | `holdall.userDir` and `holdall.sharedDir` need `storage`. |
-| Install says *... which can harm this server* | The plugin needs a dangerous permission and the server does not allow them. See [Dangerous permissions](/plugins/permissions/#dangerous-permissions). |
+| Install says *... which can harm this server* | The plugin needs a dangerous permission and the server does not allow them. See [Dangerous permissions](/docs/plugins/permissions/#dangerous-permissions). |
 | *Only pages can change the address.* | `page.navigate` was called from a widget. |
 | *The call is larger than 24 MB.* | Send less at once, or move big files through your data folder from server code. |
 | Uninstall says *Uninstall X first* | Another plugin depends on this library. Uninstall it first. |

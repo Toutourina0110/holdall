@@ -17,7 +17,7 @@ These commands run **on the server**, in a terminal (bash).
    nano .env
    ```
 
-   Set at least `APP_URL` and `APP_SECRET` (see [Settings](/install/configuration/)).
+   Set at least `APP_URL` and `APP_SECRET` (see [Settings](/docs/install/configuration/)).
 
 3. Start it:
 
@@ -29,7 +29,7 @@ These commands run **on the server**, in a terminal (bash).
 
 The image contains Node, ffmpeg and yt-dlp (verified with its official checksum), runs as a non-root user, keeps data in the `holdall-data` volume mounted on `/data`, and reports its health on `/api/health`.
 
-To reach Holdall with a domain name and HTTPS, put it behind a reverse proxy such as Caddy, Nginx or a Cloudflare Tunnel, then read [Reverse proxy](/install/reverse-proxy/).
+To reach Holdall with a domain name and HTTPS, put it behind a reverse proxy such as Caddy, Nginx or a Cloudflare Tunnel, then read [Reverse proxy](/docs/install/reverse-proxy/).
 
 ## Update
 

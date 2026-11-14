@@ -14,6 +14,6 @@ description: Upload, preview, organize and convert your files.
 - **New folder** creates a folder.
 - **Open** a folder, or **Preview** a file. Images, audio, video, PDF and text files open in the preview. Other files show **Download**.
 - **Rename**, **Move** to another folder, or **Delete** for good.
-- **Convert** turns an image, audio or video file into another format (see [Converter](/guide/converter/)).
+- **Convert** turns an image, audio or video file into another format (see [Converter](/docs/guide/converter/)).
 
 Your files are in the data folder under `files/<your account>/`. Nobody else can open them.

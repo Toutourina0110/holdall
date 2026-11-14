@@ -503,7 +503,7 @@ export const en = {
     intro: "Connect your calendars to see and edit them in Holdall. Changes sync both ways every 15 minutes. When the same event changes on both sides, the most recent change wins and the other is noted in the history.",
     connectGoogle: "Connect Google Calendar",
     connectMicrosoft: "Connect Outlook",
-    notConfigured: "The admin of this Holdall has not set up {provider} yet. Setup steps: https://docs.holdall.site/install/calendar-sync/",
+    notConfigured: "The admin of this Holdall has not set up {provider} yet. Setup steps: https://holdall.site/docs/install/calendar-sync/",
     caldavTitle: "Add iCloud or CalDAV",
     caldavHelp: "For iCloud, use your Apple ID email and an app-specific password created at account.apple.com. For Nextcloud, Fastmail or others, use the CalDAV address of your server.",
     kind: "Service",
