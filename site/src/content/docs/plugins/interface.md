@@ -11,7 +11,7 @@ Widgets and pages are HTML files from your archive, shown in a sandboxed iframe.
 |---|---|
 | Load other files from your archive: scripts, styles, images, fonts, sounds, videos, WebAssembly | Read the Holdall session, cookies or page |
 | Load anything from any website: libraries from a CDN, images, videos, fonts | Navigate the Holdall tab away |
-| Call any web API with `fetch()`, `WebSocket` or `EventSource` (the site must allow it with CORS) | Send requests to Holdall as the person (they are refused) |
+| Call any web API with `fetch()` (the site must allow it with CORS), `WebSocket` or `EventSource` | Send requests to Holdall as the person (they are refused) |
 | Embed other sites in frames, for example a video or stream player | |
 | Open links in a new tab, go fullscreen, play media, offer downloads, submit forms, copy to the clipboard | |
 | Call Holdall and your own server code through `postMessage` | |
@@ -31,7 +31,7 @@ Supported file types: `.html`, `.js`, `.mjs`, `.css`, `.json`, `.map`, `.txt`, `
 | | `fetch()` from the interface | `network.fetch` or your server code |
 |---|---|---|
 | Runs in | The person's browser | The Holdall server |
-| Needs | The site to allow CORS | The `network` permission and the host in `network` |
+| Needs | The site to allow CORS | `network` and the host in `network`, or `network:any` / `network:local` |
 | Good for | Public APIs, CDNs, embeds | Secret API keys, sites without CORS |
 
 Never put a secret API key in interface code: anyone using the plugin can read it. Keep it in your server code and call that code with `server.call` (see [Call your server code](#call-your-server-code)).

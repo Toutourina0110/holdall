@@ -10,11 +10,11 @@ await holdall("notes.list", { query: "trip" });
 await holdall.api("notes.list", { query: "trip" }, context);
 ```
 
-The first line is interface code ([Interface code](/holdall/plugins/interface/)); the second is server code inside a hook ([Server code and hooks](/holdall/plugins/server-and-hooks/)).
+The first line is interface code ([Interface code](/holdall/plugins/interface/)); the second is server code, inside a hook, a server function or background code ([Server code and hooks](/holdall/plugins/server-and-hooks/)).
 
 Every call:
 
-- runs for one person: the one looking at the page, or the one the hook is about;
+- runs for one person: the one looking at the page, or the one of the `context` your server code passes;
 - fails if the plugin is turned off for that person, or lacks the permission;
 - checks its parameters, and fails with *Invalid parameters for `<method>`* if they are wrong.
 
@@ -145,7 +145,7 @@ Permission `tasks:read`. **Params** `{ view?, today }`.
 - `view`: `inbox`, `today` (default), `upcoming` or `done`.
 - `today`: the person's date, `YYYY-MM-DD`. Pass it from the interface (`new Date().toISOString().slice(0, 10)` or a local date), so "today" matches their time zone.
 
-**Returns** tasks: `{ id, title, description, dueDate, dueTime, priority, labels, done, ... }`.
+**Returns** tasks: `{ id, title, description, dueDate, dueTime, priority, labels, listId, parentId, completedAt, ... }`. `completedAt` is the date the task was done, or `null`.
 
 ### `tasks.create`
 

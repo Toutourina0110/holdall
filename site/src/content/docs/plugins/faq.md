@@ -5,11 +5,11 @@ description: Common questions about writing Holdall plugins.
 
 ## Do I need server code?
 
-No. Many plugins are only a widget or a page that calls the API. Add server code when you must react to something (a note saved, a download finished) or answer a filter.
+No. Many plugins are only a widget or a page that calls the API. Add server code when you must react to something (a note saved, a download finished), answer a filter, keep an API key secret, or work in the background.
 
 ## Can my interface code use `fetch()` or load a library from a CDN?
 
-Yes. Your interface can load scripts, styles, fonts, images and videos from any site, embed other sites, and call web APIs that allow CORS. It only never sees the Holdall session. For APIs without CORS, or with a secret key, call them from your server code.
+Yes. Your interface can load scripts, styles, fonts, images and videos from any site, embed other sites, and call web APIs that allow CORS. It never sees the Holdall session. For APIs without CORS, or with a secret key, call them from your server code.
 
 ## Can I embed a video or a live stream?
 
@@ -41,7 +41,7 @@ You don't need to: every call already acts for the right person. `context.userId
 
 ## How do I share data between people?
 
-You can't. Storage, notes, files and events are always those of the person using the plugin. This is on purpose.
+A person's notes, files, events and storage are always theirs only: a plugin cannot show them to someone else through the API. For data meant for everyone, use [`holdall.sharedDir()`](/holdall/plugins/server-and-hooks/#data-folder) in server code, or a `global` [setting](/holdall/plugins/manifest/#settings).
 
 ## Can I show a notification from the interface?
 

@@ -7,7 +7,7 @@ Plugins add pages, widgets on **Today**, reactions to events (for example when a
 
 ## Turn a plugin on or off
 
-**On your account** lists every plugin installed on this Holdall. Use **On** and **Off** to choose which ones you use. Each row shows what the plugin is allowed to do. A plugin you turn off does nothing for your account.
+**On your account** lists every plugin installed on this Holdall, except libraries, which other plugins use behind the scenes. Use **On** and **Off** to choose which ones you use. Each row shows what the plugin is allowed to do. A plugin you turn off does nothing for your account.
 
 ## Plugin settings
 

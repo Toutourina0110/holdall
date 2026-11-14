@@ -33,7 +33,7 @@ export default function setup(holdall) {
 | `holdall.library(id).call(name, args, context)` | Call a function of a library listed in your `dependencies`. |
 | `holdall.log(message)` | Write a line to the Holdall log, prefixed with your plugin id. |
 
-`context` is `{ userId, callId }`. Pass it, unchanged, as the last argument of every call: it tells Holdall which person the call is for.
+`context` tells Holdall which person a call is for: `{ userId, callId }` in a hook, a server function or a library function, `{ userId }` from `holdall.as`. Pass it, unchanged, as the last argument of every call.
 
 ## When your code runs
 
@@ -41,7 +41,7 @@ export default function setup(holdall) {
 - Your default export runs once at start. Register your hooks and functions there.
 - **Without `background`, API calls are only accepted while Holdall is calling one of your handlers**, with that call's `context`. This guarantees such a plugin only acts when something happens for a real person. With `background`, see [Background code](#background-code).
 - Each handler has **5 seconds** to answer (15 seconds for `notes.export.render`). After that, Holdall stops waiting and logs it.
-- If your process crashes, Holdall starts it again at the next hook.
+- If your process crashes, Holdall starts it again at the next hook or call.
 - Installing a new version stops the old process; the next hook starts the new one.
 
 ## The sandbox
@@ -49,11 +49,11 @@ export default function setup(holdall) {
 By default the process is started with the Node permission model:
 
 - it can read the files of your plugin folder, read and write its [data folder](#data-folder) (with `storage`), and nothing else;
-- it cannot write files, start programs, open network connections or load native addons;
+- it cannot write other files, start programs, open network connections or load native addons;
 - it can run WebAssembly, but not WASI or worker threads;
 - it has 512 MB of memory.
 
-Everything else goes through `holdall` calls, checked against your permissions. Use `holdall.fetch` instead of `fetch`, and storage or `files.write` instead of the file system.
+Everything else goes through `holdall` calls, checked against your permissions. Use `holdall.fetch` instead of `fetch`, and your data folder, storage or `files.write` for files.
 
 Need more? The [dangerous permissions](/holdall/plugins/permissions/#dangerous-permissions) open the sandbox step by step: `network:direct` for your own network connections, `fs:host` for any file, `process:spawn` to start programs, `system` for no sandbox at all.
 
@@ -215,7 +215,7 @@ Then call it:
 holdall.handle("find", ({ query }, context) => holdall.library("com.example.search-client").call("search", { query }, context));
 ```
 
-- Only libraries listed in your `dependencies` can be called. Holdall installs nothing for you: the admin installs the library first, and cannot uninstall it while a plugin needs it.
+- Only libraries listed in your `dependencies` can be called, and only if the installed plugin really has `"type": "library"` and a version that matches your range. Holdall installs nothing for you: the admin installs the library first, and cannot uninstall it while a plugin needs it.
 - Pass your `context` to call it for the same person. The library then works for that person with **its own** permissions and its own storage. Without `context`, the library runs with no person and cannot use person data.
 - A library is active for everyone who turned on a plugin that depends on it. It does not appear in **On your account**.
 - Each library and each plugin runs in its own process: a library cannot see the plugin's data, and the plugin cannot use the library's permissions.

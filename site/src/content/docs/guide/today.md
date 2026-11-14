@@ -6,6 +6,7 @@ description: The start page, made of widgets from modules and plugins.
 **Today** is the page Holdall opens on. It shows widgets:
 
 - tasks due today, with a link to **Tasks**;
+- your recent notes;
 - today's events, with a link to **Calendar**;
 - downloads in progress;
 - widgets added by plugins you turned on.

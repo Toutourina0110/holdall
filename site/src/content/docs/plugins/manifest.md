@@ -41,7 +41,7 @@ Every plugin has a `holdall.plugin.json` file at the root of its archive. Holdal
 | `holdall` | yes | `>=x.y.z`, `^x.y.z`, `~x.y.z`, an exact version or `*` | Holdall versions it works with. Install is refused on others. |
 | `permissions` | no | Known permissions, up to 40 | Required. Refusing one cancels the install. See [Permissions](/holdall/plugins/permissions/). |
 | `optionalPermissions` | no | Known permissions, up to 40 | The admin can uncheck them at install and change them later. |
-| `network` | no | Plain host names, up to 20 | Hosts `network.fetch` may call. Needs the `network` permission. |
+| `network` | no | Plain host names, up to 20 | Hosts `network.fetch` may call with the `network` permission. Not needed with `network:any` or `network:local`. |
 | `dependencies` | no | `{ "plugin.id": "version range" }` | Plugins that must be installed first, in a matching version. Your server code can call the [libraries](/holdall/plugins/server-and-hooks/#libraries) listed here. |
 | `entry.server` | no | Relative path to a file in the archive | Server code. See [Server code and hooks](/holdall/plugins/server-and-hooks/). |
 | `entry.ui` | no | Relative path | Main interface file. |
@@ -123,7 +123,7 @@ Read them with [`settings.get`](/holdall/plugins/api/#settingsget).
 - Every plugin in `dependencies` is installed, in a matching version.
 - Every file named in the manifest is in the archive, with a relative path that stays inside it.
 - Every hook in `contributes.hooks` has the matching `hooks:<name>` permission.
-- `network` is only used with the `network` permission.
+- `network` is only used with the `network`, `network:any` or `network:local` permission.
 - A theme plugin has a valid `theme` file and no `entry`.
 - The archive is at most 20 MB, and 60 MB and 500 files once unpacked.
 

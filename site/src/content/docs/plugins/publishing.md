@@ -32,7 +32,7 @@ The store is the `index.json` file of the `holdall-registry` repository on GitHu
 1. Go through the [checklist](#checklist-before-you-publish).
 2. Pack your plugin (see [Tooling](/holdall/plugins/tooling/#pack)) and note the checksum.
 3. Create a GitHub release in your own repository and attach the archive.
-4. Open a pull request on `holdall-registry` that adds your entry to `index.json`. A check downloads the archive, compares its checksum and validates the manifest.
+4. Open a pull request on `holdall-registry` that adds your entry to `index.json`. A check validates the entry, downloads the archive and compares its checksum. Holdall checks the manifest itself when an admin installs the plugin.
 5. Once merged, the plugin appears in the **Store** section of the **Plugins** page on every Holdall within 10 minutes.
 
 When an admin installs from the store, Holdall downloads the archive and refuses it if the checksum, the id or the version differ from the listing. Then it shows the same review screen as a manual install, with the third-party banner.
@@ -52,6 +52,7 @@ Never replace the archive of a version that is already listed: its checksum woul
 - [ ] `description` says in one sentence what the plugin does.
 - [ ] `holdall` names the oldest Holdall version you tested.
 - [ ] Every permission is needed; the nice-to-have ones are in `optionalPermissions`.
+- [ ] Dangerous permissions only if nothing else works. Most servers refuse them; say so in your README.
 - [ ] `network` lists only the hosts you really call.
 
 **Behavior**
@@ -70,7 +71,7 @@ Never replace the archive of a version that is already listed: its checksum woul
 
 **Archive**
 
-- [ ] It contains only what the manifest names: no `node_modules`, no sources, no secrets.
+- [ ] It contains only what the plugin uses: no `node_modules`, no sources, no secrets.
 - [ ] It installs on a clean Holdall, and updates over the previous version.
 - [ ] Your repository has a README and a license.
 

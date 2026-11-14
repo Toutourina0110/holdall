@@ -46,3 +46,4 @@ Lines like `- [ ] Call the bank` are checklist items. **Details** lists them, an
 
 - **Import .md or .zip** adds Markdown files, or a zip of Markdown files with their folders.
 - **Export** downloads one note as `.md`. **Export as zip** downloads the folder you are in, or every note.
+- Plugins you turned on can add more export formats: they appear as extra buttons next to **Export**.

@@ -83,7 +83,11 @@ export type Task = {
   dueTime: string | null;
   priority: number;
   labels: string[];
-  done: boolean;
+  listId: string | null;
+  parentId: string | null;
+  completedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
 };
 export type TaskInput = {
   title: string;

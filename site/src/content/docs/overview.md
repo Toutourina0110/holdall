@@ -32,7 +32,7 @@ Everything lives in one folder, called the data folder (`DATA_DIR`):
 - `holdall.db`, the database (accounts, tasks, events, settings);
 - your notes, as `.md` files you can open with any editor;
 - your files, downloads and conversions;
-- installed plugins.
+- installed plugins, their settings and their data.
 
 Back up this folder and you have backed up everything. Each person's notes and files are kept in their own subfolder, and nobody can open another person's data.
 

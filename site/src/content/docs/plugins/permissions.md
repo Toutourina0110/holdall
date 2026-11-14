@@ -10,13 +10,13 @@ The **Shown as** column is the sentence people read on the consent screen.
 | Permission | Shown as | Unlocks |
 |---|---|---|
 | `notes:read` | Read all your notes | `notes.list`, `notes.get`, hooks on notes |
-| `notes:write` | Create, change and delete your notes | `notes.create`, `notes.update` |
-| `tasks:read` | Read all your tasks | `tasks.list`, `tasks.completed` hook |
-| `tasks:write` | Create, change and delete your tasks | `tasks.create`, `tasks.complete` |
+| `notes:write` | Create, change and delete your notes | `notes.create`, `notes.update`, `notes.trash`, `notes.restore`, `notes.move`, `notes.setTags`, `notes.setFlags` |
+| `tasks:read` | Read all your tasks | `tasks.list`, `tasks.lists`, `tasks.completed` hook |
+| `tasks:write` | Create, change and delete your tasks | `tasks.create`, `tasks.complete`, `tasks.update`, `tasks.delete`, `tasks.createList`, `tasks.renameList`, `tasks.deleteList` |
 | `calendar:read` | Read your calendar events | `calendar.list`, `calendar.event.render` hook |
-| `calendar:write` | Create, change and delete your calendar events | `calendar.create` |
+| `calendar:write` | Create, change and delete your calendar events | `calendar.create`, `calendar.update`, `calendar.delete` |
 | `files:read` | Read your files | `files.list`, `files.read` |
-| `files:write` | Create, change and delete your files | `files.write`, `files.delete` |
+| `files:write` | Create, change and delete your files | `files.write`, `files.mkdir`, `files.rename`, `files.move`, `files.delete` |
 | `downloads:read` | See your downloads | `downloads.list`, `download.finished` hook |
 | `downloads:create` | Start downloads for you | `downloads.create` |
 | `network` | Connect to the internet addresses listed below | `network.fetch`, to the hosts in `network` |

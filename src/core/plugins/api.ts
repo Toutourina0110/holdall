@@ -35,7 +35,7 @@ export async function callPluginApi(name: string, rawParams: unknown, context: P
   if (method.permission && !installed.granted.has(method.permission)) {
     throw new PluginPermissionError(`The plugin was not granted the ${method.permission} permission.`);
   }
-  const params = method.params.safeParse(rawParams);
+  const params = method.params.safeParse(rawParams ?? {});
   if (!params.success) throw new PluginPermissionError(`Invalid parameters for ${name}.`);
   return method.run(params.data as never, context);
 }
