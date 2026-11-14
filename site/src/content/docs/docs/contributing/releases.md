@@ -12,7 +12,7 @@ Check the draft, then publish it.
 
 ## Signed automatic updates
 
-Automatic desktop updates need a signing key that only the maintainer holds. Until it is set up, people update by installing the new version over the old one.
+The desktop app checks `latest.json` in the latest GitHub release when it starts, and only installs an update signed with the maintainer's key. The release workflow signs the installers and writes `latest.json`, using the key stored in the repository secrets. A draft release is invisible to the app: it sees the update once the release is published.
 
 To set it up (maintainer, once), in PowerShell:
 

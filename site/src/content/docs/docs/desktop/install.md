@@ -33,4 +33,8 @@ Logs are in the `logs` folder inside it. To back up, copy the whole folder while
 
 ## Update
 
-Until signed automatic updates are turned on, install the new version over the old one. Your data is kept.
+From version 0.2.0, the app checks for a new version each time it starts. When one exists, it asks: **Update now** or **Later**. With **Update now**, it downloads the new version, checks its signature, installs it and restarts. Your data is kept. Nothing is installed without your click.
+
+On Linux, automatic updates work with the `.AppImage`. With the `.deb` or `.rpm`, install the new package yourself.
+
+Version 0.1.0 cannot update itself: install 0.2.0 over it once, by hand.

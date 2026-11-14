@@ -1,7 +1,7 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "Holdall",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "identifier": "io.github.toutourina0110.holdall",
   "build": {
     "frontendDist": "placeholder",
@@ -30,6 +30,18 @@
     ],
     "resources": {
       "../.next/standalone/": "app/"
+    },
+    "createUpdaterArtifacts": true
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "REPLACE_WITH_UPDATER_PUBLIC_KEY",
+      "endpoints": [
+        "https://github.com/Toutourina0110/holdall/releases/latest/download/latest.json"
+      ],
+      "windows": {
+        "installMode": "passive"
+      }
     }
   }
 }

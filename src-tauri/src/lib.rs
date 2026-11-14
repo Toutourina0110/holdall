@@ -8,6 +8,8 @@ use std::thread;
 use std::time::{Duration, Instant};
 
 use tauri::{Manager, RunEvent, WebviewUrl, WebviewWindowBuilder};
+use tauri_plugin_dialog::{DialogExt, MessageDialogButtons, MessageDialogKind};
+use tauri_plugin_updater::UpdaterExt;
 
 struct Server(Mutex<Option<Child>>);
 
@@ -119,13 +121,49 @@ fn open_window(app: &tauri::AppHandle, url: &str) -> Result<(), String> {
     Ok(())
 }
 
-fn report(app: &tauri::AppHandle, message: &str) {
+fn log_line(app: &tauri::AppHandle, message: &str) {
     if let Ok(dir) = app.path().app_data_dir() {
         let _ = fs::create_dir_all(dir.join("logs"));
         if let Ok(mut file) = fs::OpenOptions::new().create(true).append(true).open(dir.join("logs").join("desktop.log")) {
             let _ = writeln!(file, "{message}");
         }
     }
+}
+
+fn stop_server(app: &tauri::AppHandle) {
+    if let Ok(mut server) = app.state::<Server>().0.lock() {
+        if let Some(mut child) = server.take() {
+            let _ = child.kill();
+            let _ = child.wait();
+        }
+    }
+}
+
+async fn offer_update(app: &tauri::AppHandle) -> Result<(), String> {
+    let Some(update) = app.updater().map_err(|error| error.to_string())?.check().await.map_err(|error| error.to_string())? else {
+        return Ok(());
+    };
+    let accepted = app
+        .dialog()
+        .message(format!(
+            "Holdall {} is available. You have version {}.\n\nUpdate now? Holdall downloads it, installs it and restarts. Your data is kept.",
+            update.version, update.current_version
+        ))
+        .title("Update available")
+        .kind(MessageDialogKind::Info)
+        .buttons(MessageDialogButtons::OkCancelCustom("Update now".to_string(), "Later".to_string()))
+        .blocking_show();
+    if !accepted {
+        return Ok(());
+    }
+    let bytes = update.download(|_, _| {}, || {}).await.map_err(|error| error.to_string())?;
+    stop_server(app);
+    update.install(bytes).map_err(|error| error.to_string())?;
+    app.restart();
+}
+
+fn report(app: &tauri::AppHandle, message: &str) {
+    log_line(app, message);
     let page = format!(
         "data:text/html,<body style=\"font-family:sans-serif;padding:24px\"><h1>Holdall could not start</h1><p>{}</p></body>",
         message.replace('<', "&lt;").replace('#', "%23")
@@ -136,6 +174,8 @@ fn report(app: &tauri::AppHandle, message: &str) {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let app = tauri::Builder::default()
+        .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .manage(Server(Mutex::new(None)))
         .setup(|app| {
             let handle = app.handle().clone();
@@ -149,6 +189,10 @@ pub fn run() {
                     Ok(url) => {
                         if let Err(error) = open_window(&handle, &url) {
                             report(&handle, &error);
+                        } else if !cfg!(debug_assertions) {
+                            if let Err(error) = tauri::async_runtime::block_on(offer_update(&handle)) {
+                                log_line(&handle, &format!("Update check failed: {error}"));
+                            }
                         }
                     }
                     Err(error) => report(&handle, &error),
@@ -161,11 +205,7 @@ pub fn run() {
 
     app.run(|handle, event| {
         if let RunEvent::Exit = event {
-            if let Ok(mut server) = handle.state::<Server>().0.lock() {
-                if let Some(mut child) = server.take() {
-                    let _ = child.kill();
-                }
-            }
+            stop_server(handle);
         }
     });
 }

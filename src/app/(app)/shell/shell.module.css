@@ -259,8 +259,40 @@
   grid-template-rows: var(--size-topbar) 1fr;
 }
 
-.page:has(> .demoBanner) {
+.page:has(> .demoBanner),
+.page:has(> .updateBanner) {
   grid-template-rows: auto var(--size-topbar) 1fr;
+}
+
+.page:has(> .demoBanner):has(> .updateBanner) {
+  grid-template-rows: auto auto var(--size-topbar) 1fr;
+}
+
+.updateBanner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2) var(--space-3);
+  margin: 0;
+  padding: var(--space-1) var(--space-4);
+  border-bottom: var(--border-thin) solid var(--color-accent);
+  background: var(--color-accent-soft);
+  color: var(--color-accent-text);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+}
+
+.updateBanner a {
+  color: inherit;
+}
+
+.updateBanner code {
+  padding: 0 var(--space-1);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font-weight: var(--weight-regular);
 }
 
 .top {

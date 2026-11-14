@@ -13,6 +13,7 @@ import { signOutAction } from "../actions";
 import { CustomizeProvider, useCustomize } from "./CustomizeContext";
 import { itemStyle, SlotList } from "./SlotList";
 import { StylePanel } from "./StylePanel";
+import { UpdateBanner, type UpdateInfo } from "./UpdateBanner";
 import styles from "./shell.module.css";
 
 type ShellUser = { name: string; email: string; role: string };
@@ -180,6 +181,7 @@ export function Shell({
   layout,
   demo,
   unread,
+  update,
   children,
 }: {
   user: ShellUser;
@@ -187,6 +189,7 @@ export function Shell({
   layout: UserLayout;
   demo?: boolean;
   unread: number;
+  update?: UpdateInfo;
   children: ReactNode;
 }) {
   return (
@@ -199,6 +202,7 @@ export function Shell({
               {strings.demo.banner}
             </p>
           )}
+          {update && <UpdateBanner update={update} />}
           <TopBar unread={unread} />
           <main className={styles.main} id="main">
             {children}

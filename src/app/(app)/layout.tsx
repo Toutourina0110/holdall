@@ -6,6 +6,7 @@ import { getUserLayout } from "@/core/layout/store";
 import { unreadCount } from "@/core/notifications/store";
 import "@/core/plugins/contributions";
 import { filterDashboardWidgets } from "@/core/plugins/filters";
+import { availableUpdate, canUpdateFromHoldall } from "@/core/updates";
 import "@/modules/register";
 import { Shell } from "./shell/Shell";
 
@@ -14,8 +15,10 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   const isAdmin = session.user.role === "admin";
   const items = await filterDashboardWidgets(slotItemsFor({ userId: session.user.id, isAdmin }), session.user.id);
   const layout = getUserLayout(session.user.id);
+  const latest = availableUpdate();
+  const update = latest ? { ...latest, admin: isAdmin, webhook: isAdmin && canUpdateFromHoldall() } : undefined;
   return (
-    <Shell user={{ name: session.user.name, email: session.user.email, role: session.user.role ?? "user" }} items={items} layout={layout} demo={getEnv().demoMode} unread={unreadCount(session.user.id)}>
+    <Shell user={{ name: session.user.name, email: session.user.email, role: session.user.role ?? "user" }} items={items} layout={layout} demo={getEnv().demoMode} unread={unreadCount(session.user.id)} update={update}>
       {children}
     </Shell>
   );

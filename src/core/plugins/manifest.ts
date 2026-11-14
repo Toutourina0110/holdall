@@ -135,6 +135,10 @@ function compare(a: [number, number, number], b: [number, number, number]): numb
   return 0;
 }
 
+export function isNewerVersion(candidate: string, current: string): boolean {
+  return compare(parts(candidate), parts(current)) > 0;
+}
+
 export function satisfies(version: string, range: string): boolean {
   const current = parts(version);
   const trimmed = range.trim();

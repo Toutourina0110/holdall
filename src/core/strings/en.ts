@@ -542,6 +542,14 @@ export const en = {
     saved: "Settings saved.",
     save: "Save settings",
   },
+  update: {
+    available: "Holdall {version} is available.",
+    notes: "What is new",
+    now: "Update now",
+    starting: "Starting the update",
+    started: "Update started. Holdall restarts in a minute; reload the page then.",
+    command: "To update, run on the server:",
+  },
   notifications: {
     title: "Notifications",
     intro: "Messages from your plugins. Holdall keeps the last 100.",

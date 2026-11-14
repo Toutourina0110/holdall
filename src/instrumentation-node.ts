@@ -6,6 +6,7 @@ import { autoUpdateTools } from "@/modules/downloader/jobs";
 import { startCalendarScheduler } from "@/modules/calendar/sync";
 import { startDemoReset } from "@/modules/demo/demo";
 import { startBackgroundPlugins } from "@/core/plugins/host";
+import { startUpdateChecks } from "@/core/updates";
 import "@/modules/register";
 
 export function boot(): void {
@@ -19,4 +20,5 @@ export function boot(): void {
   startCalendarScheduler();
   startDemoReset();
   startBackgroundPlugins();
+  startUpdateChecks();
 }
