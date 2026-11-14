@@ -1,7 +1,6 @@
 services:
   holdall:
-    build: .
-    image: holdall:local
+    image: ghcr.io/toutourina0110/holdall:latest
     restart: unless-stopped
     ports:
       - "3000:3000"

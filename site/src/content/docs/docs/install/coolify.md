@@ -14,3 +14,5 @@ description: Deploy Holdall on Coolify from its Git repository.
 6. Deploy. Coolify uses the image health check on `/api/health`.
 
 To update, redeploy. Database migrations run when the container starts.
+
+Faster option: instead of building from the repository, create a **Docker Image** resource with `ghcr.io/toutourina0110/holdall:latest`, port `3000`, and the same variables and volume. Coolify then only downloads the ready-made image.
