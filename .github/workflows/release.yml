@@ -53,7 +53,7 @@ jobs:
           - os: macos-15-intel
             args: "--target x86_64-apple-darwin"
           - os: ubuntu-22.04
-            args: ""
+            args: "--verbose"
     runs-on: ${{ matrix.os }}
     timeout-minutes: 90
     steps:
@@ -80,6 +80,7 @@ jobs:
       - uses: tauri-apps/tauri-action@action-v1.0.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NO_STRIP: "true"
         with:
           tagName: ${{ github.ref_name }}
           releaseName: Holdall ${{ github.ref_name }}
